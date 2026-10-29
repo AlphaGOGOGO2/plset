@@ -1,0 +1,47 @@
+async (page) => {
+  const check=(ok,message)=>{if(!ok)throw new Error(message);};
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.getByRole('button',{name:'핀볼 Pinball 03',exact:true}).click();
+  await page.getByRole('combobox',{name:'추첨 대상',exact:true}).selectOption('custom');
+  const names=['임홍규','변현제','이재호','김정우','유영진','김지성','장윤철','이영호','송병구','조일장','김명운','황병영'];
+  await page.getByRole('textbox',{name:'항목 · 한 줄에 하나',exact:true}).fill(names.join('\n'));
+  await page.getByRole('combobox',{name:'당첨자 설정',exact:true}).selectOption('last');
+  await page.getByRole('button',{name:'추첨 시작',exact:true}).click();
+  const state=()=>page.evaluate(()=>JSON.parse(window.render_game_to_text()));
+  await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).mode==='countdown');
+  check((await state()).mode==='countdown','three second countdown');
+  await page.evaluate(()=>window.advanceTime(6000));
+  check((await state()).mode==='racing','physical race in progress');
+  check(await page.getByRole('combobox',{name:'당첨자 설정',exact:true}).isDisabled(),'settings locked during race');
+  await page.evaluate(async()=>{for(let i=0;i<15;i++)await new Promise(requestAnimationFrame);});
+  await page.locator('.pinball-canvas').screenshot({path:'output/playwright/pinball-racing.png'});
+  await page.evaluate(()=>window.advanceTime(600000));
+  await page.getByRole('heading',{name:'추첨 순위',exact:true}).waitFor();
+  const result=await state();
+  check(result.mode==='complete'&&result.results.length===12&&new Set(result.results).size===12,'complete ordered result');
+  check(result.balls.length===0,'no marbles left after finish');
+  const winner=names[Number(result.results[11].replace('custom-',''))];
+  check(await page.locator('.draw-result strong:visible').innerText()===winner,'requested last finisher selected');
+  await page.locator('.pinball-canvas').screenshot({path:'output/playwright/pinball-complete.png'});
+  await page.getByRole('button',{name:'핀볼 전체 화면',exact:true}).click();
+  check(await page.evaluate(()=>!!document.fullscreenElement),'fullscreen enters');
+  await page.keyboard.press('f');
+  await page.waitForFunction(()=>!document.fullscreenElement);
+  await page.getByRole('button',{name:'추첨 시작',exact:true}).click();
+  await page.getByRole('button',{name:'추첨 취소',exact:true}).click();
+  await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).mode==='ready');
+  check((await state()).mode==='ready','cancel returns to ready');
+  for(const map of ['1','2','3']){await page.getByRole('combobox',{name:'코스',exact:true}).selectOption(map);await page.getByRole('button',{name:'추첨 시작',exact:true}).click();await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).mode==='countdown');await page.evaluate(()=>window.advanceTime(600000));await page.getByRole('heading',{name:'추첨 순위',exact:true}).waitFor();check((await state()).results.length===12,'map completes: '+map);}
+  await page.getByRole('button',{name:'룰렛 Roulette 04',exact:true}).click();
+  await page.getByRole('combobox',{name:'추첨 대상',exact:true}).selectOption('custom');
+  await page.getByRole('textbox',{name:'항목 · 한 줄에 하나',exact:true}).fill(names.join('\n'));
+  await page.getByRole('button',{name:'추첨 시작',exact:true}).click();
+  await page.getByRole('button',{name:'핀볼 Pinball 03',exact:true}).click();
+  check(await page.getByRole('button',{name:'추첨 진행 중',exact:true}).isDisabled(),'other game cannot interrupt active draw');
+  check(await page.getByRole('button',{name:'추첨 취소',exact:true}).count()===0,'other game cannot cancel active draw');
+  await page.getByRole('button',{name:'룰렛 Roulette 04',exact:true}).click();
+  await page.getByRole('heading',{name:'추첨 순위',exact:true}).waitFor({timeout:15000});
+  check(await page.locator('.ranking-list:visible > div').count()===12,'wheel still completes');
+  check(errors.length===0,errors.join(';'));
+  return ['countdown','physical course','last rank selection','all finish','result portrait','fullscreen / F exit','restart / cancel','wheel regression','no page errors'];
+}

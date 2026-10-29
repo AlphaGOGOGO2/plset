@@ -1,0 +1,1385 @@
+{
+  "updatedAt": "2026-10-22",
+  "tiers": [
+    "god",
+    "king",
+    "jack",
+    "joker",
+    "spade",
+    "0"
+  ],
+  "players": [
+    {
+      "id": "p001",
+      "name": "이재호",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "재호",
+        "갓재호"
+      ],
+      "photo": "portraits/p001.jpg"
+    },
+    {
+      "id": "p002",
+      "name": "신상문",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "상문"
+      ],
+      "photo": "portraits/p002.jpg"
+    },
+    {
+      "id": "p003",
+      "name": "유영진",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "영진"
+      ],
+      "photo": "portraits/p003.jpg"
+    },
+    {
+      "id": "p004",
+      "name": "정영재",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "영재"
+      ],
+      "photo": "portraits/p004.jpg"
+    },
+    {
+      "id": "p005",
+      "name": "조기석",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "기석",
+        "샤프"
+      ],
+      "photo": "portraits/p005.jpg"
+    },
+    {
+      "id": "p006",
+      "name": "이영웅",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "영웅"
+      ],
+      "photo": "portraits/p006.jpg"
+    },
+    {
+      "id": "p007",
+      "name": "김지성",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "지성"
+      ],
+      "photo": "portraits/p007.jpg"
+    },
+    {
+      "id": "p008",
+      "name": "이영호",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "영호",
+        "갓영호"
+      ],
+      "photo": "portraits/p008.jpg"
+    },
+    {
+      "id": "p009",
+      "name": "황병영",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "병영"
+      ],
+      "photo": "portraits/p009.jpg"
+    },
+    {
+      "id": "p010",
+      "name": "최호선",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "호선"
+      ],
+      "photo": "portraits/p010.jpg"
+    },
+    {
+      "id": "p011",
+      "name": "박성균",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "성균"
+      ],
+      "photo": "portraits/p011.jpg"
+    },
+    {
+      "id": "p012",
+      "name": "윤찬희",
+      "race": "T",
+      "tier": "god",
+      "aliases": [
+        "찬희"
+      ],
+      "photo": "portraits/p012.jpg"
+    },
+    {
+      "id": "p013",
+      "name": "박상현",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "상현",
+        "짭제",
+        "짭재",
+        "짭제동"
+      ],
+      "photo": "portraits/p013.jpg"
+    },
+    {
+      "id": "p014",
+      "name": "김민철",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "민철",
+        "철벽"
+      ],
+      "photo": "portraits/p014.jpg"
+    },
+    {
+      "id": "p015",
+      "name": "조일장",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "일장"
+      ],
+      "photo": "portraits/p015.jpg"
+    },
+    {
+      "id": "p016",
+      "name": "이제동",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "제동",
+        "폭군"
+      ],
+      "photo": "portraits/p016.jpg"
+    },
+    {
+      "id": "p017",
+      "name": "김정우",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "정우",
+        "매정우",
+        "매시아"
+      ],
+      "photo": "portraits/p017.jpg"
+    },
+    {
+      "id": "p018",
+      "name": "김명운",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "명운",
+        "퀸"
+      ],
+      "photo": "portraits/p018.jpg"
+    },
+    {
+      "id": "p019",
+      "name": "이영한",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "영한"
+      ],
+      "photo": "portraits/p019.jpg"
+    },
+    {
+      "id": "p020",
+      "name": "김성대",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "성대",
+        "액션"
+      ],
+      "photo": "portraits/p020.jpg"
+    },
+    {
+      "id": "p021",
+      "name": "임홍규",
+      "race": "Z",
+      "tier": "god",
+      "aliases": [
+        "홍규",
+        "홍구"
+      ],
+      "photo": "portraits/p021.jpg"
+    },
+    {
+      "id": "p022",
+      "name": "장윤철",
+      "race": "P",
+      "tier": "god",
+      "aliases": [
+        "윤철",
+        "짭제윤철",
+        "스노우"
+      ],
+      "photo": "portraits/p022.jpg"
+    },
+    {
+      "id": "p023",
+      "name": "도재욱",
+      "race": "P",
+      "tier": "god",
+      "aliases": [
+        "재욱",
+        "도멘",
+        "괴수"
+      ],
+      "photo": "portraits/p023.jpg"
+    },
+    {
+      "id": "p024",
+      "name": "김윤중",
+      "race": "P",
+      "tier": "god",
+      "aliases": [
+        "윤중",
+        "점중"
+      ],
+      "photo": "portraits/p024.jpg"
+    },
+    {
+      "id": "p025",
+      "name": "김택용",
+      "race": "P",
+      "tier": "god",
+      "aliases": [
+        "택용",
+        "택신"
+      ],
+      "photo": "portraits/p025.jpg"
+    },
+    {
+      "id": "p026",
+      "name": "변현제",
+      "race": "P",
+      "tier": "god",
+      "aliases": [
+        "현제",
+        "미니"
+      ],
+      "photo": "portraits/p026.jpg"
+    },
+    {
+      "id": "p027",
+      "name": "송병구",
+      "race": "P",
+      "tier": "god",
+      "aliases": [
+        "병구",
+        "뱅구",
+        "총사령관"
+      ],
+      "photo": "portraits/p027.jpg"
+    },
+    {
+      "id": "p028",
+      "name": "임진묵",
+      "race": "T",
+      "tier": "king",
+      "aliases": [
+        "진묵"
+      ],
+      "photo": "portraits/p028.jpg"
+    },
+    {
+      "id": "p029",
+      "name": "김태영",
+      "race": "T",
+      "tier": "king",
+      "aliases": [
+        "태영"
+      ],
+      "photo": "portraits/p029.jpg"
+    },
+    {
+      "id": "p030",
+      "name": "유승곤",
+      "race": "T",
+      "tier": "king",
+      "aliases": [
+        "승곤"
+      ],
+      "photo": "portraits/p030.jpg"
+    },
+    {
+      "id": "p031",
+      "name": "구성훈",
+      "race": "T",
+      "tier": "king",
+      "aliases": [
+        "성훈"
+      ],
+      "photo": "portraits/p031.jpg"
+    },
+    {
+      "id": "p032",
+      "name": "정명훈",
+      "race": "T",
+      "tier": "king",
+      "aliases": [
+        "명훈",
+        "덴"
+      ],
+      "photo": "portraits/p032.jpg"
+    },
+    {
+      "id": "p033",
+      "name": "샤이니",
+      "race": "T",
+      "tier": "king",
+      "aliases": [
+        "이니"
+      ],
+      "photo": "portraits/p033.jpg"
+    },
+    {
+      "id": "p034",
+      "name": "박준오",
+      "race": "Z",
+      "tier": "king",
+      "aliases": [
+        "준오"
+      ],
+      "photo": "portraits/p034.jpg"
+    },
+    {
+      "id": "p035",
+      "name": "이예훈",
+      "race": "Z",
+      "tier": "king",
+      "aliases": [
+        "예훈"
+      ],
+      "photo": "portraits/p035.jpg"
+    },
+    {
+      "id": "p036",
+      "name": "어윤수",
+      "race": "Z",
+      "tier": "king",
+      "aliases": [
+        "윤수"
+      ],
+      "photo": "portraits/p036.jpg"
+    },
+    {
+      "id": "p037",
+      "name": "방태수",
+      "race": "Z",
+      "tier": "king",
+      "aliases": [
+        "태수"
+      ],
+      "photo": "portraits/p037.jpg"
+    },
+    {
+      "id": "p038",
+      "name": "김윤환",
+      "race": "Z",
+      "tier": "king",
+      "aliases": [
+        "윤환",
+        "암센세"
+      ],
+      "photo": "portraits/p038.jpg"
+    },
+    {
+      "id": "p039",
+      "name": "김수식",
+      "race": "Z",
+      "tier": "king",
+      "aliases": [
+        "수식"
+      ],
+      "photo": "portraits/p039.jpg"
+    },
+    {
+      "id": "p040",
+      "name": "김경모",
+      "race": "Z",
+      "tier": "king",
+      "aliases": [
+        "경모",
+        "할매"
+      ],
+      "photo": "portraits/p040.jpg"
+    },
+    {
+      "id": "p041",
+      "name": "윤수철",
+      "race": "P",
+      "tier": "king",
+      "aliases": [
+        "수철"
+      ],
+      "photo": "portraits/p041.jpg"
+    },
+    {
+      "id": "p042",
+      "name": "윤용태",
+      "race": "P",
+      "tier": "king",
+      "aliases": [
+        "용태"
+      ],
+      "photo": "portraits/p042.jpg"
+    },
+    {
+      "id": "p043",
+      "name": "원선재",
+      "race": "P",
+      "tier": "king",
+      "aliases": [
+        "선재"
+      ],
+      "photo": "portraits/p043.jpg"
+    },
+    {
+      "id": "p044",
+      "name": "홍덕",
+      "race": "P",
+      "tier": "king",
+      "aliases": [],
+      "photo": "portraits/p044.jpg"
+    },
+    {
+      "id": "p045",
+      "name": "정윤종",
+      "race": "P",
+      "tier": "king",
+      "aliases": [
+        "윤종",
+        "프황"
+      ],
+      "photo": "portraits/p045.jpg"
+    },
+    {
+      "id": "p046",
+      "name": "염보성",
+      "race": "T",
+      "tier": "jack",
+      "aliases": [
+        "보성",
+        "염"
+      ],
+      "photo": "portraits/p046.jpg"
+    },
+    {
+      "id": "p047",
+      "name": "흑운장",
+      "race": "T",
+      "tier": "jack",
+      "aliases": [
+        "운장"
+      ],
+      "photo": "portraits/p047.jpg"
+    },
+    {
+      "id": "p048",
+      "name": "지동원",
+      "race": "T",
+      "tier": "jack",
+      "aliases": [
+        "동원"
+      ],
+      "photo": "portraits/p048.jpg"
+    },
+    {
+      "id": "p049",
+      "name": "민찬기",
+      "race": "T",
+      "tier": "jack",
+      "aliases": [
+        "찬기"
+      ],
+      "photo": "portraits/p049.jpg"
+    },
+    {
+      "id": "p050",
+      "name": "정민기",
+      "race": "T",
+      "tier": "jack",
+      "aliases": [
+        "민기"
+      ],
+      "photo": "portraits/p050.jpg"
+    },
+    {
+      "id": "p051",
+      "name": "만두호성",
+      "race": "T",
+      "tier": "jack",
+      "aliases": [],
+      "photo": "portraits/p051.jpg"
+    },
+    {
+      "id": "p052",
+      "name": "배호딱",
+      "race": "T",
+      "tier": "jack",
+      "aliases": [
+        "호딱"
+      ],
+      "photo": "portraits/p052.jpg"
+    },
+    {
+      "id": "p053",
+      "name": "김영진",
+      "race": "T",
+      "tier": "jack",
+      "aliases": [
+        "영진"
+      ],
+      "photo": "portraits/p053.jpg"
+    },
+    {
+      "id": "p054",
+      "name": "박재혁",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [
+        "재혁"
+      ],
+      "photo": "portraits/p054.jpg"
+    },
+    {
+      "id": "p055",
+      "name": "고석현",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [
+        "석현"
+      ],
+      "photo": "portraits/p055.jpg"
+    },
+    {
+      "id": "p056",
+      "name": "이창우",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [
+        "창우"
+      ],
+      "photo": "portraits/p056.jpg"
+    },
+    {
+      "id": "p057",
+      "name": "배병우",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [
+        "병우"
+      ],
+      "photo": "portraits/p057.jpg"
+    },
+    {
+      "id": "p058",
+      "name": "배성흠",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [
+        "성흠"
+      ],
+      "photo": "portraits/p058.jpg"
+    },
+    {
+      "id": "p059",
+      "name": "김병수",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [
+        "병수"
+      ],
+      "photo": "portraits/p059.jpg"
+    },
+    {
+      "id": "p060",
+      "name": "서문지훈",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [],
+      "photo": "portraits/p060.jpg"
+    },
+    {
+      "id": "p061",
+      "name": "윤진규",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [
+        "진규"
+      ],
+      "photo": "portraits/p061.jpg"
+    },
+    {
+      "id": "p062",
+      "name": "얍삽e",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [
+        "삽e"
+      ],
+      "photo": "portraits/p062.jpg"
+    },
+    {
+      "id": "p063",
+      "name": "선우도현",
+      "race": "Z",
+      "tier": "jack",
+      "aliases": [],
+      "photo": "portraits/p063.jpg"
+    },
+    {
+      "id": "p064",
+      "name": "이경민",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "경민"
+      ],
+      "photo": "portraits/p064.jpg"
+    },
+    {
+      "id": "p065",
+      "name": "박수범",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "수범"
+      ],
+      "photo": "portraits/p065.jpg"
+    },
+    {
+      "id": "p066",
+      "name": "정경두",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "경두"
+      ],
+      "photo": "portraits/p066.jpg"
+    },
+    {
+      "id": "p067",
+      "name": "김범수",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "범수"
+      ],
+      "photo": "portraits/p067.jpg"
+    },
+    {
+      "id": "p068",
+      "name": "장민철",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "민철"
+      ],
+      "photo": "portraits/p068.jpg"
+    },
+    {
+      "id": "p069",
+      "name": "진영화",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "영화"
+      ],
+      "photo": "portraits/p069.jpg"
+    },
+    {
+      "id": "p070",
+      "name": "권혁진",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "혁진"
+      ],
+      "photo": "portraits/p070.jpg"
+    },
+    {
+      "id": "p071",
+      "name": "구라미스",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [],
+      "photo": "portraits/p071.jpg"
+    },
+    {
+      "id": "p072",
+      "name": "프발",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [],
+      "photo": "portraits/p072.jpg"
+    },
+    {
+      "id": "p073",
+      "name": "원지훈",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "지훈"
+      ],
+      "photo": "portraits/p073.jpg"
+    },
+    {
+      "id": "p074",
+      "name": "김봉실",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "봉실"
+      ],
+      "photo": null
+    },
+    {
+      "id": "p075",
+      "name": "쿨지지",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "지지"
+      ],
+      "photo": "portraits/p075.jpg"
+    },
+    {
+      "id": "p076",
+      "name": "오메킴",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "메킴"
+      ],
+      "photo": "portraits/p076.jpg"
+    },
+    {
+      "id": "p077",
+      "name": "조성호",
+      "race": "P",
+      "tier": "jack",
+      "aliases": [
+        "성호"
+      ],
+      "photo": "portraits/p077.jpg"
+    },
+    {
+      "id": "p078",
+      "name": "전상욱",
+      "race": "T",
+      "tier": "joker",
+      "aliases": [
+        "상욱"
+      ],
+      "photo": "portraits/p078.jpg"
+    },
+    {
+      "id": "p079",
+      "name": "최재성",
+      "race": "T",
+      "tier": "joker",
+      "aliases": [
+        "재성"
+      ],
+      "photo": "portraits/p079.jpg"
+    },
+    {
+      "id": "p080",
+      "name": "김영주",
+      "race": "T",
+      "tier": "joker",
+      "aliases": [
+        "영주"
+      ],
+      "photo": "portraits/p080.jpg"
+    },
+    {
+      "id": "p081",
+      "name": "이인극",
+      "race": "T",
+      "tier": "joker",
+      "aliases": [
+        "인극"
+      ],
+      "photo": "portraits/p081.jpg"
+    },
+    {
+      "id": "p082",
+      "name": "기뉴다",
+      "race": "T",
+      "tier": "joker",
+      "aliases": [
+        "뉴다"
+      ],
+      "photo": "portraits/p082.jpg"
+    },
+    {
+      "id": "p083",
+      "name": "철구",
+      "race": "Z",
+      "tier": "joker",
+      "aliases": [],
+      "photo": "portraits/p083.jpg"
+    },
+    {
+      "id": "p084",
+      "name": "김건욱",
+      "race": "Z",
+      "tier": "joker",
+      "aliases": [
+        "건욱"
+      ],
+      "photo": "portraits/p084.jpg"
+    },
+    {
+      "id": "p085",
+      "name": "허유",
+      "race": "Z",
+      "tier": "joker",
+      "aliases": [],
+      "photo": "portraits/p085.jpg"
+    },
+    {
+      "id": "p086",
+      "name": "액션구드론",
+      "race": "Z",
+      "tier": "joker",
+      "aliases": [],
+      "photo": "portraits/p086.jpg"
+    },
+    {
+      "id": "p087",
+      "name": "저지현",
+      "race": "Z",
+      "tier": "joker",
+      "aliases": [
+        "지현"
+      ],
+      "photo": "portraits/p087.jpg"
+    },
+    {
+      "id": "p088",
+      "name": "김대한",
+      "race": "Z",
+      "tier": "joker",
+      "aliases": [
+        "대한"
+      ],
+      "photo": "portraits/p088.jpg"
+    },
+    {
+      "id": "p089",
+      "name": "김기덕",
+      "race": "Z",
+      "tier": "joker",
+      "aliases": [
+        "기덕"
+      ],
+      "photo": "portraits/p089.jpg"
+    },
+    {
+      "id": "p090",
+      "name": "김상곤",
+      "race": "Z",
+      "tier": "joker",
+      "aliases": [
+        "상곤"
+      ],
+      "photo": "portraits/p090.jpg"
+    },
+    {
+      "id": "p091",
+      "name": "라박이",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "박이"
+      ],
+      "photo": "portraits/p091.jpg"
+    },
+    {
+      "id": "p092",
+      "name": "손찬웅",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "찬웅"
+      ],
+      "photo": "portraits/p092.jpg"
+    },
+    {
+      "id": "p093",
+      "name": "김민우",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "민우"
+      ],
+      "photo": "portraits/p093.jpg"
+    },
+    {
+      "id": "p094",
+      "name": "킁식",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [],
+      "photo": "portraits/p094.jpg"
+    },
+    {
+      "id": "p095",
+      "name": "김학수",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "학수"
+      ],
+      "photo": "portraits/p095.jpg"
+    },
+    {
+      "id": "p096",
+      "name": "박준혁",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "준혁"
+      ],
+      "photo": "portraits/p096.jpg"
+    },
+    {
+      "id": "p097",
+      "name": "전제민",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "제민"
+      ],
+      "photo": "portraits/p097.jpg"
+    },
+    {
+      "id": "p098",
+      "name": "미동미동",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [],
+      "photo": "portraits/p098.jpg"
+    },
+    {
+      "id": "p099",
+      "name": "윤준석",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "준석"
+      ],
+      "photo": "portraits/p099.jpg"
+    },
+    {
+      "id": "p100",
+      "name": "안기효",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "기효"
+      ],
+      "photo": "portraits/p100.jpg"
+    },
+    {
+      "id": "p101",
+      "name": "최성원",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "성원"
+      ],
+      "photo": null
+    },
+    {
+      "id": "p102",
+      "name": "김유진",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [
+        "유진"
+      ],
+      "photo": "portraits/p102.jpg"
+    },
+    {
+      "id": "p103",
+      "name": "쿰신",
+      "race": "P",
+      "tier": "joker",
+      "aliases": [],
+      "photo": "portraits/p103.jpg"
+    },
+    {
+      "id": "p104",
+      "name": "이윤열",
+      "race": "T",
+      "tier": "spade",
+      "aliases": [
+        "윤열"
+      ],
+      "photo": "portraits/p104.jpg"
+    },
+    {
+      "id": "p105",
+      "name": "박성진",
+      "race": "T",
+      "tier": "spade",
+      "aliases": [
+        "성진"
+      ],
+      "photo": "portraits/p105.jpg"
+    },
+    {
+      "id": "p106",
+      "name": "초난강",
+      "race": "T",
+      "tier": "spade",
+      "aliases": [
+        "난강"
+      ],
+      "photo": "portraits/p106.jpg"
+    },
+    {
+      "id": "p107",
+      "name": "김상수",
+      "race": "T",
+      "tier": "spade",
+      "aliases": [
+        "상수"
+      ],
+      "photo": "portraits/p107.jpg"
+    },
+    {
+      "id": "p108",
+      "name": "이완",
+      "race": "T",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p108.jpg"
+    },
+    {
+      "id": "p109",
+      "name": "팔레트",
+      "race": "T",
+      "tier": "spade",
+      "aliases": [
+        "레트"
+      ],
+      "photo": "portraits/p109.jpg"
+    },
+    {
+      "id": "p110",
+      "name": "박태민",
+      "race": "Z",
+      "tier": "spade",
+      "aliases": [
+        "태민"
+      ],
+      "photo": "portraits/p110.jpg"
+    },
+    {
+      "id": "p111",
+      "name": "박성준",
+      "race": "Z",
+      "tier": "spade",
+      "aliases": [
+        "성준"
+      ],
+      "photo": "portraits/p111.jpg"
+    },
+    {
+      "id": "p112",
+      "name": "저그맨박성준",
+      "race": "Z",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p112.jpg"
+    },
+    {
+      "id": "p113",
+      "name": "초롱초롱",
+      "race": "Z",
+      "tier": "spade",
+      "aliases": [],
+      "photo": null
+    },
+    {
+      "id": "p114",
+      "name": "전태규",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [
+        "태규"
+      ],
+      "photo": "portraits/p114.jpg"
+    },
+    {
+      "id": "p115",
+      "name": "강민",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p115.jpg"
+    },
+    {
+      "id": "p116",
+      "name": "빡죠스",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [
+        "죠스"
+      ],
+      "photo": "portraits/p116.jpg"
+    },
+    {
+      "id": "p117",
+      "name": "파도",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p117.jpg"
+    },
+    {
+      "id": "p118",
+      "name": "안정우",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [
+        "정우"
+      ],
+      "photo": "portraits/p118.jpg"
+    },
+    {
+      "id": "p119",
+      "name": "유민",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p119.jpg"
+    },
+    {
+      "id": "p120",
+      "name": "트슈",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p120.jpg"
+    },
+    {
+      "id": "p121",
+      "name": "난수",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p121.jpg"
+    },
+    {
+      "id": "p122",
+      "name": "김봉준",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [
+        "봉준"
+      ],
+      "photo": "portraits/p122.jpg"
+    },
+    {
+      "id": "p123",
+      "name": "김성제",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [
+        "성제"
+      ],
+      "photo": "portraits/p123.jpg"
+    },
+    {
+      "id": "p124",
+      "name": "서기수",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [
+        "기수"
+      ],
+      "photo": "portraits/p124.jpg"
+    },
+    {
+      "id": "p125",
+      "name": "탱크",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p125.jpg"
+    },
+    {
+      "id": "p126",
+      "name": "하얀눈길",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p126.jpg"
+    },
+    {
+      "id": "p127",
+      "name": "고도준",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [
+        "도준"
+      ],
+      "photo": "portraits/p127.jpg"
+    },
+    {
+      "id": "p128",
+      "name": "탱크",
+      "race": "P",
+      "tier": "spade",
+      "aliases": [],
+      "photo": "portraits/p128.jpg"
+    },
+    {
+      "id": "p129",
+      "name": "서지수",
+      "race": "T",
+      "tier": "0",
+      "aliases": [
+        "지수",
+        "토스걸"
+      ],
+      "photo": "portraits/p129.jpg"
+    },
+    {
+      "id": "p130",
+      "name": "강구열",
+      "race": "T",
+      "tier": "0",
+      "aliases": [
+        "구열"
+      ],
+      "photo": "portraits/p130.jpg"
+    },
+    {
+      "id": "p131",
+      "name": "베트남테란",
+      "race": "T",
+      "tier": "0",
+      "aliases": [],
+      "photo": "portraits/p131.jpg"
+    },
+    {
+      "id": "p132",
+      "name": "정소윤",
+      "race": "Z",
+      "tier": "0",
+      "aliases": [
+        "소윤"
+      ],
+      "photo": "portraits/p132.jpg"
+    },
+    {
+      "id": "p133",
+      "name": "채린쟝",
+      "race": "Z",
+      "tier": "0",
+      "aliases": [
+        "린쟝"
+      ],
+      "photo": "portraits/p133.jpg"
+    },
+    {
+      "id": "p134",
+      "name": "시라소니",
+      "race": "Z",
+      "tier": "0",
+      "aliases": [],
+      "photo": "portraits/p134.jpg"
+    },
+    {
+      "id": "p135",
+      "name": "보혜",
+      "race": "P",
+      "tier": "0",
+      "aliases": [],
+      "photo": "portraits/p135.jpg"
+    },
+    {
+      "id": "p136",
+      "name": "멍이에요",
+      "race": "P",
+      "tier": "0",
+      "aliases": [],
+      "photo": "portraits/p136.jpg"
+    },
+    {
+      "id": "p137",
+      "name": "유성민",
+      "race": "P",
+      "tier": "0",
+      "aliases": [
+        "성민"
+      ],
+      "photo": "portraits/p137.jpg"
+    },
+    {
+      "id": "p138",
+      "name": "소룡이",
+      "race": "P",
+      "tier": "0",
+      "aliases": [
+        "룡이"
+      ],
+      "photo": "portraits/p138.jpg"
+    },
+    {
+      "id": "p139",
+      "name": "토스봇",
+      "race": "P",
+      "tier": "0",
+      "aliases": [
+        "스봇"
+      ],
+      "photo": "portraits/p139.jpg"
+    },
+    {
+      "id": "p140",
+      "name": "파메",
+      "race": "P",
+      "tier": "0",
+      "aliases": [],
+      "photo": "portraits/p140.jpg"
+    }
+  ]
+}

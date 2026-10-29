@@ -1,0 +1,17 @@
+node_modules/
+.npm-cache/
+dist/
+release/
+release-build/
+output/
+.playwright-cli/
+*.tsbuildinfo
+*.log
+research/**/*.mp4
+research/**/*.mp3
+research/**/metadata.json
+dist-web/
+research/
+.playwright-mcp/
+output-audit.json
+progress.md

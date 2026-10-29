@@ -1,0 +1,80 @@
+{
+  "name": "plset",
+  "productName": "PL SET",
+  "version": "0.2.4",
+  "private": true,
+  "description": "스타크래프트 프로리그 진행자를 위한 올인원 방송 콘솔",
+  "author": "PL SET",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "build": "tsc -b && vite build --logLevel warn",
+    "build:web": "node scripts/build-web.mjs",
+    "start": "electron .",
+    "test": "tsx --test src/domain.test.ts src/theme.test.ts src/pinball.test.ts src/race.test.ts src/racePlayback.test.ts",
+    "pack": "npm run build && electron-builder --win dir --config.electronDist=node_modules/electron/dist",
+    "dist": "npm run build && electron-builder --win nsis --config.electronDist=node_modules/electron/dist",
+    "test:updater": "node --test electron/updater.test.cjs"
+  },
+  "build": {
+    "appId": "studio.plset.desktop",
+    "productName": "PL SET",
+    "directories": {
+      "output": "release-build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "!electron/**/*.test.cjs",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "executableName": "PLSet",
+      "icon": "electron/assets/icon.ico",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "perMachine": false,
+      "installerLanguages": [
+        "ko_KR"
+      ],
+      "language": "1042",
+      "createStartMenuShortcut": true,
+      "shortcutName": "PL SET",
+      "installerIcon": "electron/assets/icon.ico",
+      "uninstallerIcon": "electron/assets/icon.ico",
+      "deleteAppDataOnUninstall": false
+    }
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource/noto-sans-kr": "^5.3.1",
+    "box2d-wasm": "^7.0.0",
+    "cannon-es": "^0.20.0",
+    "lucide-react": "^1.61.0",
+    "matter-js": "^0.20.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@playwright/cli": "^0.1.22",
+    "@types/matter-js": "^0.20.2",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.170.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.15.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}

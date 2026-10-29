@@ -1,0 +1,275 @@
+/* Broadcast capture: spend the frame on names, numbers and controls. */
+:root { --capture-sidebar: 172px; }
+.titlebar { height: 26px; }
+.titlebar > span { font-size: 10px; letter-spacing: 1px; }
+.sidebar { top: 26px; width: var(--capture-sidebar); padding: 20px 10px 0; }
+.sidebar > .brand { padding-left: 8px; font-size: 28px; }
+.sidebar .brand small { display: none; }
+.nav-section-label { margin: 24px 0 10px; font-size: 10px; padding: 0 9px; }
+.sidebar nav { gap: 6px; }
+.sidebar nav button { padding: 10px 8px; gap: 8px; }
+.sidebar nav button > span:not(.nav-number) { font-size: 15px; font-weight: 700; letter-spacing: -.6px; }
+.sidebar nav button > svg { width: 18px; height: 18px; }
+.sidebar nav small { font-size: 10px; margin-top: 3px; letter-spacing: 0; }
+.nav-number { font-size: 9px; }
+.workspace { margin-left: var(--capture-sidebar); padding-top: 26px; }
+.workspace-header { height: 44px; padding: 0 16px; }
+.breadcrumb { font-size: 11px; letter-spacing: .7px; }
+.save-status { font-size: 12px; }
+.header-actions .button { height: 32px; font-size: 13px; }
+.session-strip { height: 40px; padding: 0 16px; }
+.session-strip input { font-size: 18px; width: min(600px, 85%); }
+.session-strip > button { font-size: 16px; gap: 8px; }
+.session-badge { font-size: 10px; }
+.main-content { padding: 10px 14px 0; }
+.workspace-footer { display: none; }
+.button { height: 38px; font-size: 15px; padding: 0 12px; }
+.panel-heading { min-height: 46px; padding: 7px 14px; }
+.panel-heading .eyebrow { display: none; }
+.panel-heading h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.panel-actions { gap: 8px; }
+.panel-actions .button { height: 34px; font-size: 14px; padding: 0 10px; }
+.count-pill { font-size: 14px; }
+.segmented button { padding: 6px 10px; min-height: 32px; font-size: 14px; }
+
+/* Participant rows retain T/Z/P grouping with a shorter, readable card. */
+.roster-entry-panel { margin-bottom: 10px; }
+.roster-entry-header { min-height: 46px; padding: 3px 14px; }
+.roster-entry-header h2 { font-size: 20px; font-weight: 700; }
+.roster-entry-header h2 > span { font-size: 14px; }
+.participant-entry-actions { gap: 12px; }
+.participant-entry-actions .race-entry-search { width: 390px; }
+.race-entry-search > input { font-size: 17px; padding: 7px 10px; }
+.race-entry-search > input::placeholder { font-size: 14px; }
+.participant-library-button { font-size: 14px; padding: 7px 0; }
+.participant-reset-button { display: flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid #5d715540; border-radius: 5px; background: #1d2820; color: #acbea4; font-size: 14px; white-space: nowrap; }
+.participant-reset-button:hover:not(:disabled) { background: #2b392c; border-color: #81987780; }
+.race-entry { grid-template-columns: 106px minmax(0, 1fr); gap: 0 12px; padding: 2px 14px; }
+.race-entry-heading { grid-template-columns: 28px 1fr; gap: 2px 8px; }
+.race-entry-heading .race { width: 28px; height: 34px; font-size: 18px; }
+.race-entry-heading h3 { font-size: 16px; }
+.race-entry-heading > span:last-child { font-size: 12px; }
+.race-entry-players { min-height: 80px; gap: 8px; padding: 2px 0; }
+.race-entry-player { flex: 0 0 110px; width: 110px; padding: 3px 8px; gap: 2px; }
+.race-entry-player .portrait-small { width: 42px; height: 42px; }
+.race-entry-player strong { font-size: 20px; font-weight: 700; line-height: 1.2; }
+.race-entry-player > button { width: 20px; height: 20px; right: 3px; top: 3px; }
+.race-entry-suggestions { min-width: 300px; }
+.race-entry-suggestions > button { padding: 8px; }
+.race-entry-suggestions strong { font-size: 18px; }
+.race-entry-suggestions small { font-size: 13px; }
+.race-entry-suggestions .portrait-small { width: 34px; height: 38px; }
+
+/* Ten funding rows, timer and totals fit within a 1080p capture. */
+.funding-workspace { grid-template-columns: minmax(0, 1fr) 300px; }
+.funding-details .table-toolbar { min-height: 44px; padding: 4px 12px; gap: 12px; }
+.auto-sort-label { font-size: 12px; color: #a2b59c; }
+.search-input { width: 160px; font-size: 15px; }
+.funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 32px 196px minmax(130px, 1fr) minmax(130px, .85fr) 150px minmax(120px, .8fr); gap: 10px; padding: 0 12px; }
+.funding-panel .table-header { height: 30px; font-size: 14px; color: #afbeb0; }
+.funding-panel .table-row { min-height: 44px; }
+.funding-panel .row-index { font-size: 16px; }
+.funding-panel .player-cell { gap: 8px; }
+.funding-panel .player-cell strong { font-size: 22px; font-weight: 700; color: #e3eadf; overflow: hidden; text-overflow: ellipsis; }
+.funding-panel .player-cell .portrait-small { width: 31px; height: 35px; }
+.funding-panel .player-cell .race { width: 23px; height: 27px; font-size: 14px; }
+.funding-panel .amount-input { height: 38px; padding: 3px 9px; }
+.funding-panel .amount-input input { font-size: 28px; line-height: 1.15; }
+.funding-panel .amount-input > span { font-size: 12px; }
+.funding-panel .converted { font-size: 24px; color: #c3d4bb; }
+.funding-panel .converted small { font-size: 12px; }
+.funding-panel .converted .remainder { font-size: 11px; }
+.funding-panel .quick-add { gap: 6px; }
+.funding-panel .quick-add button { min-height: 32px; padding: 4px 8px; font-size: 14px; color: #a7bda1; }
+.funding-panel .table-footer { min-height: 22px; padding: 3px 12px; font-size: 11px; }
+.funding-summary { container-type: inline-size; }
+.funding-panel .funding-leader-row .row-index, .funding-panel .funding-leader-row .player-cell strong { color: #ead096; }
+.funding-panel .funding-danger-row .row-index, .funding-panel .funding-danger-row .player-cell strong { color: #e9ac9e; }
+.funding-timer { padding: 10px 16px 12px; }
+.funding-timer-heading > span { font-size: 16px; gap: 6px; }
+.funding-timer-heading small { font-size: 12px; }
+.funding-timer-clock { margin: 4px 0 9px; }
+.funding-timer-clock .clock-small { font-size: 64px; font-weight: 600; line-height: 1.08; }
+.funding-timer button { height: 34px; font-size: 15px; }
+.funding-timer-controls { margin-top: 6px; }
+.funding-metric { min-height: 154px; padding: 12px 14px; gap: 8px; }
+.funding-metric-label { font-size: 20px; }
+.funding-metric .stat-value { font-size: 62px; }
+.funding-metric.stat-main .stat-value { font-size: 78px; }
+.funding-metric .stat-value > span { font-size: 18px; margin-left: 5px; }
+.funding-summary .funding-metric .stat-value.long { font-size: clamp(24px, 12.6cqw, 38px); }
+.funding-remainder { font-size: 13px; }
+.notes-panel { padding: 12px 14px; margin-top: 10px; }
+.notes-panel h3 { font-size: 16px; }
+.notes-panel > div > span { font-size: 12px; }
+.notes-panel textarea { margin-top: 7px; min-height: 60px; font-size: 16px; line-height: 1.5; }
+.participant-overview-body { display: grid; grid-template-columns: minmax(0, 1fr) clamp(320px, 28%, 480px); }
+.participant-overview-body .roster-entry-grid { min-width: 0; }
+.notes-panel.participant-notes { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 12px 14px; border-left: 1px solid var(--line); border-radius: 0 0 7px 0; background: #131b16; }
+.participant-notes > div { flex-wrap: wrap; gap: 5px 8px; }
+.participant-notes h3 { font-size: 18px; }
+.participant-notes > div > span { width: 100%; margin-left: 25px; font-size: 12px; line-height: 1.4; }
+.participant-notes textarea { flex: 1; min-height: 0; margin-top: 8px; resize: none; font-size: 18px; line-height: 1.55; color: #c8d5c5; }
+
+/* Team selection uses the same type scale as the funding list. */
+.team-bench-panel { margin-bottom: 12px; }
+.bench-list { padding: 0 12px 12px; gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
+.bench-player { position: relative; display: flex; flex-direction: column; flex: 0 0 108px; min-width: 0; padding: 7px; gap: 7px; }
+.bench-player:active { cursor: grabbing; }
+.bench-player .portrait-small { width: 100%; height: 100px; border-radius: 4px; }
+.bench-player > .race { position: absolute; top: 11px; left: 11px; width: 22px; height: 26px; font-size: 13px; box-shadow: 0 2px 8px #0005; }
+.bench-player strong { width: 100%; text-align: center; font-size: 21px; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bench-assign { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+.bench-player button { width: 100%; height: 30px; font-size: 15px; }
+.team-bench-panel .empty-state { padding: 6px 0; font-size: 14px; line-height: 1.4; }
+.team-layout { gap: 12px; }
+.team-card-head { padding: 10px 14px; gap: 10px; }
+.team-card-head .eyebrow { display: none; }
+.team-name-input { font-size: 24px; max-width: 330px; }
+.team-capacity { font-size: 18px; }
+.team-letter { width: 40px; height: 42px; font-size: 28px; }
+.team-slots { display: grid; gap: 8px; padding: 12px; align-items: stretch; }
+.team-slot { position: relative; display: flex; flex-direction: column; min-height: 222px; min-width: 0; margin: 0; padding: 30px 6px 10px; gap: 7px; border-radius: 6px; }
+.team-slot.filled { background: linear-gradient(165deg, #34503c55, #1b2920); }
+.team-B .team-slot.filled { background: linear-gradient(165deg, #35485866, #1a242c); }
+.team-slot strong { font-size: 22px; font-weight: 700; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; }
+.team-slot .portrait-small { width: 100%; height: auto; aspect-ratio: 4 / 5; max-height: 150px; border-radius: 4px; }
+.team-slot .race { position: absolute; top: 6px; left: calc(50% - 11px); width: 22px; height: 22px; font-size: 13px; }
+.slot-no { position: absolute; left: 7px; top: 9px; font-size: 11px; color: #8da68f; }
+.team-slot .remove-player { position: absolute; top: 5px; right: 4px; margin: 0; width: 22px; height: 22px; font-size: 18px; display: grid; place-items: center; padding: 0; border-radius: 4px; }
+.slot-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 13px; line-height: 1.6; text-align: center; white-space: normal; }
+.slot-empty::before { content: '+'; display: grid; place-items: center; width: 32px; height: 40px; font-family: 'Manrope Variable', sans-serif; font-size: 27px; font-weight: 400; color: #6c8c73; border: 1px solid #52735a50; border-radius: 6px; }
+.team-card.drag-over { border-color: #b8d0b5; box-shadow: inset 0 0 0 1px #b8d0b550; }
+.team-card.drag-over .team-slot:not(.filled) { background: #93b68b12; border-color: #a0bc9760; }
+.team-card-foot { padding: 10px 14px; }
+.team-card-foot > span { font-size: 14px; }
+.team-race-counts { display: flex; align-items: center; gap: 18px; }
+.team-race-count { display: flex; align-items: center; gap: 6px; }
+.team-race-count .race { width: 26px; height: 28px; font-size: 17px; }
+.team-race-count b { font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1; }
+.team-race-count small { font-size: 13px; color: #9aaf96; }
+.team-card-foot strong { font-size: 24px; margin-top: 2px; }
+.score-step button { width: 32px; height: 32px; font-size: 18px; }
+.score-step b { font-size: 30px; }
+.tip { margin-top: 12px; font-size: 13px; }
+
+.page-heading { margin: 0 0 12px; gap: 12px; }
+.page-heading .eyebrow { display: none; }
+.page-heading h1 { margin-top: 0; font-size: 26px; }
+.page-heading p { display: none; }
+.subtle-tag { font-size: 12px; }
+.draw-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 12px; }
+.draw-controls { padding: 14px; }
+.draw-controls > .eyebrow { display: none; }
+.draw-controls h3 { font-size: 21px; margin: 0 0 12px; }
+.draw-controls .field-label { font-size: 15px; margin-top: 14px; gap: 6px; }
+.draw-controls .field-label select, .draw-controls .field-label textarea { font-size: 17px; padding: 8px; }
+.draw-controls .button { margin-top: 12px; height: 40px; font-size: 17px; }
+.draw-chips { gap: 5px; margin-top: 10px; }
+.draw-chips span { font-size: 16px; padding: 4px 7px; }
+.control-note { font-size: 13px; line-height: 1.6; }
+.stage-toolbar { padding: 9px 14px; font-size: 12px; }
+.draw-result { min-height: 54px; padding: 10px 14px; font-size: 16px; }
+.draw-result strong { font-size: 26px; }
+.result-label { font-size: 14px; }
+.result-assign button { font-size: 15px; padding: 7px 10px; }
+.ranking-list > div { font-size: 18px; }
+.ranking-list b { font-size: 20px; }
+.pinball-fullscreen { width: 36px; height: 36px; }
+.pinball-stage .pinball-canvas { aspect-ratio: 1600 / 900; }
+.pinball-stage:fullscreen .pinball-canvas { max-height: 56.25vw; }
+.stage-panel > .draw-canvas { max-height: calc(100vh - 230px); object-fit: contain; }
+.timer-panel { padding: 16px 24px 22px; }
+.timer-top { margin-bottom: 12px; }
+.timer-label-input { font-size: 24px; }
+.timer-panel .clock-large { font-size: 140px; line-height: 1.2; margin: 5px 0; }
+.timer-progress { margin-bottom: 18px; }
+.timer-actions .button { font-size: 17px; height: 42px; }
+.timer-presets { padding: 0 14px 16px; }
+.timer-presets b { font-size: 30px; }
+.timer-presets span, .timer-presets > label { font-size: 15px; }
+.timer-presets > label { width: 160px; }
+.timer-presets label button { font-size: 15px; }
+.sound-toggle { font-size: 14px; }
+.field-label { font-size: 16px; margin-top: 14px; gap: 6px; }
+.field-label input, .field-label select, .field-label textarea { font-size: 18px; }
+.history-row { padding: 12px 0; margin: 0 14px; font-size: 17px; line-height: 1.6; }
+.history-row time { font-size: 14px; }
+.empty-state { font-size: 16px; padding: 22px 12px; }
+.modal-head h2 { font-size: 24px; }
+.modal-description, .settings-reset p { font-size: 15px; }
+.roster-modal { width: 1000px; padding: 20px; }
+.roster-modal .modal-description { font-size: 14px; line-height: 1.5; margin-top: 8px; }
+.roster-tabs { margin-top: 14px; }
+.roster-tabs > button { font-size: 18px; }
+.roster-search { margin-top: 14px; }
+.roster-search input { font-size: 20px; padding: 8px 0; }
+.roster-search input::placeholder { font-size: 16px; }
+.roster-filters select { font-size: 15px; }
+.roster-race-title h3 { font-size: 17px; }
+.roster-card-info strong { font-size: 18px; }
+.roster-card-info small { font-size: 12px; }
+.roster-card .portrait { width: 42px; height: 48px; }
+.roster-selected-count small { font-size: 14px; }
+.toast { font-size: 15px; }
+
+@media (max-height: 1000px) {
+  .workspace-header, .session-strip { height: 36px; }
+  .main-content { padding-top: 8px; }
+  .roster-entry-header { min-height: 42px; padding-top: 1px; padding-bottom: 1px; }
+  .race-entry-players { min-height: 76px; }
+  .race-entry-player { padding-top: 2px; padding-bottom: 2px; }
+  .race-entry-player .portrait-small { width: 40px; height: 40px; }
+  .panel-heading { min-height: 42px; padding-top: 5px; padding-bottom: 5px; }
+  .funding-details .table-toolbar { min-height: 40px; padding-top: 2px; padding-bottom: 2px; }
+  .funding-panel .table-header { height: 28px; }
+  .funding-panel .table-row { min-height: 43px; }
+  .funding-panel .table-footer { min-height: 20px; padding-top: 2px; padding-bottom: 2px; }
+}
+
+@media (max-width: 1500px) {
+  :root { --capture-sidebar: 160px; }
+  .sidebar nav button > span:not(.nav-number) { font-size: 14px; }
+  .main-content { padding-left: 10px; padding-right: 10px; }
+  .bench-player { flex-basis: 96px; padding: 6px; }
+  .bench-player .portrait-small { height: 92px; }
+  .bench-player strong { font-size: 20px; }
+  .funding-workspace { grid-template-columns: minmax(0, 1fr) 270px; }
+  .funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 28px 178px minmax(110px, 1fr) minmax(110px, .85fr) 140px minmax(100px, .8fr); gap: 8px; padding: 0 10px; }
+  .funding-panel .player-cell strong { font-size: 21px; }
+  .funding-panel .converted { font-size: 22px; }
+  .funding-panel .quick-add button { padding: 4px 6px; }
+  .funding-metric.stat-main .stat-value { font-size: 68px; }
+  .funding-metric .stat-value { font-size: 54px; }
+}
+@media (max-width: 1150px) {
+  :root { --capture-sidebar: 144px; }
+  .sidebar nav button { padding-left: 5px; padding-right: 5px; gap: 5px; }
+  .sidebar nav small { font-size: 9px; }
+  .sidebar nav button > span:not(.nav-number) { font-size: 13px; }
+  .participant-entry-actions .race-entry-search { width: 320px; }
+  .participant-overview-body { grid-template-columns: minmax(0, 1fr) 280px; }
+  .funding-workspace { grid-template-columns: minmax(0, 1fr) 238px; }
+  .funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 24px 154px minmax(92px, 1fr) minmax(90px, .8fr) 122px minmax(88px, .7fr); gap: 6px; padding: 0 8px; }
+  .funding-panel .player-cell { gap: 5px; }
+  .funding-panel .player-cell strong { font-size: 20px; }
+  .funding-panel .player-cell .portrait-small { width: 25px; height: 31px; }
+  .funding-panel .player-cell .race { width: 20px; height: 25px; }
+  .funding-panel .amount-input input { font-size: 24px; }
+  .funding-panel .converted { font-size: 20px; }
+  .funding-panel .quick-add button { font-size: 13px; padding: 4px; }
+  .auto-sort-label { display: none; }
+  .search-input { width: 130px; }
+  .draw-layout { grid-template-columns: 210px minmax(0, 1fr); }
+}
+
+/* Funding desk: leader crown and per-player notes */
+.funding-panel .table-header > span:nth-child(5) { text-align: center; }
+.funding-panel .table-header > span:last-child { text-align: left; padding-left: 4px; }
+.funding-panel .leader-crown { flex-shrink: 0; margin-left: 2px; color: #f0d48a; filter: drop-shadow(0 0 4px #e9c46a99) drop-shadow(0 1px 1px #0008); animation: crown-glow 2.6s ease-in-out infinite; }
+@keyframes crown-glow { 50% { filter: drop-shadow(0 0 8px #f3d48acc) drop-shadow(0 1px 1px #0008); } }
+@media (prefers-reduced-motion: reduce) { .funding-panel .leader-crown { animation: none; } }
+.funding-panel .note-input { width: 100%; min-width: 0; height: 34px; padding: 4px 8px; border: 1px solid transparent; border-radius: 5px; background: transparent; font-size: 14px; color: #c9d4c5; transition: border-color .15s, background .15s; }
+.funding-panel .note-input::placeholder { color: #5f6e63; }
+.funding-panel .note-input:hover, .funding-panel .note-input:focus { border-color: #3b453c; background: #101712; outline: none; }
+.funding-panel .note-input.note-default::placeholder { color: #d0a79a; font-weight: 600; letter-spacing: .2px; }

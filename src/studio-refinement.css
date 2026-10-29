@@ -1,0 +1,189 @@
+/* The fourth funding rank is the fixed observer cutoff, even when searching. */
+.funding-panel .funding-observer-cutoff { position: relative; }
+.funding-observer-cutoff::before {
+  content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px;
+  height: 2px; background: #bcaa7d; z-index: 3; pointer-events: none;
+  box-shadow: 0 1px 0 #0a0f0c;
+}
+
+/* Pinball: compact controls over a full-width broadcast stage. */
+.page-heading:has(+ .pinball-layout) { display: none; }
+.pinball-layout .draw-mode-field select { font-size: 15px; }
+.ace-mode-options { display: flex; align-items: center; justify-content: space-around; height: 39px; padding: 0 8px; gap: 12px; border: 1px solid #555340; border-radius: 5px; background: #25271f; color: #d6c99f; font-size: 16px; font-weight: 700; }
+.ace-mode-options span + span { border-left: 1px solid #a99c7138; padding-left: 12px; }
+.draw-ball-total { display: flex; gap: 5px; align-items: baseline; height: 39px; font-size: 26px; font-weight: 700; color: #ddcda4; }
+.draw-ball-total small { font-size: 13px; font-weight: 400; }
+.pinball-layout .draw-ball-count-field { align-items: center; text-align: center; }
+.draw-ball-count-field .draw-ball-total { justify-content: center; width: 100%; }
+.draw-order-readout { display: flex; align-items: center; height: 39px; font-size: 15px; color: #d7c79f; font-weight: 500; white-space: nowrap; }
+.draw-map-pool { grid-column: 1 / -1; order: 2; display: flex; align-items: center; gap: 20px; padding-top: 9px; border-top: 1px solid #ffffff0b; }
+.draw-map-pool > span { color: #9caa9e; font-size: 13px; }
+.draw-map-pool > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.draw-map-pool b { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 12px; border: 1px solid #55533e; border-radius: 4px; color: #d7c79f; background: #252820; font-size: 15px; }
+.draw-map-remove { display: grid; place-items: center; width: 18px; height: 18px; border: 0; border-radius: 50%; background: #ffffff10; color: #b8ad8c; cursor: pointer; }
+.draw-map-remove:hover { background: #b56c5b66; color: #f3d9d1; }
+.draw-map-input { min-width: 170px; height: 31px; padding: 0 10px; border: 1px dashed #55533e; border-radius: 4px; background: transparent; color: #e3dcc4; font-size: 14px; }
+.draw-map-input::placeholder { color: #7d7a63; }
+.draw-map-input:focus { outline: none; border-style: solid; border-color: #9c8d5f; background: #1c1f19; }
+.match-map-schedule { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); gap: 8px; }
+.match-map-schedule > div { flex-direction: column; align-items: center; gap: 8px; padding: 15px 10px; }
+.match-map-schedule > div > span { width: auto; font-size: 15px; color: #a6b6a6; }
+.match-map-schedule > div > b { margin: 0; font-size: 25px; color: #e0d2ad; }
+.draw-quantity-panel { grid-column: 1 / -1; order: 2; min-width: 0; padding-top: 9px; border-top: 1px solid #ffffff0b; }
+.quantity-panel-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.quantity-panel-heading strong { font-size: 14px; color: #d0d9cc; }
+.quantity-panel-heading small { font-size: 12px; font-weight: 400; color: #94a38f; margin-left: 5px; }
+.quantity-panel-heading > span { font-size: 12px; color: #899786; }
+.quantity-panel-heading > button { margin-left: auto; border: 0; background: transparent; color: #cfc39f; font-size: 13px; padding: 0 5px; }
+.quantity-cards { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: thin; }
+.all-player-quantities .quantity-cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-height: 152px; overflow-y: auto; }
+.quantity-card { display: flex; flex: 1 0 165px; min-width: 0; align-items: center; gap: 8px; padding: 8px 10px; background: #111816; border: 1px solid #354035; border-radius: 6px; }
+.quantity-card > strong { font-size: 16px; white-space: nowrap; }
+.quantity-card .portrait-small { width: 28px; height: 32px; flex-shrink: 0; }
+.quantity-control { display: flex; align-items: center; height: 30px; border: 1px solid #47533f; border-radius: 4px; margin-left: auto; flex-shrink: 0; overflow: hidden; }
+.quantity-control button { display: grid; place-items: center; width: 26px; height: 28px; background: #253021; border: 0; color: #c8d2ba; padding: 0; }
+.quantity-control input { width: 28px; height: 28px; padding: 0; background: transparent; border: 0; border-radius: 0; text-align: center; font-size: 18px; font-weight: 700; }
+.quantity-card.quantity-excluded { border-style: dashed; opacity: .55; }
+.ace-quantities .quantity-card { flex-basis: 180px; }
+.ace-heaven { border-color: #b9a16c60; }
+.ace-hell { border-color: #aa706060; }
+.ace-natural { border-color: #87a48660; }
+.draw-team-picker { display: flex; flex-wrap: wrap; gap: 6px; max-height: 105px; overflow-y: auto; margin-bottom: 8px; }
+.draw-team-picker > button { display: flex; align-items: center; gap: 7px; padding: 5px 8px; background: #17201a; border: 1px solid #3e4b3c; border-radius: 5px; font-size: 14px; }
+.draw-team-picker > button[aria-pressed=true] { background: #383a28; border-color: #a99e6d; }
+.draw-team-picker .portrait-small { width: 24px; height: 28px; }
+.draw-team-picker small { font-size: 11px; color: #c9ba93; }
+@media (max-width: 1300px) {
+  .team-quantities .quantity-card { display: grid; grid-template-columns: 28px minmax(0, 1fr); flex-basis: 155px; gap: 5px 7px; padding: 6px 8px; }
+  .team-quantities .quantity-control { grid-column: 1 / -1; display: grid; grid-template-columns: 26px minmax(0, 1fr) 26px; width: 100%; margin: 0; }
+  .team-quantities .quantity-control input { width: 100%; }
+}
+.pinball-layout .draw-chips { grid-column: 1 / -1; order: 2; display: flex; flex-wrap: nowrap; overflow-x: auto; margin: 0; gap: 16px; padding-top: 8px; border-top: 1px solid #ffffff0a; scrollbar-width: thin; }
+.pinball-layout .draw-chips span { flex-shrink: 0; border: 0; background: none; padding: 0; font-size: 14px; font-weight: 500; color: #a7b5a9; }
+.pinball-layout .stage-panel { display: flex; flex-direction: column; align-self: stretch; height: 100%; min-height: 0; border-color: #3d4440; border-radius: 9px; background: #141819; box-shadow: 0 8px 28px #0002; }
+.pinball-layout .stage-toolbar { display: none; }
+.pinball-layout .pinball-stage { flex: 1; height: 0; min-height: 0; background: #0b0f10; }
+.pinball-layout .pinball-canvas { display: block; width: 100%; height: 100%; max-height: none; object-fit: contain; background: #0b0f10; }
+.pinball-layout .draw-result:not(:has(strong)) { display: none; }
+.pinball-layout .draw-result { position: absolute; right: 14px; bottom: 14px; z-index: 3; min-width: 280px; padding: 10px 16px; border-radius: 10px; background: #0f1516ee; border: 1px solid #ffffff1a; }
+.pinball-layout .pinball-fullscreen { right: 10px; top: 10px; bottom: auto; width: 29px; height: 29px; border-color: #6a756b40; background: #242b27; color: #b2bcb0; opacity: .7; }
+.pinball-layout .pinball-fullscreen:hover { opacity: 1; }
+.pinball-layout .pinball-stage:fullscreen { height: 100vh; }
+.pinball-layout .pinball-stage:fullscreen .pinball-canvas { width: 100%; height: 100%; max-height: 100vh; max-width: 100vw; }
+@media (max-height: 1000px) {  }
+@media (max-width: 1150px) {
+    }
+
+
+.draw-custom-items { min-width: 0; }
+.pinball-layout .draw-custom-items { grid-column: 1 / -1; order: 2; }
+.draw-custom-items .field-label { margin: 0; }
+.draw-custom-items input { width: 100%; min-height: 42px; }
+.draw-custom-badges { display: flex; flex-wrap: wrap; gap: 7px; max-height: 110px; overflow-y: auto; margin-top: 9px; }
+.draw-custom-badges:empty { display: none; }
+.draw-custom-badge { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 6px 7px 6px 12px; border: 1px solid #c9ba9338; border-radius: 6px; background: #c9ba930c; color: #e1dac8; font-size: 15px; font-weight: 600; }
+.draw-custom-badge > span { overflow-wrap: anywhere; }
+.draw-custom-badge button { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; border: 0; border-radius: 4px; background: transparent; color: #a7ada8; cursor: pointer; }
+.draw-custom-badge button:hover:not(:disabled) { background: #ffffff10; color: #fff; }
+.draw-custom-badge button:focus-visible { outline: 2px solid #c9ba93; outline-offset: 1px; }
+.draw-custom-badge button:disabled { opacity: .35; cursor: default; }
+
+.draw-result > .button { margin-left: auto; flex-shrink: 0; padding: 7px 12px; font-size: 14px; }
+
+.pinball-action-layer { position: absolute; z-index: 4; pointer-events: none; }
+.pinball-map-copy { position: absolute; left: 50%; top: 21.5%; transform: translateX(-50%); pointer-events: auto; min-height: 34px; padding: 0 16px; font-size: 14px; border-color: #c9ba9345; background: #292e27; color: #e2d7bc; }
+.pinball-map-copy:active:not(:disabled) { transform: translateX(-50%); }
+.pinball-map-next { border-color: #d9bf9480; background: #4a3f26; color: #f3e4bd; font-weight: 700; }
+.pinball-map-next:hover:not(:disabled) { background: #5a4c2c; }
+
+.pinball-speed-controls { position: absolute; right: 10px; top: 48px; display: flex; gap: 2px; padding: 3px; border: 1px solid #c9ba932b; border-radius: 6px; background: #161d1bec; }
+.pinball-speed-controls button { width: 30px; height: 30px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: #8d9b90; font-size: 13px; font-weight: 700; }
+.pinball-speed-controls button[aria-pressed=true] { color: #e5d6b0; background: #c9ba9324; }
+.pinball-speed-controls button:hover { color: #f0e6cf; background: #c9ba9314; }
+
+.team-bench-panel.drag-over { border-color: #d4c59f; background: #242b23; box-shadow: inset 0 0 0 1px #d4c59f66; }
+.team-bench-panel .bench-list { min-height: 104px; }
+.team-slot .remove-player { width: 38px; height: 38px; top: 5px; right: 5px; z-index: 3; display: grid; place-items: center; padding: 0; border: 1px solid #e1e6dc38; border-radius: 7px; background: #121916ed; color: #d8dfd6; font-size: 26px; line-height: 1; opacity: 1; cursor: pointer; }
+.team-slot .remove-player:hover { background: #673d3b; border-color: #d9a29c88; color: #fff; }
+.team-slot .remove-player:focus-visible { outline: 2px solid #d4c59f; outline-offset: 2px; }
+
+/* Roulette keeps the wheel in view while settings stay compact above it. */
+.page-heading:has(+ .wheel-layout) { display: none; }
+.draw-layout.wheel-layout { grid-template-columns: minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); height: calc(100vh - 120px); gap: 10px; }
+.wheel-layout .draw-controls { display: grid; grid-template-columns: minmax(210px,1fr) minmax(170px,.8fr) auto auto; gap: 10px 14px; align-items: end; padding: 12px 16px; border-color: #373e38; background: #191e1d; border-radius: 8px; }
+.wheel-layout .draw-controls h3, .wheel-layout .control-note, .wheel-layout .draw-chips, .wheel-layout .stage-toolbar { display: none; }
+.wheel-layout .draw-controls .field-label { margin: 0; gap: 5px; color: #a2ada3; font-size: 12px; }
+.wheel-layout .draw-controls select { height: 39px; font-size: 16px; padding: 5px 10px; background: #111715; border-color: #3b453c; border-radius: 5px; }
+.wheel-layout .draw-controls > .button { margin: 0; height: 39px; padding: 0 18px; font-size: 16px; }
+.wheel-layout .draw-controls > .button.primary { background: #d4c59f; border-color: #d4c59f; color: #252820; }
+.wheel-layout .draw-custom-items { grid-column: 1 / -1; order: 2; }
+.wheel-layout .stage-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; border-color: #3d4440; border-radius: 9px; }
+.wheel-layout .draw-result { flex-shrink: 0; }
+.wheel-layout .draw-result:not(:has(strong)) { display: none; }
+.wheel-stage { position: relative; display: flex; flex: 1; min-height: 0; align-items: center; justify-content: center; width: 100%; height: 100%; overflow: hidden; background: #141b18; }
+.wheel-stage .wheel-canvas { display: block; width: 100%; height: 100%; max-height: none; aspect-ratio: 1000 / 640; object-fit: contain; background: #141b18; }
+.wheel-stage:fullscreen { width: 100vw; height: 100vh; }
+.wheel-action-layer { position: absolute; pointer-events: none; }
+.wheel-spin-button { position: absolute; left: 50%; top: 57.8125%; transform: translate(-50%,-50%); width: 10.4%; min-width: 62px; max-width: 112px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 4px; pointer-events: auto; border: 1px solid #c6b78b; border-radius: 50%; background: #1b281f; color: #f0e1bc; font-size: clamp(11px,1.05vw,16px); font-weight: 700; box-shadow: 0 4px 16px #0004; }
+.wheel-spin-button:active:not(:disabled) { transform: translate(-50%,-50%) scale(.97); }
+.wheel-spin-button:disabled { opacity: 1; cursor: default; }
+.wheel-spin-button:disabled:not(:has(.wheel-spinning-mark)) { color: #7c8b7e; }
+.wheel-spinning-mark { width: 21px; height: 21px; border: 2px solid #d4c59f35; border-top-color: #e4d2a6; border-radius: 50%; animation: wheel-busy .9s linear infinite; }
+@keyframes wheel-busy { to { transform: rotate(360deg); } }
+
+.wheel-canvas.can-spin { cursor: pointer; }
+
+.wheel-editor-layout .draw-controls { grid-template-columns: auto minmax(100px,1fr) auto auto; }
+.wheel-count-control { display: flex; align-items: center; gap: 4px; height: 39px; border: 1px solid #3b453c; border-radius: 5px; background: #111715; padding: 2px; }
+.wheel-count-control button { display: grid; place-items: center; width: 34px; height: 33px; padding: 0; border: 0; border-radius: 3px; background: #293228; }
+.wheel-count-control input { width: 44px; padding: 0; border: 0; background: none; text-align: right; font-size: 21px; font-weight: 700; }
+.wheel-count-control small { margin-right: 8px; color: #a7b1a5; font-size: 13px; }
+.wheel-entry-status { align-self: center; padding-top: 16px; color: #a7b1a5; font-size: 14px; }
+.wheel-action-layer { container-type: inline-size; }
+.wheel-slot-editor input { position: absolute; transform: translate(-50%,-50%); pointer-events: auto; height: clamp(23px,3.8cqw,40px); padding: 3px 5px; border: 1px solid #21302570; border-radius: 5px; background: #fff8e7ed; color: #17291c; font-size: clamp(11px,1.8cqw,20px); font-weight: 600; text-align: center; box-shadow: 0 2px 6px #0002; }
+.wheel-slot-editor input::placeholder { color: #7d8674; }
+.wheel-slot-editor input:focus-visible { outline: 2px solid #fff4cc; outline-offset: 2px; border-color: #26372c; background: #fffbea; }
+.wheel-slot-editor-list { position: absolute; left: 1%; top: 16%; width: 23%; max-height: 80%; overflow-y: auto; pointer-events: auto; display: grid; gap: 5px; padding: 6px; background: #142019ea; border-radius: 6px; }
+.wheel-slot-editor-list input { position: static; transform: none; width: 100%; height: 30px; font-size: 14px; }
+
+.sidebar-version { align-items: center; padding: 16px 8px; margin-top: 12px; font-size: 11px; letter-spacing: .8px; color: #879580; }
+.sidebar-version b { font-size: 14px; font-weight: 600; color: #cec19d; letter-spacing: .2px; }
+/* Pinball: one full-height stage; settings float over it at the bottom-left, view tools sit top-right under the fullscreen button. */
+.draw-layout.pinball-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); height: calc(100vh - 134px); gap: 0; }
+@media (max-height: 1000px) { .draw-layout.pinball-layout { height: calc(100vh - 120px); } }
+.pinball-layout .stage-panel { position: relative; }
+.pinball-settings { position: absolute; left: 14px; bottom: 14px; z-index: 3; width: min(820px, calc(100% - 28px)); padding: 12px 40px 12px 14px; border: 1px solid #ffffff1c; border-radius: 10px; background: #0f1516f0; backdrop-filter: blur(6px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 10px; align-items: end; }
+.pinball-settings .field-label { min-width: 0; margin: 0; gap: 4px; font-size: 11px; color: #a2ada3; }
+.pinball-settings select { width: 100%; height: 34px; padding: 4px 8px; font-size: 14px; background: #111715; border-color: #3b453c; border-radius: 5px; }
+.pinball-settings > .button { grid-column: 1 / -1; margin: 0; height: 36px; font-size: 15px; }
+.pinball-settings > .button.primary { color: #252820; background: #d4c59f; border-color: #d4c59f; }
+.pinball-settings > .button + .button { margin-top: -2px; }
+.pinball-settings .draw-ball-count-field { align-items: center; text-align: center; }
+.pinball-settings .draw-quantity-panel, .pinball-settings .draw-custom-items, .pinball-settings .draw-map-pool, .pinball-settings .draw-chips { grid-column: 1 / -1; order: 2; padding-top: 8px; border-top: 1px solid #ffffff0b; }
+.pinball-settings > .button { order: 3; }
+.pinball-settings .draw-chips { display: flex; flex-wrap: nowrap; overflow-x: auto; margin: 0; gap: 14px; scrollbar-width: thin; }
+.pinball-settings .draw-chips span { flex-shrink: 0; border: 0; background: none; padding: 0; font-size: 13px; font-weight: 500; color: #a7b5a9; }
+.pinball-settings .quantity-panel-heading { margin-bottom: 8px; }
+.pinball-settings[data-running=true] .quantity-cards, .pinball-settings[data-running=true] .draw-team-picker { display: none; }
+.pinball-settings .quantity-cards { max-height: 132px; }
+.pinball-settings .all-player-quantities .quantity-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pinball-settings .team-quantities .quantity-card { display: flex; flex-basis: auto; }
+.pinball-settings .quantity-card .portrait-small { width: 24px; height: 28px; }
+
+.pinball-settings .quantity-control { height: 28px; margin-left: 4px; }
+.pinball-settings .quantity-card > strong { flex: 0 0 auto; overflow: visible; }
+.pinball-settings .quantity-control button { width: 24px; height: 26px; }
+.pinball-settings .quantity-control input { width: 26px; height: 26px; font-size: 15px; }
+.pinball-settings .quantity-card { padding: 5px 8px; gap: 6px; min-width: 0; }
+.pinball-settings .quantity-card > strong { font-size: 14px; }
+.pinball-settings-close { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: #8d9b90; }
+.pinball-settings-close:hover { background: #ffffff12; color: #fff; }
+.pinball-settings-toggle { position: absolute; left: 14px; bottom: 14px; z-index: 3; display: flex; gap: 6px; align-items: center; height: 34px; padding: 0 14px; border: 1px solid #ffffff22; border-radius: 8px; background: #0f1516ee; color: #d3c7a2; font-size: 13px; }
+.pinball-settings-toggle:hover { background: #1a2325; color: #f0e6cf; }
+.pinball-layout .draw-result:not(:has(strong)) { display: none; }
+.pinball-layout .pinball-stage:fullscreen .pinball-settings, .pinball-layout .pinball-stage:fullscreen .pinball-settings-toggle { display: none; }
+.pinball-view-row { grid-column: 1 / -1; order: 1; display: flex; gap: 6px; }
+.pinball-view-row button { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border: 1px solid #6c72564d; border-radius: 5px; background: #1a211d; color: #8d9b90; font-size: 13px; }
+.pinball-view-row button[aria-pressed=true] { color: #e5d6b0; border-color: #a99e6d80; background: #c9ba9324; }
+.pinball-view-row button:disabled { opacity: .4; }
+.pinball-view-row button:hover:not(:disabled) { color: #f0e6cf; }

@@ -1,0 +1,16 @@
+async(page)=>{
+ const check=(v,m)=>{if(!v)throw Error(m)},key='plset.session.v1',original=await page.evaluate(k=>localStorage.getItem(k),key),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const state=()=>page.evaluate(()=>JSON.parse(window.render_game_to_text()));
+ try{
+ await page.evaluate(k=>{const s=JSON.parse(localStorage.getItem(k));s.draw=null;localStorage.setItem(k,JSON.stringify(s));},key);await page.reload();await page.setViewportSize({width:1536,height:980});await page.getByRole('button',{name:'핀볼 Pinball 03',exact:true}).click();check(await page.getByRole('button',{name:'1배속',exact:true}).getAttribute('aria-pressed')==='true','default 1x');
+ await page.evaluate(()=>{window.__realNow=Date.now;const now=Date.now();Date.now=()=>now;});await page.getByRole('button',{name:'추첨 시작',exact:true}).click();const run=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)).draw,key);await page.waitForFunction(seed=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).seed===seed,run.seed);await page.evaluate(()=>window.advanceTime(3000));
+ let prev=(await state()).tick;const deltas=[];
+ for(const speed of [1,2,4]){await page.getByRole('button',{name:`${speed}배속`,exact:true}).click();const before=await state();check(before.tick===prev,'speed switch does not reset or advance race');check(before.seed===run.seed&&before.selectedSpeed===speed,'same seed and selected rate');await page.evaluate(()=>window.advanceTime(1000));const after=await state();deltas.push(after.tick-prev);prev=after.tick;}
+ check(Math.abs(deltas[0]-100)<=1&&Math.abs(deltas[1]-200)<=2&&Math.abs(deltas[2]-400)<=4,`rates ${deltas}`);
+ await page.getByRole('button',{name:'핀볼 전체 화면',exact:true}).click();await page.getByRole('button',{name:'2배속',exact:true}).click();check((await state()).selectedSpeed===2,'fullscreen speed works');await page.screenshot({path:'output/playwright/pinball-speed-fullscreen.png'});await page.keyboard.press('f');await page.getByRole('button',{name:'4배속',exact:true}).click();
+ await page.evaluate(()=>window.advanceTime(600000));await page.getByRole('heading',{name:'추첨 순위',exact:true}).waitFor();const saved=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)).draw,key);
+ const actual=await page.evaluate(async run=>{const {createPinball}=await import('/src/pinball.ts');const race=await createPinball(run.items,run.seed,run.map);let n=60000;while(race.results.length<run.items.length&&n-->0)race.step();const order=[...race.results];race.dispose();return order;},run);check(saved.results.join()===actual.join(),'rate changes preserve physical order');
+ for(const [width,height]of [[1120,680],[1536,980]]){await page.setViewportSize({width,height});const b=await page.getByRole('group',{name:'핀볼 재생 속도'}).boundingBox();check(b.x>=0&&b.y+b.height<=height,'speed buttons visible');}await page.screenshot({path:'output/playwright/pinball-speed-result.png'});check(errors.length===0,errors.join(';'));
+ return {passed:['1x/2x/4x tick ratios','change without restart','same physical result','fullscreen controls','small window fit'],deltas};
+ }finally{await page.evaluate(({k,v})=>{if(window.__realNow)Date.now=window.__realNow;localStorage.setItem(k,v)},{k:key,v:original});await page.reload();}
+}

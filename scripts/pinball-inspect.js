@@ -1,0 +1,1 @@
+async(page)=>{await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).mode==='ready');await page.locator('.pinball-canvas').screenshot({path:'output/playwright/pinball-reference-ready.png'});return JSON.parse(await page.evaluate(()=>window.render_game_to_text()));}

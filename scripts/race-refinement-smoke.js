@@ -1,0 +1,42 @@
+async(page)=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));const check=(v,m)=>{if(!v)throw Error(m);};
+ const panel=page.locator('.race-layout'),state=()=>page.evaluate(()=>JSON.parse(window.render_game_to_text()));
+ await page.setViewportSize({width:1536,height:980});await page.getByRole('button',{name:'레이스 Marble race 05',exact:true}).click();
+ await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).mode==='ready');
+ check(await panel.getByRole('button',{name:'1.5배속',exact:true}).getAttribute('aria-pressed')==='true','default 1.5x');
+ check(!/[\u{1F300}-\u{1FAFF}]/u.test(await panel.locator('.race-theme-picker').innerText()),'no map emoji');
+ check(await panel.locator('.quantity-card').count()===10,'ten participant controls');
+ await panel.getByRole('button',{name:'전체 제외',exact:true}).click();check(await panel.getByRole('button',{name:'레이스 시작',exact:true}).isDisabled(),'zero guard');
+ const names=await panel.locator('.quantity-card>strong').allTextContents();
+ await panel.getByRole('spinbutton',{name:names[0]+' 수량',exact:true}).fill('2');
+ await panel.getByRole('spinbutton',{name:names[1]+' 수량',exact:true}).fill('3');
+ await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).balls.length===5);
+ let preview=await state();check(preview.balls.filter(b=>b.name===names[0]).length===2,'duplicate ball count');check(new Set(preview.balls.map(b=>b.id)).size===5,'unique ball ids');
+ await page.screenshot({path:'output/playwright/race-refined-setup.png'});
+ await page.setViewportSize({width:1120,height:680});await page.waitForTimeout(300);const box=await panel.boundingBox();check(box.y+box.height<=680,'small window fit');check((await panel.locator('.race-canvas').boundingBox()).height>=250,'usable canvas');
+ await page.screenshot({path:'output/playwright/race-refined-small.png'});await page.setViewportSize({width:1536,height:980});
+ preview=await state();await panel.getByRole('button',{name:'레이스 시작',exact:true}).click();
+ await page.waitForFunction(()=>JSON.parse(window.render_game_to_text()).mode==='countdown');
+ check((await state()).sceneId===preview.sceneId,'reuse prepared scene on start');
+ await page.waitForTimeout(3500);check((await state()).mode==='racing','automatic start from preview');
+ const frames=await page.evaluate(()=>new Promise(resolve=>{const values=[],start=performance.now();let last=start;function tick(now){values.push(now-last);last=now;if(now-start>2000)resolve(values);else requestAnimationFrame(tick);}requestAnimationFrame(tick);}));
+ await page.screenshot({path:'output/playwright/race-refined-racing.png'});
+ await panel.getByRole('button',{name:'설정',exact:true}).click();check(await panel.getByRole('spinbutton',{name:names[0]+' 수량',exact:true}).isDisabled(),'locked quantities');await panel.getByRole('button',{name:'설정 접기',exact:true}).click();
+ const runBefore=await state();await panel.getByRole('button',{name:'2배속',exact:true}).click();check((await state()).seed===runBefore.seed,'speed preserves run');
+ for(let i=0;i<30;i++){if((await state()).mode==='complete')break;await page.evaluate(()=>window.advanceTime(3000));await page.waitForTimeout(100);}
+ const result=await state();check(result.mode==='complete'&&result.results.length===5,'weighted race complete');
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('plset.session.v1')));check(saved.draw.counts[saved.players[2].id]===0,'zero saved');check(saved.draw.items.every(i=>i.playerId),'owner id saved');
+ await page.reload();await page.getByRole('button',{name:'레이스 Marble race 05',exact:true}).click();await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).mode==='complete');
+ check(await panel.getByRole('spinbutton',{name:names[0]+' 수량',exact:true}).inputValue()==='2','count restored');check(await panel.getByRole('spinbutton',{name:names[2]+' 수량',exact:true}).inputValue()==='0','excluded restored');
+ await panel.getByRole('button',{name:'전체 1개',exact:true}).click();
+ for(let i=0;i<7;i++)await panel.getByRole('spinbutton',{name:names[i]+' 수량',exact:true}).fill('5');
+ check(await panel.getByRole('button',{name:'레이스 시작',exact:true}).isDisabled(),'30-ball limit');
+ await panel.getByRole('button',{name:'전체 1개',exact:true}).click();await panel.getByRole('combobox',{name:'참가 대상',exact:true}).click();await panel.getByRole('option',{name:'A팀',exact:true}).click();
+ const picker=panel.getByRole('generic',{name:'A팀 선수 선택',exact:true});
+ await panel.locator('.draw-team-picker').getByRole('button').filter({hasText:names[0]}).click();await panel.locator('.draw-team-picker').getByRole('button').filter({hasText:names[1]}).click();
+ check(await panel.locator('.quantity-card').count()===2,'team selection adds players');await panel.locator('.draw-team-picker').getByRole('button').filter({hasText:names[0]}).click();
+ check(await panel.locator('.quantity-card').count()===1,'team selection removes player');
+ const teams=await page.evaluate(()=>JSON.parse(localStorage.getItem('plset.session.v1')).players.filter(p=>p.team==='A'));check(teams.length===1&&teams[0].name===names[1],'shared team assignment');
+ await page.screenshot({path:'output/playwright/race-refined-team-picker.png'});
+ check(errors.length===0,errors.join('\n'));frames.sort((a,b)=>a-b);return {errors,sceneReused:true,weightedResults:result.results.length,frames:{count:frames.length,p95:frames[Math.floor(frames.length*.95)],max:Math.max(...frames)}};
+}

@@ -1,0 +1,25 @@
+async(page)=>{
+ const check=(v,m)=>{if(!v)throw Error(m)},key='plset.session.v1',original=await page.evaluate(k=>localStorage.getItem(k),key),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const load=()=>page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);
+ const nav=async name=>{await page.getByRole('button',{name,exact:true}).click();};
+ try{
+ await page.evaluate(k=>{const s=JSON.parse(localStorage.getItem(k));s.draw=null;s.players=s.players.map(p=>({...p,team:null}));localStorage.setItem(k,JSON.stringify(s));},key);await page.reload();await page.setViewportSize({width:1536,height:980});
+ await nav('팀 편성 Match builder 02');await page.getByRole('button',{name:'무작위 팀 편성',exact:true}).click();let s=await load();const a=s.players.find(p=>p.team==='A'),b=s.players.find(p=>p.team==='B');
+ const deck=page.getByRole('region',{name:'미배정 선수 덱',exact:true});
+ await page.getByRole('region',{name:'A팀 선수',exact:true}).locator('.team-slot').filter({hasText:a.name}).dragTo(deck.locator('.empty-state'));
+ check((await load()).players.find(p=>p.id===a.id).team===null,'A to empty bench real drag');
+ await page.getByRole('region',{name:'B팀 선수',exact:true}).locator('.team-slot').filter({hasText:b.name}).dragTo(deck.locator('.bench-list'));
+ check((await load()).players.find(p=>p.id===b.id).team===null,'B to populated bench real drag');
+ await deck.getByRole('button',{name:a.name+' A팀 배정',exact:true}).click();let remove=page.getByRole('button',{name:a.name+' 팀에서 제외',exact:true});const bounds=await remove.boundingBox();check(bounds.width>=38&&bounds.height>=38,'large remove target');await remove.click({position:{x:2,y:2}});check((await load()).players.find(p=>p.id===a.id).team===null,'edge click removes without drag');
+ await deck.locator('.bench-player').filter({hasText:a.name}).dragTo(page.getByRole('region',{name:'A팀 선수',exact:true}));remove=page.getByRole('button',{name:a.name+' 팀에서 제외',exact:true});await remove.focus();await page.keyboard.press('Enter');check((await load()).players.find(p=>p.id===a.id).team===null,'keyboard remove');await page.screenshot({path:'output/playwright/team-return-bench.png'});
+ await nav('룰렛 Roulette 04');await page.getByRole('combobox',{name:'추첨 대상',exact:true}).selectOption('custom');const input=page.getByRole('textbox',{name:'추첨 항목 입력',exact:true});
+ for(const name of ['컬러리스페이트','오디세이','녹아웃','아이올로스','백룸','옥타곤','애티튜드']){await input.fill(name);await input.press('Enter');}
+ await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).entries?.length===7);check((await page.evaluate(()=>JSON.parse(window.render_game_to_text()))).entries.map(x=>x.label).join()==='컬러리스페이트,오디세이,녹아웃,아이올로스,백룸,옥타곤,애티튜드','wheel live preview');await page.screenshot({path:'output/playwright/wheel-seven-ready.png'});
+ await page.getByRole('button',{name:'룰렛 돌리기',exact:true}).click();await page.waitForFunction(()=>window.render_game_to_text&&JSON.parse(window.render_game_to_text()).mode==='spinning');await page.evaluate(()=>window.advanceTime(3000));await page.screenshot({path:'output/playwright/wheel-seven-spinning.png'});check(await input.isDisabled(),'edit locked');await page.evaluate(()=>window.advanceTime(10000));await page.getByRole('heading',{name:'추첨 순위',exact:true}).waitFor();s=await load();let debug=await page.evaluate(()=>JSON.parse(window.render_game_to_text()));check(debug.pointerId===s.draw.results[s.draw.rank-1],'pointer matches saved winner');check(s.draw.results.length===7,'complete shuffle saved');await page.screenshot({path:'output/playwright/wheel-seven-complete.png'});
+ await page.getByRole('button',{name:'룰렛 전체 화면',exact:true}).click();await page.locator('.wheel-stage').screenshot({path:'output/playwright/wheel-fullscreen.png'});await page.keyboard.press('f');
+ await page.getByRole('button',{name:'룰렛 다시 돌리기',exact:true}).click();await page.evaluate(()=>window.advanceTime(10000));await page.getByRole('button',{name:'룰렛 다시 돌리기',exact:true}).waitFor();await page.reload();await nav('룰렛 Roulette 04');check((await page.evaluate(()=>JSON.parse(window.render_game_to_text()))).mode==='complete','restored wheel stays visible');
+ for(const [width,height]of [[1120,680],[1536,980]]){await page.setViewportSize({width,height});const stage=await page.locator('.wheel-stage:visible').boundingBox(),start=await page.getByRole('button',{name:'룰렛 다시 돌리기',exact:true}).boundingBox();check(stage.y+stage.height<=height&&start.y+start.height<=height,'wheel fits small window');}
+ await nav('핀볼 Pinball 03');await page.getByRole('combobox',{name:'모드',exact:true}).selectOption('maps');const names=await page.locator('.draw-map-pool b').allTextContents();check(names.join()==='컬러리스페이트,오디세이,녹아웃,아이올로스,백룸,옥타곤,애티튜드','canonical map labels');check(errors.length===0,errors.join(';'));
+ return ['team A/B drag to bench empty/populated','38px X edge and keyboard','wheel live names','pointer equals seeded winner','spin/repeat/reload/fullscreen','7 full map labels','responsive controls'];
+ }finally{await page.evaluate(({k,v})=>localStorage.setItem(k,v),{k:key,v:original});await page.reload();}
+}

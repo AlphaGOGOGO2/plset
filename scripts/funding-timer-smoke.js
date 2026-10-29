@@ -1,0 +1,32 @@
+async (page) => {
+  const check=(ok,message)=>{if(!ok)throw new Error(message);};
+  await page.getByRole('button',{name:'진행 대시보드 Overview 01',exact:true}).click();
+  const timer=page.getByRole('region',{name:'펀딩 타이머',exact:true});
+  const clock=timer.getByRole('timer',{name:'펀딩 남은 시간',exact:true});
+  const seconds=async()=>{const [m,s]=(await clock.innerText()).split(':').map(Number);return m*60+s;};
+  await timer.getByRole('button',{name:'펀딩 타이머 초기화',exact:true}).click();
+  check(await seconds()===0,'reset clears time');
+  check(await timer.getByRole('button',{name:'펀딩 타이머 시작',exact:true}).isDisabled(),'empty clock cannot start');
+  await timer.getByRole('button',{name:'펀딩 타이머 30초 추가',exact:true}).click();
+  check(await seconds()===30,'adds 30 seconds');
+  await timer.getByRole('button',{name:'펀딩 타이머 30초 추가',exact:true}).click();
+  await timer.getByRole('button',{name:'펀딩 타이머 1분 추가',exact:true}).click();
+  check(await seconds()===120,'additions accumulate');
+  await timer.getByRole('button',{name:'펀딩 타이머 시작',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('.funding-timer-clock')?.textContent!=='02:00');
+  const before=await seconds();
+  await timer.getByRole('button',{name:'펀딩 타이머 30초 추가',exact:true}).click();
+  const delta=await seconds()-before;
+  check(delta>=29&&delta<=30,'extend running countdown without resetting');
+  await timer.getByRole('button',{name:'펀딩 타이머 일시정지',exact:true}).click();
+  const paused=await clock.innerText();
+  await page.waitForTimeout(1100);
+  check(await clock.innerText()===paused,'pause freezes time');
+  await page.getByRole('button',{name:'팀 편성 Match builder 02',exact:true}).click();
+  await page.getByRole('button',{name:'진행 대시보드 Overview 01',exact:true}).click();
+  check(await clock.innerText()===paused,'timer persists across tab navigation');
+  const positions=await page.locator('.funding-summary').evaluate(el=>({timer:el.querySelector('.funding-timer').getBoundingClientRect().bottom,funding:el.querySelector('.stat-main').getBoundingClientRect().top}));
+  check(positions.timer<=positions.funding,'timer sits above per-player funding');
+  await page.locator('.funding-summary').screenshot({path:'output/playwright/funding-summary-timer.png'});
+  return ['above funding totals','30-second / 1-minute additions','start / pause / reset','extension while running','timer persists across tabs'];
+}
