@@ -10,8 +10,8 @@ import { createFinishSlowMotion } from './racePlayback';
 type Race = Awaited<ReturnType<typeof createRace>>;
 type GameWindow = Window & { render_game_to_text?: () => string; advanceTime?: (ms: number) => void };
 type Row = { id: string; label: string; color: string; done: boolean; detail: string; portrait: string | null; x: number; z: number; progress: number };
-type Hud = { status: string; clock: string; countdown: number; rows: Row[]; finished: number; total: number; winner: Row | null; podium: Row[]; complete: boolean };
-const EMPTY: Hud = { status: '대기', clock: '00:00', countdown: 0, rows: [], finished: 0, total: 0, winner: null, podium: [], complete: false };
+type Hud = { status: string; clock: string; countdown: number; rows: Row[]; finished: number; total: number; winner: Row | null; finishers: Row[]; complete: boolean };
+const EMPTY: Hud = { status: '대기', clock: '00:00', countdown: 0, rows: [], finished: 0, total: 0, winner: null, finishers: [], complete: false };
 const MARBLE_COLORS=['#ff794d','#369eff','#c562e9','#75c440','#f14b6e','#ffc632','#24c8ac','#8271ed','#f46ea7','#39bfde'];
 
 // Quads between consecutive samples that pass `keep`, laid a hair above the road (ice tint, booster pads).
@@ -214,7 +214,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
         hudAt = frameNow;
         const row = (m: Race['marbles'][number]): Row => { const done = arrived.includes(m.item.id), ticks = race!.finishTicks.get(m.item.id); return { id: m.item.id, label: givenName(m.item.label), color: colorFor(m.index), done, detail: done ? (ticks !== undefined ? seconds(ticks) : '완주') : `${Math.max(0, Math.min(99, Math.round(m.progress / race!.finish * 100)))}%`, portrait: portraits[m.index],x:m.x,z:m.z,progress:done?100:Math.max(0,Math.min(100,m.progress/race!.finish*100)) }; };
         const standings = [...arrived.map(id => race!.marbles.find(m => m.item.id === id)!), ...active].map(row);
-        setHud({ status: finished ? '완료' : !run ? '대기' : countdown > 0 ? '출발 준비' : frameScale < .9 ? 'SLOW' : frameScale > 1.1 ? '정리 중' : '진행 중', clock: `${String(Math.floor(race.tick * STEP / 60)).padStart(2, '0')}:${String(Math.floor(race.tick * STEP) % 60).padStart(2, '0')}`, countdown: run && !finished ? countdown : 0, rows: standings.slice(0, 30), finished: arrived.length, total: entrants.length, winner: decided ? standings[0] : null, podium: standings.slice(0, 3).filter(r => r.done), complete: finished });
+        setHud({ status: finished ? '완료' : !run ? '대기' : countdown > 0 ? '출발 준비' : frameScale < .9 ? 'SLOW' : frameScale > 1.1 ? '정리 중' : '진행 중', clock: `${String(Math.floor(race.tick * STEP / 60)).padStart(2, '0')}:${String(Math.floor(race.tick * STEP) % 60).padStart(2, '0')}`, countdown: run && !finished ? countdown : 0, rows: standings.slice(0, 30), finished: arrived.length, total: entrants.length, winner: decided ? standings[0] : null, finishers: standings.filter(r => r.done), complete: finished });
       }
     }
     function frame() { if (disposed) return; advance(); if (!stage.closest('[hidden]')) render(); raf = requestAnimationFrame(frame); }
@@ -239,7 +239,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
     <div className="race-minimap"><span>COURSE MAP</span><svg viewBox={mini.viewBox} aria-label="레이스 코스 미니맵"><path d={mini.path} fill="none" stroke="#ffffff22" strokeWidth="7" strokeLinecap="round"/><path d={mini.path} fill="none" stroke="#cdd9e0" strokeWidth="1.8"/>{hud.rows.filter(r=>!r.done).slice().reverse().map(r=><circle key={r.id} cx={r.x} cy={r.z} r="3" fill={r.color} stroke="#fff" strokeWidth=".7"/>)}</svg></div>
     {!run?<div className="race-ready-caption"><span>PL SET / MARBLE RACE</span><strong>{RACE_THEMES[trackIndex]?.subtitle}</strong><p>{RACE_THEMES[trackIndex]?.detail}</p></div>:null}
     {hud.countdown > 0 ? <div className="race-countdown"><strong>{hud.countdown}</strong><span>잠시 후 출발</span></div> : null}
-    {hud.winner ? <div className={`race-result${hud.complete?'':' race-result-live'}`} style={{ ['--race-accent' as string]: accent }}><div className="race-result-label">{hud.complete?'RACE FINISHED':'WINNER'} · 첫번째 완주</div>{hud.winner.portrait && showPortraits ? <img src={hud.winner.portrait} alt=""/> : <div className="race-result-ball" style={{ background: accent }}/>}<h2>{hud.winner.label}</h2>{hud.complete?<ol>{hud.podium.map((r, i) => <li key={r.id}>{i + 1}위 {r.label} {r.detail}</li>)}</ol>:<small>나머지 참가자 레이스 진행 중</small>}</div> : null}
+    {hud.winner ? <div className={`race-result${hud.complete?'':' race-result-live'}`} style={{ ['--race-accent' as string]: accent }}><div className="race-result-label">{hud.complete?'RACE FINISHED':'WINNER'} · 첫번째 완주</div><h2>{hud.winner.label}</h2>{hud.complete?<ol className="race-result-ranking" style={{ ['--race-columns' as string]: Math.ceil(hud.finishers.length / 10), ['--race-n' as string]: hud.finishers.length }}>{hud.finishers.map((r, i) => <li key={r.id}><span>{i + 1}</span><b>{r.label}</b><small>{r.detail}</small></li>)}</ol>:<small>나머지 참가자 레이스 진행 중</small>}</div> : null}
     {status ? <div className="pinball-loading" role="status">{status}</div> : null}
     <div className="race-camera-controls" role="group" aria-label="레이스 카메라"><button aria-pressed={view==='chase'} onClick={()=>setView('chase')}>선두 추적</button><button aria-pressed={view==='overview'} onClick={()=>setView('overview')}>전체 코스</button></div>
     <div className="pinball-speed-controls" role="group" aria-label="레이스 재생 속도">{([1, 1.5, 2, 2.5] as const).map(value => <button key={value} aria-label={`${value}배속`} aria-pressed={speed === value} onClick={() => { speedRef.current = value; setSpeed(value); }}>{value}×</button>)}</div>

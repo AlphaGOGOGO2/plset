@@ -43,3 +43,18 @@
 .race-stage-complete .race-minimap{display:none}
 .race-stage-complete .race-board{max-height:calc(100% - 132px)}
 @media(max-width:1200px){.race-board{max-height:calc(100% - 210px)}.race-stage-complete .race-board{max-height:calc(100% - 200px)}}
+/* Finished race: the centre card lists every finisher, split into columns of ten. */
+.race-result:not(.race-result-live){width:auto;min-width:300px;max-width:calc(100% - 40px);max-height:calc(100% - 40px);overflow:auto}
+.race-result-ranking{display:grid;grid-auto-flow:column;grid-template-rows:repeat(min(10,var(--race-n,10)),auto);grid-template-columns:repeat(var(--race-columns,1),minmax(190px,1fr));column-gap:22px;margin:14px 0 0;padding:0;text-align:left}
+.race-result .race-result-ranking li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:baseline;gap:8px;padding:4px 6px;border-radius:4px;font-size:14px;line-height:22px;color:#9cb3bf}
+.race-result .race-result-ranking li:first-child{background:#d9bd7c1f;color:#f0e2bf}
+.race-result-ranking span{font-variant-numeric:tabular-nums;color:#6f8593;font-size:12px}
+.race-result-ranking b{font-weight:600;color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.race-result .race-result-ranking small{display:inline;margin:0;font-size:12px;color:#7f97a5;font-variant-numeric:tabular-nums}
+.race-result:not(.race-result-live) h2{margin-top:6px}
+.race-result:not(.race-result-live){max-height:calc(100% - 150px)}
+.race-result .race-result-ranking li{padding:3px 8px;line-height:20px}
+.race-result:not(.race-result-live){top:66px;transform:translateX(-50%);padding:16px 20px;max-height:calc(100% - 150px)}
+.race-result:not(.race-result-live) h2{font-size:26px;margin-top:4px}
+.race-result-ranking{margin-top:10px}
+.race-result .race-result-ranking li{line-height:18px}
