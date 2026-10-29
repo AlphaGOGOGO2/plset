@@ -231,7 +231,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
   }, [sceneSeed, itemKey, trackIndex]);
 
   const accent = hud.winner?.color ?? '#d5bb8e';
-  return <div className="pinball-stage race-stage" ref={stageRef}>
+  return <div className={`pinball-stage race-stage${hud.complete?' race-stage-complete':''}`} ref={stageRef}>
     <canvas className="race-canvas" ref={canvasRef} aria-label="레이스 추첨 화면"/>
     <div className="race-labels" ref={labelsRef} aria-hidden="true"/>
     <div className="race-hud"><span className="race-live-dot"/><h3>{RACE_TRACKS[trackIndex] ?? '레이스'}</h3><span>{hud.status}</span><b>{hud.clock}</b></div>
