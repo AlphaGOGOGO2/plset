@@ -16,7 +16,6 @@ export const THEMES: Theme[] = [
   { id: 'mono', name: '블랙 & 화이트', description: '완전한 무채색', hue: null, saturation: 0, lightness: 0 },
 ];
 export const DEFAULT_THEME = THEMES[0];
-const KEY = 'plset.theme';
 export const themeById = (id: string | null | undefined) => THEMES.find(t => t.id === id) ?? DEFAULT_THEME;
 
 export interface Rgba { r: number; g: number; b: number; a: number }
@@ -59,7 +58,7 @@ export function remapText(text: string, theme: Theme) {
     .replace(RGB, (m, r, g, b, a) => { const next = remapRgba({ r: +r, g: +g, b: +b, a: a === undefined ? 1 : +a }, theme); return next === null ? m : `rgb${next.a < 1 ? 'a' : ''}(${Math.round(next.r)}, ${Math.round(next.g)}, ${Math.round(next.b)}${next.a < 1 ? `, ${next.a}` : ''})`; })
     .replace(HEX, m => remapHex(m, theme));
 }
-const HAS_COLOR = /rgba?\(|#[0-9a-f]{3,8}/i;
+const HAS_COLOR = /rgba?\(|#[0-9a-f]{3,8}\b/i;
 // Only color-bearing declarations are cloned, in source order, so layout properties and the
 // original cascade between same-specificity rules are left exactly as the stylesheets define them.
 function colorDeclarations(style: CSSStyleDeclaration, theme: Theme) {
@@ -95,17 +94,14 @@ export function applyTheme(theme: Theme) {
   if (!css) return;
   const style = document.createElement('style'); style.id = STYLE_ID; style.textContent = css; document.head.append(style);
 }
-export function loadTheme(): Theme { try { return themeById(localStorage.getItem(KEY)); } catch { return DEFAULT_THEME; } }
-export function saveTheme(theme: Theme) { try { localStorage.setItem(KEY, theme.id); } catch { /* private mode */ } }
-// Re-applies the stored theme when stylesheets are added later (dev HMR, lazy chunks).
+// The app always runs in black & white; there is no theme picker.
+export const APP_THEME = themeById('mono');
+// Re-applies the theme when stylesheets are added later (dev HMR, lazy chunks).
 export function initTheme() {
-  applyTheme(loadTheme());
+  applyTheme(APP_THEME);
   let pending = 0;
   new MutationObserver(records => {
     if (!records.some(r => Array.from(r.addedNodes).some(n => (n instanceof HTMLStyleElement && n.id !== STYLE_ID) || n instanceof HTMLLinkElement))) return;
-    cancelAnimationFrame(pending); pending = requestAnimationFrame(() => applyTheme(loadTheme()));
+    cancelAnimationFrame(pending); pending = requestAnimationFrame(() => applyTheme(APP_THEME));
   }).observe(document.head, { childList: true });
 }
-// Swatches for the settings page preview.
-export const PREVIEW_BASE = { bg: '#101514', panel: '#171d1a', line: '#2a322c', deep: '#294331', accent: '#a4e5bc', text: '#e5e9e1', muted: '#839086' } as const;
-export function previewPalette(theme: Theme) { return Object.fromEntries(Object.entries(PREVIEW_BASE).map(([k, v]) => [k, remapHex(v, theme)])) as Record<keyof typeof PREVIEW_BASE, string>; }

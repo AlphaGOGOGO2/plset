@@ -104,11 +104,11 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
       for (const m of race?.marbles ?? []) { const prev = cueBoost.get(m.item.id); if (prev && m.boostAt !== prev[0] && m.recoveries === prev[1]) sfx('boost'); cueBoost.set(m.item.id, [m.boostAt, m.recoveries]); }
     }
     function listenForHits(value: Race) {
-      const hard = new Set(value.obstacles.filter(o => o.kind === 'bumper' || o.kind === 'peg' || o.kind === 'spinner').map(o => o.body)), marbles = new Set(value.marbles.map(m => m.body));
+      const hard = new Set(value.obstacles.filter(o => o.kind === 'bumper' || o.kind === 'peg' || o.kind === 'spinner').map(o => o.body));
       for (const m of value.marbles) m.body.addEventListener('collide', (e: { body: unknown; contact: { getImpactVelocityAlongNormal(): number } }) => {
-        // Rolling contacts report every step; only a real impact makes a sound.
+        // Rolling contacts report every step; only a real impact on an obstacle makes a sound (marble-on-marble hits stay silent).
         if (Math.abs(e.contact.getImpactVelocityAlongNormal()) < 2.5) return;
-        if (hard.has(e.body as never)) sfx('bumper'); else if (marbles.has(e.body as never)) sfx('click');
+        if (hard.has(e.body as never)) sfx('bumper');
       });
     }
     function syncRun(){

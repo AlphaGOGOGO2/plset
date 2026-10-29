@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { randomSeed, type DrawItem, type DrawRun, type Session } from './domain';
 import WheelStage from './WheelStage';
-import SfxVolumeControl from './SfxVolumeControl';
 type Commit=(update:(s:Session)=>Session,label?:string,history?:boolean)=>void;
 export default function RoulettePage({s,commit,notify,onFinish,visible}:{s:Session;commit:Commit;notify:(text:string)=>void;onFinish:(ids:string[])=>void;visible:boolean}){
  const previous=s.draw?.mode==='wheel'?s.draw:null;
@@ -26,9 +25,7 @@ export default function RoulettePage({s,commit,notify,onFinish,visible}:{s:Sessi
  return <div className="draw-layout wheel-layout wheel-editor-layout">
   <section className="panel draw-controls">
    <div className="field-label wheel-count-field"><span>판 개수</span><div className="wheel-count-control"><button aria-label="판 개수 줄이기" disabled={busy||labels.length<=2} onClick={()=>resize(labels.length-1)}><Minus size={16}/></button><input type="number" aria-label="판 개수" min={2} max={60} disabled={busy} value={countDraft??labels.length} onFocus={()=>setCountDraft(String(labels.length))} onChange={e=>setCountDraft(e.target.value)} onBlur={e=>{if(e.currentTarget.value.trim())resize(e.currentTarget.valueAsNumber);setCountDraft(null);}} onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();}}/><small>개</small><button aria-label="판 개수 늘리기" disabled={busy||labels.length>=60} onClick={()=>resize(labels.length+1)}><Plus size={16}/></button></div></div>
-   <span className="wheel-entry-status">{filled} / {labels.length} 입력</span>
-   <div className="pinball-view-row"><SfxVolumeControl/></div>
-   {editing?<button className="button primary" disabled={busy} onClick={confirm}>설정 완료</button>:<button className="button" disabled={busy} onClick={reconfigure}><RotateCcw size={15}/>재설정</button>}
+   <span className="wheel-entry-status">{filled} / {labels.length} 입력</span>   {editing?<button className="button primary" disabled={busy} onClick={confirm}>설정 완료</button>:<button className="button" disabled={busy} onClick={reconfigure}><RotateCcw size={15}/>재설정</button>}
    {busy&&run?<button className="button" onClick={()=>commit(value=>({...value,draw:null}),'룰렛 추첨 취소')}><X size={15}/>추첨 취소</button>:null}
   </section>
   <section className="panel stage-panel">

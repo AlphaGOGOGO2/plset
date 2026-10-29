@@ -6,6 +6,7 @@ import { type DrawItem, type DrawRun } from './domain';
 import { configurePinballWasm, createPinball, MARBLE_COLORS, PINBALL_MAPS, replayCourse } from './pinball';
 import { Camera, cameraFocus, finishIntensity, INITIAL_ZOOM, RankTracker, timeScale, VIEW_H, VIEW_W } from './pinballCamera';
 import { portraitUrl } from './roster';
+import { playSfx, type Sfx } from './sfx';
 
 configurePinballWasm({ standard, simd });
 const W = VIEW_W, H = VIEW_H, MINI_SCALE = 4, MINI_UNITS = 26, MINI_INSET = 10;
@@ -80,6 +81,27 @@ export default function PinballStage({ run, items, rank, map = 0, variant = 'pla
     const observer=new ResizeObserver(measure);if(stageRef.current)observer.observe(stageRef.current);measure();
     setStatus('코스를 불러오는 중');
     const finishCount=mapExtra?2:entrants.length;
+    // Sound cues compare each frame with the last. The first look adopts the state silently, so reopening a finished or running
+    // draw does not replay its fanfare; a countdown seen first still beeps. Hits come from markers the physics step leaves behind.
+    const sfx=(name:Sfx)=>{if(!stageRef.current?.closest('[hidden]'))playSfx(name);};
+    let cuePrimed=false,cueCountdown=0,cueMoving=false,cueArrived=0,cueFinished=false,cueSlow=false,cueTick=-1,cueEntities=0;
+    function cueSounds(countdown:number,moving:boolean,finished:boolean,arrived:number,slow:boolean){
+      if(!cuePrimed){cuePrimed=true;cueCountdown=countdown>0?countdown+1:0;cueMoving=moving;cueArrived=arrived;cueFinished=finished;cueSlow=slow;}
+      if(countdown>0&&countdown!==cueCountdown)sfx('countdown');
+      if(moving&&!cueMoving&&!finished)sfx('go');
+      if(arrived>cueArrived&&!finished)sfx('finish');
+      if(finished&&!cueFinished){sfx('win');setTimeout(()=>sfx('cheer'),500);}
+      if(slow&&!cueSlow&&!finished)sfx('tension');
+      cueCountdown=countdown;cueMoving=moving;cueArrived=arrived;cueFinished=finished;cueSlow=slow;
+    }
+    function cueHits(){
+      if(!race)return;
+      if(cueTick<0){cueTick=race.tick;cueEntities=race.entities.length;return;}
+      if(race.marbles.some(m=>m.bumpTick>cueTick))sfx('pinballBounce');
+      if(race.entities.some(e=>(e.hitTick??-1)>cueTick))sfx('pinballBumper');
+      if(race.entities.length<cueEntities)sfx('pinballBreak');
+      cueTick=race.tick;cueEntities=race.entities.length;
+    }
     const complete = () => !!latest.current?.finishedAt || !!race && entrants.length > 0 && race.results.length >= finishCount;
     const order = () => latest.current?.finishedAt ? latest.current.results : (race?.results ?? []).slice(0,finishCount);
     let ranked: string[] = [];
@@ -145,6 +167,7 @@ export default function PinballStage({ run, items, rank, map = 0, variant = 'pla
       pendingTime+=Math.max(0,now-Math.max(start,lastPresentationTime));lastPresentationTime=now;
       const cost=10/(frameScale*speedRef.current);
       while(race.results.length<finishCount&&budget-->0){if(pendingTime<cost)break;pendingTime-=cost;race.step();simSeconds+=.01;}
+      cueHits();
       if (race.results.length >= finishCount && !sent) { sent = true; callback.current?.(race.results.slice(0,finishCount)); }
     }
     function render() {
@@ -157,6 +180,7 @@ export default function PinballStage({ run, items, rank, map = 0, variant = 'pla
       // Draw between the last two physics steps so slow motion (one 10ms step per several frames) still glides.
       const alpha = moving && !finished && !saved ? Math.max(0, Math.min(1, pendingTime / (10 / (frameScale * speedRef.current)))) : 1;
       const mx = (m: { x: number; px: number }) => m.px + (m.x - m.px) * alpha, my = (m: { y: number; py: number }) => m.py + (m.y - m.py) * alpha;
+      cueSounds(countdown, moving, finished, state.arrived.length, moving && !finished && frameScale < .9);
       const { arrived, active } = state, frameNow = performance.now(), dt = Math.min(100, frameNow - lastFrame); lastFrame = frameNow;
       if(inspection)camera.inspect(inspection,dt);
       else if (moving && active.length) {

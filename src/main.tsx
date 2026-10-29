@@ -15,7 +15,6 @@ import './pinball.css';
 import './broadcast-layout.css';
 import './studio-refinement.css';
 import './patrons.css';
-import './settings.css';
 import './race-game.css';
 initTheme();
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);

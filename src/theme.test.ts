@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { THEMES, DEFAULT_THEME, parseHex, toHex, rgbToHsl, remapHex, remapText, themeById, previewPalette } from './theme';
+import { THEMES, DEFAULT_THEME, parseHex, toHex, rgbToHsl, remapHex, remapText, themeById, APP_THEME } from './theme';
 const hue = (hex: string) => rgbToHsl(parseHex(hex)!.r, parseHex(hex)!.g, parseHex(hex)!.b)[0];
 test('hex 파싱과 직렬화는 3·4·6·8자리를 모두 왕복한다', () => {
   assert.deepEqual(parseHex('#fff'), { r: 255, g: 255, b: 255, a: 1 });
@@ -29,8 +29,8 @@ test('직렬화된 rgb()와 사용자 정의 속성의 hex를 함께 바꾸고 �
   assert.match(out, /border-color: rgb\(234, 208, 150\)/);
   assert.equal(remapText('color: rgb(16, 21, 20);', DEFAULT_THEME), 'color: rgb(16, 21, 20);');
 });
-test('테마 목록은 고유 id를 가지며 미리보기 팔레트는 모든 키를 채운다', () => {
+test('테마 목록은 고유 id를 가지며 앱은 블랙 & 화이트로 고정된다', () => {
   assert.equal(new Set(THEMES.map(t => t.id)).size, THEMES.length);
   assert.equal(themeById('nope'), DEFAULT_THEME);
-  for (const t of THEMES) { const p = previewPalette(t); assert.ok(['bg', 'panel', 'line', 'deep', 'accent', 'text', 'muted'].every(k => /^#[0-9a-f]{6}$/.test(p[k as keyof typeof p]))); }
+  assert.equal(APP_THEME.id, 'mono');
 });

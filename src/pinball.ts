@@ -53,7 +53,7 @@ export async function createPinball(items: DrawItem[], seed: number, mapIndex = 
     const x = 9.75 + slot % columns * .86 + row % 2 * .12 + (random() - .5) * .12, y = .2 + row * .8 + random() * .16;
     const def = new box.b2BodyDef(); def.set_type(box.b2_dynamicBody); vector.Set(x, y); def.set_position(vector);
     const body = world.CreateBody(def), shape = new box.b2CircleShape(); shape.set_m_radius(.25); body.CreateFixture(shape, 1 + random()); box.destroy(shape); box.destroy(def);
-    return { item, index, body, x, y, px: x, py: y, stuck: 0, trail: [] as { x: number; y: number }[], distance: progress.distanceAt(x, y) };
+    return { item, index, body, x, y, px: x, py: y, vx: 0, vy: 0, bumpTick: -100, stuck: 0, trail: [] as { x: number; y: number }[], distance: progress.distanceAt(x, y) };
   });
   const results: string[] = [], done = new Set<string>(); let tick = 0, disposed = false;
   function step() {
@@ -87,6 +87,10 @@ export async function createPinball(items: DrawItem[], seed: number, mapIndex = 
       if (done.has(m.item.id)) continue;
       const p = m.body.GetPosition(), x = p.get_x(), y = p.get_y(), previousY = m.y;
       m.stuck = (x - m.x) ** 2 + (y - m.y) ** 2 < .00001 ? m.stuck + 1 : 0;
+      // Read-only bounce marker for sound: a velocity jump of more than 3 m/s in one step is a hit (gravity alone adds 0.1).
+      const v = m.body.GetLinearVelocity(), vx = v.get_x(), vy = v.get_y();
+      if ((vx - m.vx) ** 2 + (vy - m.vy) ** 2 > 9) m.bumpTick = tick;
+      m.vx = vx; m.vy = vy;
       m.x = x; m.y = y; m.distance += (progress.distanceAt(x, y) - m.distance) * .025;
       // Stuck watchdog: a gentle nudge toward the lane centre and slightly upward, not a random pop.
       if (m.stuck >= 500) { vector.Set(Math.sign(13 - x) * (1 + random() * 1.5), -(1 + random())); m.body.ApplyLinearImpulseToCenter(vector, true); m.stuck = 0; }
