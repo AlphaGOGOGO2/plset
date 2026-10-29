@@ -13,7 +13,7 @@ https://starjoa.kr/proleague 에서 설치 없이 브라우저로 사용합니�
 3. 결과에 영향을 주는 진행자 설정은 모두 시작 전에 화면에 보입니다: 참가 대상, 선수당 구슬 개수, 코스, 당첨 순위(첫 번째/마지막). 시작 후에는 배속과 카메라만 바꿀 수 있고, 이는 결과를 바꾸지 않습니다.
 4. 시드는 외부로 전송되지 않습니다. 웹 버전은 서버 없이 진행자 브라우저 안에서만 동작합니다.
 
-직접 확인하려면 `src/domain.ts`, `src/pinball.ts`, `src/race.ts`, `src/raceWorld.ts`, `src/RoulettePage.tsx`를 읽거나 `Math.random`을 검색해 보세요. 결과 개수가 0이어야 합니다.
+직접 확인하려면 `src/domain.ts`, `src/pinball.ts`, `src/race.ts`, `src/raceWorld.ts`, `src/RoulettePage.tsx`를 읽거나 `src` 폴더에서 `Math.random`을 검색해 보세요. 결과가 없어야 합니다.
 
 ## 웹 버전
 
