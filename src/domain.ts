@@ -111,6 +111,15 @@ export function funding(players: Player[], size: number) {
   const total = players.filter(p => p.active).reduce((sum,p) => sum + p.amount, 0);
   return { total, per: Math.floor(total / size), remainder: total % size };
 }
+// Post-match settlement in per-head (두당) units, the way the board's 두당 view shows funding: amount ÷ team size. Seen from one
+// winning player's wallet (`baseId`, default the most 두당), `diff` is negative when that player sends the gap to a teammate with
+// less 두당 (3300 vs 2800 → -500) and positive when they receive it from one with more. Ranking ties keep entry order (rankByFunding).
+export function settlement(players: Player[], winner: Team, size: number, baseId?: string) {
+  const { total, per, remainder } = funding(players, size);
+  const ranked = rankByFunding(teamMembers(players, winner)).map(player => ({ player, per: Math.floor(player.amount / size) }));
+  const base = ranked.find(w => w.player.id === baseId) ?? ranked[0];
+  return { total, per, remainder, base: base?.player, winners: ranked.map(w => ({ ...w, diff: base ? w.per - base.per : 0 })) };
+}
 export function patronFunding(patrons: Patron[], size: number) {
   const total=patrons.reduce((sum,patron)=>sum+patron.amount,0);
   return {total,per:Math.floor(total/size),remainder:total%size};

@@ -16,5 +16,6 @@ import './broadcast-layout.css';
 import './studio-refinement.css';
 import './patrons.css';
 import './race-game.css';
+import './settlement.css';
 initTheme();
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);

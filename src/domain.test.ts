@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MATCH_MAPS, mapSchedule, allocateTeams, createSession, patronFunding, funding, clockRemaining, shuffle, validateSession, setAmount, setTeam, rankByFunding, teamMembers, givenName, withTeamNames, spectatorText, setNote, sessionReport, reportFileName, addMap, removeMap, sessionMaps, participantGroups, swapTie } from './domain';
+import { MATCH_MAPS, mapSchedule, allocateTeams, createSession, patronFunding, funding, clockRemaining, shuffle, validateSession, setAmount, setTeam, rankByFunding, teamMembers, givenName, withTeamNames, spectatorText, setNote, sessionReport, reportFileName, addMap, removeMap, sessionMaps, participantGroups, swapTie, settlement } from './domain';
 import { ROSTER, searchRoster } from './roster';
 test('별명·줄인 이름·초성으로 등록 선수를 검색한다',()=>{
   assert.equal(searchRoster('현제')[0].name,'변현제');
@@ -208,4 +208,17 @@ test('같은 금액인 선수끼리만 순서를 바꿀 수 있다',()=>{
   assert.deepEqual(names(swapTie(moved,s.players[2].id,'up')),['조일장','임홍규','김정우','김명운']);
   assert.equal(swapTie(players,s.players[3].id,'up'),players);
   assert.equal(swapTie(players,s.players[0].id,'up'),players);
+});
+test('정산: 기준 선수의 두당과 팀원 두당의 차액을 보여준다',()=>{
+  const p=(name:string,amount:number,team:'A'|'B',teamAt:number)=>({id:name,name,race:'P' as const,amount,team,active:true,teamAt});
+  // 4명 팀: 총액 13200 → 두당 3300, 11200 → 2800, 7200 → 1800, 8000 → 2000
+  const players=[p('김택용',13200,'A',1),p('이현제',11200,'A',2),p('김기석',7200,'A',3),p('김정우',8000,'A',4),p('임홍규',3600,'B',5),p('송병구',0,'B',6),{...p('휴식',500,'A',7),active:false}];
+  const r=settlement(players,'A',4);
+  assert.deepEqual([r.total,r.per,r.remainder],[43200,10800,0],'토탈은 활성 참가자 전원, 두당은 토탈 ÷ 팀 인원');
+  assert.deepEqual(r.winners.map(w=>[w.player.name,w.per]),[['김택용',3300],['이현제',2800],['김정우',2000],['김기석',1800]]);
+  assert.equal(r.base?.name,'김택용','기준을 고르지 않으면 두당이 가장 많은 선수');
+  assert.deepEqual(r.winners.map(w=>w.diff),[0,-500,-1300,-1500],'기준 선수가 보내는 차액은 음수');
+  assert.deepEqual(settlement(players,'A',4,'이현제').winners.map(w=>w.diff),[500,0,-800,-1000],'기준보다 두당이 많은 팀원에게서는 받으므로 양수');
+  assert.equal(settlement(players,'A',4,'임홍규').base?.name,'김택용','이긴 팀이 아닌 선수를 기준으로 고르면 최다 두당으로 돌아간다');
+  assert.equal(settlement([],'B',5).base,undefined);
 });

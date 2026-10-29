@@ -1,0 +1,30 @@
+.settlement-page{display:flex;flex-direction:column;gap:12px;min-width:0}
+.settlement-winner{display:flex;flex-direction:column;gap:8px}
+.settlement-winner-head h2{margin:0 0 3px;font-size:16px}.settlement-winner-head span{font-size:12px;color:var(--muted)}
+.settlement-teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.settlement-team-pick{position:relative;border-radius:10px;cursor:pointer;outline:2px solid transparent;outline-offset:2px;transition:outline-color .15s,opacity .15s}
+.settlement-team-pick:hover{outline-color:#ffffff30}.settlement-team-pick:focus-visible{outline-color:#ffffff80}
+.settlement-team-pick.selected{outline-color:#ffffffd0}
+.settlement-teams:has(.selected) .settlement-team-pick:not(.selected){opacity:.55}
+.settlement-team-pick .team-card{margin:0;pointer-events:none}.settlement-team-pick .team-capacity{visibility:hidden}
+.settlement-pick-badge{position:absolute;top:10px;right:12px;display:flex;align-items:center;gap:5px;font-size:12px;padding:4px 9px;border-radius:4px;border:1px solid var(--line);background:#111;color:var(--muted);white-space:nowrap}
+.settlement-team-pick.selected .settlement-pick-badge{background:#f2f2f2;color:#111;border-color:#f2f2f2;font-weight:700}
+@media(max-width:1100px){.settlement-teams{grid-template-columns:1fr}}
+.settlement-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.settlement-summary section{padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.settlement-summary span{font-size:12px;color:var(--muted)}
+.settlement-summary strong{font-size:36px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.settlement-summary small{font-size:15px;margin-left:3px;color:var(--muted)}
+.settlement-summary em{font-style:normal;font-size:12px;color:var(--muted)}
+.settlement-list{padding:12px 14px}
+.settlement-list header{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}.settlement-list h2{margin:0;font-size:16px}.settlement-list header span{font-size:12px;color:var(--muted)}
+.settlement-list table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.settlement-list th{text-align:right;font-size:12px;font-weight:500;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--line)}
+.settlement-list td{text-align:right;font-size:15px;padding:9px 10px;border-bottom:1px solid #ffffff0d}
+.settlement-list th:first-child,.settlement-list td:first-child{text-align:left}
+.settlement-player{display:inline-flex;align-items:center;gap:9px;font-weight:600}
+.settlement-list td b{font-size:16px}.settlement-list .receive{color:#fff}.settlement-none{color:var(--muted)}
+.settlement-empty{margin:0;font-size:13px;color:var(--muted)}
+.settlement-base{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-bottom:10px}.settlement-base>span{font-size:13px;color:var(--muted)}
+.settlement-base .segmented{flex-wrap:wrap}.settlement-base .segmented button{white-space:nowrap}
+.settlement-list tr.base td{background:#ffffff08}.settlement-list td.send b{color:var(--muted)}
+.settlement-hint{margin:10px 0 0;font-size:12px;color:var(--muted)}
