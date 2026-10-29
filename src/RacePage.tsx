@@ -5,7 +5,7 @@ import { Portrait } from './components';
 import { RACE_TRACKS, RACE_THEMES } from './race';
 import DrawStage from './DrawStage';
 import RaceSourceSelect, { type RaceSource as Source } from './RaceSourceSelect';
-import { RACE_SFX_VOLUME, savedSfxVolume, setSfxVolume as storeSfxVolume } from './raceSfx';
+import SfxVolumeControl from './SfxVolumeControl';
 type Commit = (update: (s: Session) => Session, label?: string, history?: boolean) => void;
 export const RACE_MAX = 30;
 const RACE_BGM_VOLUME = 0.2, RACE_BGM_KEY = 'plset-race-bgm-volume';
@@ -38,8 +38,6 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
     if (bgmRef.current) bgmRef.current.volume = bgmVolume;
     try { localStorage.setItem(RACE_BGM_KEY, String(bgmVolume)); } catch { /* Storage may be unavailable; the volume still applies for this session. */ }
   }, [bgmVolume]);
-  const [sfxVolume, setSfxVolume] = useState(savedSfxVolume);
-  useEffect(() => { storeSfxVolume(sfxVolume); }, [sfxVolume]);
   const displayedRun = s.draw?.mode === 'race' && (!setupEdited || !s.draw.finishedAt) ? s.draw : null;
   const players = s.players.filter(p => p.active && (source === 'players' || p.team === source));
   const teamSource=source==='A'||source==='B';
@@ -73,10 +71,7 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
           <button type="button" aria-pressed={bgmVolume > 0} aria-label={bgmVolume > 0 ? 'BGM 끄기' : 'BGM 켜기'} onClick={() => setBgmVolume(v => v > 0 ? 0 : RACE_BGM_VOLUME)}>{bgmVolume > 0 ? <Volume2 size={14}/> : <VolumeX size={14}/>} BGM</button>
           <input type="range" aria-label="BGM 볼륨" min={0} max={1} step={0.05} value={bgmVolume} onChange={e => setBgmVolume(e.currentTarget.valueAsNumber)}/>
         </div>
-        <div className="race-bgm-volume" role="group" aria-label="효과음 볼륨">
-          <button type="button" aria-pressed={sfxVolume > 0} aria-label={sfxVolume > 0 ? '효과음 끄기' : '효과음 켜기'} onClick={() => setSfxVolume(v => v > 0 ? 0 : RACE_SFX_VOLUME)}>{sfxVolume > 0 ? <Volume2 size={14}/> : <VolumeX size={14}/>} 효과음</button>
-          <input type="range" aria-label="효과음 볼륨" min={0} max={1} step={0.05} value={sfxVolume} onChange={e => setSfxVolume(e.currentTarget.valueAsNumber)}/>
-        </div>
+        <SfxVolumeControl/>
         <small className="race-bgm-note">AI(Suno·ElevenLabs)로 직접 제작한 BGM·효과음 · 기존 곡 저작권과 무관</small>
       </div>
       {source === 'custom' ? <div className="draw-custom-items">

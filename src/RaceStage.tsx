@@ -3,7 +3,7 @@ import { Maximize2, Minimize2 } from 'lucide-react';
 import * as THREE from 'three';
 import { givenName, type DrawItem, type DrawRun } from './domain';
 import { createRace, MARBLE_R, RACE_TRACKS, RACE_THEMES, ROAD_HALF, sampleAt, seconds, STEP, type Sample } from './race';
-import { playSfx, type RaceSfx } from './raceSfx';
+import { playSfx, type Sfx } from './sfx';
 import { buildRaceWorld, marbleTexture } from './raceWorld';
 import { portraitUrl } from './roster';
 import { createFinishSlowMotion } from './racePlayback';
@@ -87,7 +87,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
     const live = () => race ? race.marbles.filter(m => !race!.done.has(m.item.id) && !order().includes(m.item.id)).sort((p, q) => q.progress - p.progress) : [];
     // Sound cues: compare this frame's race state with the previous one. The first look adopts the state silently, so reopening a
     // finished or running race does not replay its fanfare; a countdown seen first still beeps.
-    const sfx = (name: RaceSfx) => { if (!stage.closest('[hidden]')) playSfx(name); };
+    const sfx = (name: Sfx) => { if (!stage.closest('[hidden]')) playSfx(name); };
     let cuePrimed = false, cueCountdown = 0, cueMoving = false, cueArrived = 0, cueLeader: string | undefined, cueDuel = false, cueGoAt = 0;
     const cueBoost = new Map<string, [number, number]>();
     function cueSounds(countdown: number, moving: boolean, finished: boolean, arrived: number, leader: string | undefined) {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Maximize2, Minimize2, Play, RotateCcw } from 'lucide-react';
 import { seeded, shuffle, type DrawItem, type DrawRun } from './domain';
+import { playSfx, startLoop } from './sfx';
 
 const W=1000,H=640,CX=500,CY=370,R=232,TAU=Math.PI*2,DURATION=7600,REVEAL=650,FLASH=600,TILT=.38;
 const COLORS=['#e7b879','#89bca8','#91b7d8','#d39baa','#b9acd1','#c1cc8e','#82bfbd','#d7a889','#a3b4cb','#d7c17f'];
@@ -44,6 +45,17 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
    ctx!.font=`${weight} ${size}px ${font}`;const width=ctx!.measureText(value).width;if(width>maxWidth)ctx!.font=`${weight} ${Math.max(12,size*maxWidth/width)}px ${font}`;
    ctx!.fillStyle=color;ctx!.textAlign='center';ctx!.textBaseline='middle';ctx!.fillText(value,x,y);ctx!.textBaseline='alphabetic';
   }
+  // Sound: the crank plays in the short wait before the spin (so reopening the tab mid-spin never replays it), a whirring loop
+  // follows the wheel's speed (it falls linearly, so 1-progress is the speed), and every peg the pointer passes ticks.
+  let spin:ReturnType<typeof startLoop>|null=null,startCued=false;
+  function cueSounds(now:number,stopped:boolean,crossed:boolean){
+   const audible=!stageRef.current?.closest('[hidden]'),spinning=!!run&&!stopped&&now>=start&&audible;
+   if(run&&!stopped&&now<start&&!startCued&&audible){startCued=true;playSfx('wheelStart');}
+   if(!spinning){spin?.stop();spin=null;return;}
+   spin??=startLoop('wheelSpin');
+   const speed=1-progress;spin.set(.25+.75*speed,.6+.6*speed);
+   if(crossed)playSfx('wheelTick');
+  }
   function draw(){
    if(!ctx||disposed)return;
    const stopped=complete(),now=Date.now()+offset;
@@ -53,7 +65,8 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
    angle=run?initialAngle+(finalAngle-initialAngle)*eased:initialAngle;
    const position=wrap(-Math.PI/2-angle)/sector,pointerIndex=Math.min(n-1,Math.floor(position)),peg=position-pointerIndex;
    // Pointer flick: a peg bends the tip as it approaches (peg→0), then the tip springs back once the peg has passed.
-   if(lastIndex>=0&&pointerIndex!==lastIndex)releasedAt=now;lastIndex=pointerIndex;
+   const crossed=lastIndex>=0&&pointerIndex!==lastIndex;if(crossed)releasedAt=now;lastIndex=pointerIndex;
+   cueSounds(now,stopped,crossed);
    const tilt=run?TILT*Math.max(peg<.08?1-peg/.08:0,releasedAt?Math.exp(-(now-releasedAt)/70):0):0;
    // Hold a beat after the wheel stops, then reveal the winner with a flash.
    const revealAt=start+duration+REVEAL,finished=stopped&&now>=revealAt,flash=finished?Math.max(0,1-(now-revealAt)/FLASH):0;
@@ -121,7 +134,7 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
   const debug=()=>JSON.stringify({mode:!run?'ready':complete()?(Date.now()+offset>=start+duration+REVEAL?'complete':'stopped'):Date.now()+offset<start?'countdown':'spinning',coordinates:'canvas 1000x640, origin top-left, x right, y down',angle,progress,duration,landing,entries,seed:run?.seed,selectedId:winnerId,pointerId:entries[Math.floor(wrap(-Math.PI/2-angle)/sector)]?.id,results:complete()?(latest.current?.results.length?latest.current.results:order):[]});
   const advanceTime=(ms:number)=>{offset+=Math.max(0,ms);draw();};
   const frame=()=>{if(disposed)return;const visible=!stageRef.current?.closest('[hidden]');if(visible||run&&!latest.current?.finishedAt)draw();if(visible){if(import.meta.env.DEV){host.render_game_to_text=debug;host.advanceTime=advanceTime;}}raf=requestAnimationFrame(frame);};frame();
-  return()=>{disposed=true;observer.disconnect();cancelAnimationFrame(raf);if(host.render_game_to_text===debug){delete host.render_game_to_text;delete host.advanceTime;}};
+  return()=>{disposed=true;spin?.stop();observer.disconnect();cancelAnimationFrame(raf);if(host.render_game_to_text===debug){delete host.render_game_to_text;delete host.advanceTime;}};
  },[run?.seed,run?.startedAt,itemKey,run?.rank,editing]);
  return <div className="wheel-stage" ref={stageRef}>
   <canvas ref={canvasRef} className={`draw-canvas wheel-canvas${onStart&&!editing&&!running&&!disabled&&items.length>=2?' can-spin':''}`} aria-label="룰렛 추첨 화면" onClick={e=>{if(!onStart||editing||running||disabled||items.length<2)return;const bounds=layerRef.current?.getBoundingClientRect();if(!bounds)return;const x=(e.clientX-bounds.x)/bounds.width*W,y=(e.clientY-bounds.y)/bounds.height*H;if(Math.hypot(x-CX,y-CY)<=R)onStart();}}/>
