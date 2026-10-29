@@ -3,6 +3,7 @@ import { Maximize2, Minimize2 } from 'lucide-react';
 import * as THREE from 'three';
 import { givenName, type DrawItem, type DrawRun } from './domain';
 import { createRace, MARBLE_R, RACE_TRACKS, RACE_THEMES, ROAD_HALF, sampleAt, seconds, STEP, type Sample } from './race';
+import { playSfx, type RaceSfx } from './raceSfx';
 import { buildRaceWorld, marbleTexture } from './raceWorld';
 import { portraitUrl } from './roster';
 import { createFinishSlowMotion } from './racePlayback';
@@ -84,9 +85,35 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
     const complete = () => !!latest.current?.finishedAt || !!race && entrants.length > 0 && race.results.length >= entrants.length;
     const order = () => latest.current?.finishedAt ? latest.current.results : (race?.results ?? []);
     const live = () => race ? race.marbles.filter(m => !race!.done.has(m.item.id) && !order().includes(m.item.id)).sort((p, q) => q.progress - p.progress) : [];
+    // Sound cues: compare this frame's race state with the previous one. The first look adopts the state silently, so reopening a
+    // finished or running race does not replay its fanfare; a countdown seen first still beeps.
+    const sfx = (name: RaceSfx) => { if (!stage.closest('[hidden]')) playSfx(name); };
+    let cuePrimed = false, cueCountdown = 0, cueMoving = false, cueArrived = 0, cueLeader: string | undefined, cueDuel = false, cueGoAt = 0;
+    const cueBoost = new Map<string, [number, number]>();
+    function cueSounds(countdown: number, moving: boolean, finished: boolean, arrived: number, leader: string | undefined) {
+      if (!cuePrimed) { cuePrimed = true; cueCountdown = countdown > 0 ? countdown + 1 : 0; cueMoving = moving; cueArrived = arrived; cueLeader = leader; cueDuel = finalDuel; }
+      if (countdown > 0 && countdown !== cueCountdown) sfx('countdown');
+      if (moving && !cueMoving && !finished) { sfx('go'); cueGoAt = performance.now(); }
+      if (arrived > cueArrived) { if (cueArrived === 0) { sfx('win'); setTimeout(() => sfx('cheer'), 500); } else sfx('finish'); }
+      if (moving && !finished && arrived === 0 && leader && cueLeader && leader !== cueLeader && performance.now() - cueGoAt > 3000) sfx('lead');
+      if (finalDuel && !cueDuel) sfx('tension');
+      cueCountdown = countdown; cueMoving = moving; cueArrived = arrived; cueLeader = leader; cueDuel = finalDuel;
+    }
+    function cueBoosts() {
+      // race.ts stamps boostAt on a booster pad and also on a stuck-marble recovery; only the former (recoveries unchanged) is a boost.
+      for (const m of race?.marbles ?? []) { const prev = cueBoost.get(m.item.id); if (prev && m.boostAt !== prev[0] && m.recoveries === prev[1]) sfx('boost'); cueBoost.set(m.item.id, [m.boostAt, m.recoveries]); }
+    }
+    function listenForHits(value: Race) {
+      const hard = new Set(value.obstacles.filter(o => o.kind === 'bumper' || o.kind === 'peg' || o.kind === 'spinner').map(o => o.body)), marbles = new Set(value.marbles.map(m => m.body));
+      for (const m of value.marbles) m.body.addEventListener('collide', (e: { body: unknown; contact: { getImpactVelocityAlongNormal(): number } }) => {
+        // Rolling contacts report every step; only a real impact makes a sound.
+        if (Math.abs(e.contact.getImpactVelocityAlongNormal()) < 2.5) return;
+        if (hard.has(e.body as never)) sfx('bumper'); else if (marbles.has(e.body as never)) sfx('click');
+      });
+    }
     function syncRun(){
       if(latest.current?.startedAt===runStamp)return;
-      runStamp=latest.current?.startedAt;start=runStamp??clockNow();
+      runStamp=latest.current?.startedAt;start=runStamp??clockNow();cuePrimed=false;
       pendingTime=0;lastPresentationTime=start;virtualOffset=0;frameScale=1;lastFrame=performance.now();
       finishSlow=createFinishSlowMotion();finalDuel=false;playbackAt=clockNow();
     }
@@ -149,6 +176,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
       const cost = STEP * 1000 / (frameScale * speedRef.current);
       lastStepCost=cost;
       while (race.results.length < entrants.length && budget-- > 0) { if (pendingTime < cost) break; pendingTime -= cost; race.step(); }
+      cueBoosts();
       if (race.results.length >= entrants.length && !sent) { sent = true; callback.current?.(race.results); }
     }
     function render() {
@@ -161,6 +189,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
       const presentationNow=clockNow(),playbackDelta=Math.max(0,presentationNow-playbackAt);playbackAt=presentationNow;
       const playback = finishSlow.update({ now: presentationNow, moving, finished, progress: active.map(m=>m.progress), finish: race.finish, arrived: arrived.length, speed: speedRef.current });
       finalDuel=playback.slow;
+      cueSounds(countdown, moving, finished, arrived.length, leader?.item.id);
       frameScale += (playback.scale-frameScale)*(1-Math.exp(-playbackDelta/180));
       const alpha = moving && !finished && !saved ? Math.max(0, Math.min(1, pendingTime / lastStepCost)) : 1;
       race.marbles.forEach((m, i) => { const mesh = marbleMeshes[i], gone = race!.done.has(m.item.id) || arrived.includes(m.item.id); mesh.visible = !gone;const shadow=marbleShadows[i];shadow.visible=!gone; if (gone) return; mesh.position.set(m.px + (m.x - m.px) * alpha, m.py + (m.y - m.py) * alpha, m.pz + (m.z - m.pz) * alpha); previousRotation.set(m.body.previousQuaternion.x,m.body.previousQuaternion.y,m.body.previousQuaternion.z,m.body.previousQuaternion.w);currentRotation.set(m.body.quaternion.x,m.body.quaternion.y,m.body.quaternion.z,m.body.quaternion.w);mesh.quaternion.slerpQuaternions(previousRotation,currentRotation,alpha);const q=race!.samples[m.sampleIndex];shadow.position.copy(mesh.position);shadow.position.y=race!.started?q.p.y+.04:mesh.position.y-MARBLE_R;shadow.quaternion.setFromUnitVectors(worldUp,q.up); });
@@ -221,7 +250,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
     const debug = () => JSON.stringify({ sceneId, mode: !race ? 'loading' : !latest.current ? 'ready' : complete() ? 'complete' : clockNow() < start ? 'countdown' : 'racing', coordinates: 'world metres, y up', track: trackIndex, tick: race?.tick, seconds: race ? +(race.tick * STEP).toFixed(2) : 0, view: viewRef.current, followedId: viewRef.current==='overview'?null:live()[0]?.item.id, finalDuel, effectiveSpeed: +(frameScale*speedRef.current).toFixed(3), camera: { x: +camPos.x.toFixed(1), y: +camPos.y.toFixed(1), z: +camPos.z.toFixed(1) }, timeScale: frameScale, playbackSpeed:speedRef.current, seed: latest.current?.seed, finish: race?.finish, length: race?.length, results: order(), balls: live().map(m => ({ id: m.item.id, name: m.item.label, progress: +m.progress.toFixed(1), x: +m.x.toFixed(1), y: +m.y.toFixed(1), z: +m.z.toFixed(1) })) });
     const advanceTime = (ms: number) => { syncRun();virtualOffset += Math.max(0, ms); advance(60000); render(); };
     createRace(entrants, sceneSeed, trackIndex).then(value => {
-      if (disposed) { value.dispose(); return; } race = value; build(value);
+      if (disposed) { value.dispose(); return; } race = value; build(value); listenForHits(value);
       renderer.compile(scene,camera);setStatus('');
       if (latest.current && !latest.current.finishedAt && start < clockNow()) {start=clockNow();lastPresentationTime=start;}
       if (import.meta.env.DEV) { host.render_game_to_text = debug; host.advanceTime = advanceTime; } frame();

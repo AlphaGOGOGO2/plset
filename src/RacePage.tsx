@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
-import { ArrowUpRight, Check, Copy, Minus, Plus, Play, Shuffle, SlidersHorizontal, Tag, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, Check, Copy, Minus, Plus, Play, Shuffle, SlidersHorizontal, Tag, Volume2, VolumeX, X } from 'lucide-react';
 import { givenName, randomSeed, setTeam, withTeamNames, type DrawItem, type DrawRun, type Player, type Session, type Team } from './domain';
 import { Portrait } from './components';
 import { RACE_TRACKS, RACE_THEMES } from './race';
 import DrawStage from './DrawStage';
 import RaceSourceSelect, { type RaceSource as Source } from './RaceSourceSelect';
+import { RACE_SFX_VOLUME, savedSfxVolume, setSfxVolume as storeSfxVolume } from './raceSfx';
 type Commit = (update: (s: Session) => Session, label?: string, history?: boolean) => void;
 export const RACE_MAX = 30;
+const RACE_BGM_VOLUME = 0.2, RACE_BGM_KEY = 'plset-race-bgm-volume';
+const savedBgmVolume = () => { try { const raw = localStorage.getItem(RACE_BGM_KEY), v = Number(raw); return raw !== null && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : RACE_BGM_VOLUME; } catch { return RACE_BGM_VOLUME; } };
 
 export default function RacePage({ s, commit, notify, onFinish, visible }: { s: Session; commit: Commit; notify: (text: string) => void; onFinish: (ids: string[]) => void; visible: boolean }) {
   const previous = s.draw?.mode === 'race' ? s.draw : null;
@@ -20,6 +23,23 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
   const [showNames, setShowNames] = useState(true), [settingsOpen, setSettingsOpen] = useState(true);
   const running = !!s.draw && !s.draw.finishedAt;
   useEffect(() => { setSettingsOpen(!running); }, [running]);
+  const [bgmVolume, setBgmVolume] = useState(savedBgmVolume), bgmRef = useRef<HTMLAudioElement | null>(null), bgmVolumeRef = useRef(bgmVolume);
+  bgmVolumeRef.current = bgmVolume;
+  useEffect(() => {
+    if (!visible) return;
+    const bgm = new Audio(`${import.meta.env.BASE_URL}audio/race-bgm.mp3`);
+    bgm.loop = true; bgm.volume = bgmVolumeRef.current; bgmRef.current = bgm;
+    // Autoplay is blocked until the page has had a user gesture (e.g. opening the console straight onto this tab), so retry on the first click.
+    const retry = () => { void bgm.play().catch(() => {}); };
+    bgm.play().catch(() => window.addEventListener('pointerdown', retry, { once: true }));
+    return () => { window.removeEventListener('pointerdown', retry); bgm.pause(); bgm.removeAttribute('src'); bgm.load(); bgmRef.current = null; };
+  }, [visible]);
+  useEffect(() => {
+    if (bgmRef.current) bgmRef.current.volume = bgmVolume;
+    try { localStorage.setItem(RACE_BGM_KEY, String(bgmVolume)); } catch { /* Storage may be unavailable; the volume still applies for this session. */ }
+  }, [bgmVolume]);
+  const [sfxVolume, setSfxVolume] = useState(savedSfxVolume);
+  useEffect(() => { storeSfxVolume(sfxVolume); }, [sfxVolume]);
   const displayedRun = s.draw?.mode === 'race' && (!setupEdited || !s.draw.finishedAt) ? s.draw : null;
   const players = s.players.filter(p => p.active && (source === 'players' || p.team === source));
   const teamSource=source==='A'||source==='B';
@@ -49,6 +69,15 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
       <div className="pinball-view-row" role="group" aria-label="보기 설정">
         <button type="button" aria-pressed={showNames} onClick={() => setShowNames(v => !v)}><Tag size={14}/> 이름표 {showNames ? 'ON' : 'OFF'}</button>
         <button type="button" disabled={running} onClick={() => { setSetupEdited(true); setPreviewSeed(randomSeed()); }}><Shuffle size={14}/> 출발 순서 섞기</button>
+        <div className="race-bgm-volume" role="group" aria-label="BGM 볼륨">
+          <button type="button" aria-pressed={bgmVolume > 0} aria-label={bgmVolume > 0 ? 'BGM 끄기' : 'BGM 켜기'} onClick={() => setBgmVolume(v => v > 0 ? 0 : RACE_BGM_VOLUME)}>{bgmVolume > 0 ? <Volume2 size={14}/> : <VolumeX size={14}/>} BGM</button>
+          <input type="range" aria-label="BGM 볼륨" min={0} max={1} step={0.05} value={bgmVolume} onChange={e => setBgmVolume(e.currentTarget.valueAsNumber)}/>
+        </div>
+        <div className="race-bgm-volume" role="group" aria-label="효과음 볼륨">
+          <button type="button" aria-pressed={sfxVolume > 0} aria-label={sfxVolume > 0 ? '효과음 끄기' : '효과음 켜기'} onClick={() => setSfxVolume(v => v > 0 ? 0 : RACE_SFX_VOLUME)}>{sfxVolume > 0 ? <Volume2 size={14}/> : <VolumeX size={14}/>} 효과음</button>
+          <input type="range" aria-label="효과음 볼륨" min={0} max={1} step={0.05} value={sfxVolume} onChange={e => setSfxVolume(e.currentTarget.valueAsNumber)}/>
+        </div>
+        <small className="race-bgm-note">AI(Suno·ElevenLabs)로 직접 제작한 BGM·효과음 · 기존 곡 저작권과 무관</small>
       </div>
       {source === 'custom' ? <div className="draw-custom-items">
         <label className="field-label">참가자<input aria-label="참가자 입력" placeholder="이름 입력 후 Enter" disabled={running} maxLength={80} value={customDraft} onChange={e => setCustomDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) { e.preventDefault(); addCustomItem(); } }}/></label>

@@ -5,6 +5,7 @@
 .race-theme-picker button>span{grid-row:1/3;font-size:23px}.race-theme-picker strong{font-size:14px}.race-theme-picker small{font-size:8px;letter-spacing:1px;color:#8296a8;white-space:nowrap}
 .race-theme-picker button[aria-pressed=true]{border-color:#ecbd64;background:#3b3528;color:#ffda92;box-shadow:inset 0 -2px #ecbd64}.race-theme-picker button[aria-pressed=true] small{color:#c9b58c}
 .race-layout .pinball-settings .pinball-view-row{grid-column:3;grid-row:2;order:0;flex-wrap:wrap;gap:5px;align-self:center}.race-layout .pinball-settings .pinball-view-row button{font-size:11px;white-space:nowrap;padding:5px 7px}
+.race-bgm-volume{display:flex;align-items:center;gap:6px}.race-bgm-volume input{width:76px;accent-color:#c9ba93;cursor:pointer}.race-bgm-note{flex-basis:100%;font-size:10px;line-height:1.3;color:#7d8a80}
 .race-layout .pinball-settings>.button{grid-column:4;grid-row:2;order:0;height:42px;align-self:center;font-size:15px;background:#efbf69;border-color:#efbf69;color:#282515;font-weight:800}
 .race-layout .pinball-settings>.button:not(.primary){grid-row:3;background:#35272a;color:#f0a6a6;border-color:#653a41}
 .race-layout .pinball-settings .draw-chips{padding-top:5px;gap:12px;max-height:33px}.race-layout .pinball-settings .draw-custom-items{padding-top:0;display:flex;align-items:center;gap:12px}.race-layout .draw-custom-badges{max-height:70px;overflow:auto}.race-layout .draw-custom-items>.field-label{width:170px;flex-shrink:0}
