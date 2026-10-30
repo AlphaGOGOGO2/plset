@@ -151,6 +151,51 @@ test('모든 맵의 핀은 랜덤 배치 후에도 벽과 공 한 개 이상의 
   }
 });
 
+test('스위치 게이트 양쪽에서 눌린 공은 순간이동 없이 열린 틈으로 빠져나간다', async () => {
+  // Include both originally reproduced directions and all 192 jungle cases.
+  for (const track of tracks.keys()) for (const seed of (track === 0 ? [...Array.from({ length: 30 }, (_, i) => i + 1), 42, 99] : [6, 42])) {
+    for (const feature of tracks[track].features.filter(f => f.kind === 'gate')) for (const side of [-1, 1]) {
+      const race = await createRace([{ id: 'probe', label: '게이트 통과 확인' }], seed, track), m = race.marbles[0];
+      const gateSample = sampleAt(race.samples, feature.t), q = race.samples.filter(s => s.s < gateSample.s - 1.5).at(-1)!;
+      const target = gateSample.s + 3;
+      const pos = q.p.clone().addScaledVector(q.side, side * (ROAD_HALF - MARBLE_R - .05)).addScaledVector(q.up, MARBLE_R + .02);
+      m.body.position.set(pos.x, pos.y, pos.z); m.body.velocity.set(q.tangent.x * 5, q.tangent.y * 5, q.tangent.z * 5);
+      m.x = m.px = pos.x; m.y = m.py = pos.y; m.z = m.pz = pos.z;
+      m.sampleIndex = m.safeSampleIndex = race.samples.indexOf(q); m.progress = m.bestProgress = q.s;
+      const context = `${race.track.title} / seed ${seed} / gate ${feature.t} / side ${side}`;
+      const gateIndex = tracks[track].features.filter(f => f.kind === 'gate').indexOf(feature);
+      const gateBody = race.obstacles.filter(o => o.kind === 'gate')[gateIndex].body;
+      race.start();
+      while (race.tick < 12 / STEP && m.progress < target) {
+        const before = m.body.position.clone(), gateBefore = gateBody.position.clone();
+        race.step();
+        assert.equal(m.recoveries, 0, `${context}: respawn`);
+        if (Math.abs(m.progress - sampleAt(race.samples, feature.t).s) < 2) assert.equal(m.stalls, 0, `${context}: artificial nudge at gate`);
+        assert.ok(m.body.position.distanceTo(before) < .5, `${context}: discontinuous movement`);
+        assert.ok(gateBody.position.distanceTo(gateBefore) <= 2.2 * 2 * Math.PI / feature.period * STEP + 1e-6, `${context}: gate jumped after releasing marble`);
+      }
+      assert.ok(m.progress >= target, `${context}: did not leave the gate`);
+      race.dispose();
+    }
+  }
+});
+
+test('게이트 앞 대기는 정체 복구를 발동하지 않지만 실제 추락은 복구한다', async () => {
+  for (const side of [-1, 1]) {
+    const race = await createRace([{ id: 'probe', label: '게이트 대기 확인' }], 42, 0), m = race.marbles[0];
+    const q = sampleAt(race.samples, .45 - .002), pos = q.p.clone().addScaledVector(q.side, side * 3.4).addScaledVector(q.up, MARBLE_R + .02);
+    m.body.position.set(pos.x, pos.y, pos.z); m.x = pos.x; m.y = pos.y; m.z = pos.z;
+    m.sampleIndex = m.safeSampleIndex = race.samples.indexOf(q); m.progress = q.s;
+    m.bestProgress = 1e6; m.stall = 479; m.stalls = 1;
+    race.start(); race.step();
+    assert.equal(m.recoveries, 0); assert.equal(m.stall, 0); assert.equal(m.stalls, 0);
+    const below = q.p.clone().addScaledVector(q.up, -8);
+    m.body.position.set(below.x, below.y, below.z);
+    race.step(); assert.equal(m.recoveries, 1, 'a real fall still needs recovery');
+    race.dispose();
+  }
+});
+
 test('모든 맵의 이탈·반복 걸림 복구는 앞으로 건너뛰지 않고 다시 굴러간다', async () => {
   for (const track of tracks.keys()) for (const mode of ['left', 'right', 'below', 'stall']) {
     const race = await createRace([{ id: 'probe', label: '복구 확인' }], 42, track), m = race.marbles[0];

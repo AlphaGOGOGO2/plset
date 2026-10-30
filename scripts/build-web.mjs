@@ -9,7 +9,7 @@ const base = '/proleague/app/';
 const out = path.resolve('dist-web');
 const target = path.resolve(process.argv[2] ?? '../starjoa/public/proleague/app');
 
-const typecheck = spawnSync('npx tsc -b', { stdio: 'inherit', shell: true });
+const typecheck = spawnSync('npx tsc -b', { stdio: 'inherit', shell: true, windowsHide: true });
 if (typecheck.status) process.exit(typecheck.status);
 
 process.env.PLSET_BASE = base;

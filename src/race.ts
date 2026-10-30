@@ -251,7 +251,24 @@ export async function createRace(items: DrawItem[], seed: number, trackIndex = 0
     // Translate through physical velocity so the moving opening pushes marbles naturally.
     // Even at the centre there are two 1.2 m passages; the road is never completely sealed.
     if(started)for(const {body,q,phase,omega} of gates){
-      const offset=Math.sin(phase+tick*STEP*omega)*2.2;
+      const current=(body.position.x-q.p.x)*q.side.x+(body.position.y-q.p.y)*q.side.y+(body.position.z-q.p.z)*q.side.z;
+      // Yield at a trapped marble instead of crushing it through the wall. Once
+      // the gap clears, resume at the gate's normal speed (never catch up in a jump).
+      const travel=2.2*omega*STEP;
+      let offset=Math.max(current-travel,Math.min(current+travel,Math.sin(phase+tick*STEP*omega)*2.2));
+      for(const m of live){
+        const dx=m.x-q.p.x,dy=m.y-q.p.y,dz=m.z-q.p.z;
+        const lane=dx*q.side.x+dy*q.side.y+dz*q.side.z;
+        if(Math.abs(lane)<ROAD_HALF-MARBLE_R-.2)continue;
+        const along=dx*q.tangent.x+dy*q.tangent.y+dz*q.tangent.z;
+        const height=dx*q.up.x+dy*q.up.y+dz*q.up.z;
+        const depthGap=Math.max(0,Math.abs(along)-.4),heightGap=Math.max(0,-height,height-1.6);
+        const contactRadius2=(MARBLE_R+.02)**2-depthGap**2-heightGap**2;
+        if(contactRadius2<=0)continue;
+        const reach=2.8+Math.sqrt(contactRadius2);
+        if(offset>current&&lane>current+2.8)offset=Math.min(offset,Math.max(current,lane-reach));
+        else if(offset<current&&lane<current-2.8)offset=Math.max(offset,Math.min(current,lane+reach));
+      }
       body.velocity.set((q.p.x+q.up.x*.8+q.side.x*offset-body.position.x)/STEP,(q.p.y+q.up.y*.8+q.side.y*offset-body.position.y)/STEP,(q.p.z+q.up.z*.8+q.side.z*offset-body.position.z)/STEP);
     }
     if(started)for(const arm of sweepers){
@@ -280,12 +297,16 @@ export async function createRace(items: DrawItem[], seed: number, trackIndex = 0
       // Remember only positions near the road surface. Airborne movement must
       // not advance the checkpoint used to recover a fallen marble.
       const q = samples[m.sampleIndex], off = m.body.position.vsub(new CANNON.Vec3(q.p.x, q.p.y, q.p.z));
-      const lateral = off.x * q.side.x + off.y * q.side.y + off.z * q.side.z, height = off.x * q.up.x + off.y * q.up.y + off.z * q.up.z;
+      const lateral = off.x * q.side.x + off.y * q.side.y + off.z * q.side.z;
+      const height = off.x * q.up.x + off.y * q.up.y + off.z * q.up.z;
+      // Waiting for a moving opening is not a stall. Actual falls still recover.
+      const atGate = gates.some(g => Math.abs(q.s - g.q.s) < 2 && height >= MARBLE_R - .2 && height <= WALL_H);
       if (Math.abs(lateral) <= ROAD_HALF - MARBLE_R + .1 && height >= MARBLE_R - .2 && height <= MARBLE_R + .3) m.safeSampleIndex = m.sampleIndex;
       if (height < -1.5 || Math.abs(lateral) > ROAD_HALF + MARBLE_R || off.length() > ROAD_HALF + 9) { recover(m, Math.min(m.sampleIndex, m.safeSampleIndex)); continue; }
       // First try a small physical push. Repeated stalls restart alongside or
       // behind the same position, rather than teleporting down the course.
       if (m.progress > m.bestProgress + .05) { m.bestProgress = m.progress; m.stall = 0; m.stalls = 0; }
+      else if (atGate) { m.stall = 0; m.stalls = 0; }
       else if (++m.stall >= 480) { m.stall = 0; if (m.stalls++ === 0) m.body.velocity.vadd(new CANNON.Vec3(q.tangent.x * 3, .5, q.tangent.z * 3), m.body.velocity); else recover(m, Math.min(m.sampleIndex, m.safeSampleIndex)); }
     }
     if (started) {
