@@ -1,14 +1,21 @@
 import { useState } from 'react';
-import { Trophy } from 'lucide-react';
+import { Download, Trophy } from 'lucide-react';
 import { Portrait, TeamCard } from './components';
-import { number, settlement, teamMembers, type Session, type Team } from './domain';
+import { number, settlement, settlementFileName, settlementText, teamMembers, type Session, type Team } from './domain';
+import { saveText } from './saveText';
 
 const signed = (n: number) => `${n > 0 ? '+' : ''}${number(n)}개`;
 
-export default function SettlementPage({ s }: { s: Session }) {
+export default function SettlementPage({ s, notify }: { s: Session; notify: (text: string) => void }) {
   const [winner, setWinner] = useState<Team | null>(s.score.A > s.score.B ? 'A' : s.score.B > s.score.A ? 'B' : null);
   const [baseId, setBaseId] = useState<string>();
   const result = settlement(s.players, winner ?? 'A', s.teamSize, baseId);
+  const exportMemo = async () => {
+    if (!result.base) return;
+    const name = settlementFileName(result.base.name);
+    try { const done = await saveText(name, settlementText(result)); if (done) notify(`${name} 파일을 ${done === 'saved' ? '저장' : '내보냈'}습니다.`); }
+    catch { notify('파일 저장에 실패했습니다.'); }
+  };
   return <section className="settlement-page" aria-label="경기 정산">
     <div className="patrons-heading"><h1>정산</h1></div>
     <section className="settlement-winner" aria-label="이긴 팀 선택">
@@ -29,7 +36,8 @@ export default function SettlementPage({ s }: { s: Session }) {
       <section className="panel"><span>두당 펀딩 · {s.teamSize}명 기준</span><strong>{number(result.per)}<small>개</small></strong>{result.remainder ? <em>나머지 {number(result.remainder)}개</em> : null}</section>
     </div>
     {!winner ? <p className="settlement-empty">경기가 끝나면 이긴 팀을 선택하세요.</p> : <section className="panel settlement-list" aria-label={`${s.teams[winner]} 정산`}>
-      <header><h2>{s.teams[winner]} · 승리</h2><span>{result.winners.length}명</span></header>
+      <header><h2>{s.teams[winner]} · 승리</h2><span>{result.winners.length}명</span>
+        {result.base ? <button type="button" className="button settlement-export" onClick={() => void exportMemo()} title={`${result.base.name} 기준 정산을 메모장 파일로 저장`}><Download size={14}/> 내보내기</button> : null}</header>
       {result.winners.length && result.base ? <>
         <div className="settlement-base"><span>누구 기준으로 볼까요?</span>
           <div className="segmented" role="group" aria-label="기준 선수">{result.winners.map(({ player }) => <button key={player.id} type="button" className={player === result.base ? 'selected' : ''} aria-pressed={player === result.base} onClick={() => setBaseId(player.id)}>{player.name}</button>)}</div>

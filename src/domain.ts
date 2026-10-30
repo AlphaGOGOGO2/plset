@@ -121,6 +121,16 @@ export function settlement(players: Player[], winner: Team, size: number, baseId
   // `half` (반띵) splits the gap; balloons are whole, so odd gaps drop the half toward zero (-1301 → -650) and never show -0.
   return { total, per, remainder, base: base?.player, winners: ranked.map(w => { const diff = base ? w.per - base.per : 0; return { ...w, diff, half: Math.trunc(diff / 2) || 0 }; }) };
 }
+// Memo export from the base player's side: what they receive first, a divider, then what they send, largest first in each
+// block, as "보내는 사람->받는 사람 차액(반띵)개".
+export function settlementText(result: ReturnType<typeof settlement>) {
+  const base = result.base; if (!base) return '';
+  const others = result.winners.filter(w => w.player !== base && w.diff !== 0), line = (from: string, to: string, w: typeof others[number]) => `${from}->${to} ${number(Math.abs(w.diff))}(${number(Math.abs(w.half))})개`;
+  const incoming = others.filter(w => w.diff > 0).sort((a, b) => b.diff - a.diff).map(w => line(w.player.name, base.name, w));
+  const outgoing = others.filter(w => w.diff < 0).sort((a, b) => a.diff - b.diff).map(w => line(base.name, w.player.name, w));
+  return [incoming.join('\n'), outgoing.join('\n')].filter(Boolean).join('\n----------\n') + '\n';
+}
+export function settlementFileName(baseName: string, now = new Date()) { return `${pad2(now.getFullYear() % 100)}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}프로리그 정산(${baseName}).txt`; }
 export function patronFunding(patrons: Patron[], size: number) {
   const total=patrons.reduce((sum,patron)=>sum+patron.amount,0);
   return {total,per:Math.floor(total/size),remainder:total%size};

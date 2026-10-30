@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MATCH_MAPS, mapSchedule, allocateTeams, createSession, patronFunding, funding, clockRemaining, shuffle, validateSession, setAmount, setTeam, rankByFunding, teamMembers, givenName, withTeamNames, spectatorText, setNote, sessionReport, reportFileName, addMap, removeMap, sessionMaps, participantGroups, swapTie, settlement } from './domain';
+import { MATCH_MAPS, mapSchedule, allocateTeams, createSession, patronFunding, funding, clockRemaining, shuffle, validateSession, setAmount, setTeam, rankByFunding, teamMembers, givenName, withTeamNames, spectatorText, setNote, sessionReport, reportFileName, addMap, removeMap, sessionMaps, participantGroups, swapTie, settlement, settlementText, settlementFileName } from './domain';
 import { ROSTER, searchRoster } from './roster';
 test('별명·줄인 이름·초성으로 등록 선수를 검색한다',()=>{
   assert.equal(searchRoster('현제')[0].name,'변현제');
@@ -223,4 +223,11 @@ test('정산: 기준 선수의 두당과 팀원 두당의 차액을 보여준다
   assert.deepEqual(settlement([p('가',4,'A',1),p('나',0,'A',2)],'A',4,'가').winners.map(w=>w.half),[0,0],'홀수 차액은 0 쪽으로 버리고 -0을 만들지 않는다');
   assert.equal(settlement(players,'A',4,'임홍규').base?.name,'김택용','이긴 팀이 아닌 선수를 기준으로 고르면 최다 두당으로 돌아간다');
   assert.equal(settlement([],'B',5).base,undefined);
+});
+test('정산 메모: 기준 선수가 받는 줄, 구분선, 보내는 줄 순서로 차액(반띵)을 적는다',()=>{
+  const p=(name:string,per:number,teamAt:number)=>({id:name,name,race:'P' as const,amount:per*4,team:'A' as const,active:true,teamAt});
+  const players=[p('정영재',3400,1),p('김택용',3300,2),p('변현제',2800,3),p('김정우',2000,4),p('김기석',1800,5)];
+  assert.equal(settlementText(settlement(players,'A',4,'변현제')),'정영재->변현제 600(300)개\n김택용->변현제 500(250)개\n----------\n변현제->김기석 1,000(500)개\n변현제->김정우 800(400)개\n');
+  assert.equal(settlementText(settlement(players,'A',4,'정영재')).includes('----------'),false,'받을 것이 없으면 구분선도 없다');
+  assert.equal(settlementFileName('변현제',new Date(2026,9,30)),'261030프로리그 정산(변현제).txt');
 });

@@ -33,3 +33,4 @@
 .settlement-team-totals b{color:#e5e5e5;font-variant-numeric:tabular-nums}.settlement-team-totals small{font-size:12px}
 .settlement-team-totals .won b{color:#fff}
 .settlement-list tr.sum td{background:#ffffff0b;color:#a8a8a8;font-size:14px;font-weight:600;padding:8px 10px}
+.settlement-export{margin-left:auto;display:flex;align-items:center;gap:6px;white-space:nowrap}
