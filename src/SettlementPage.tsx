@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Download, Trophy } from 'lucide-react';
 import { Portrait, TeamCard } from './components';
 import { number, settlement, settlementFileName, settlementText, teamMembers, type Session, type Team } from './domain';
@@ -6,9 +5,12 @@ import { saveText } from './saveText';
 
 const signed = (n: number) => `${n > 0 ? '+' : ''}${number(n)}개`;
 
-export default function SettlementPage({ s, notify }: { s: Session; notify: (text: string) => void }) {
-  const [winner, setWinner] = useState<Team | null>(s.score.A > s.score.B ? 'A' : s.score.B > s.score.A ? 'B' : null);
-  const [baseId, setBaseId] = useState<string>();
+type Commit = (update: (s: Session) => Session, label?: string, history?: boolean) => void;
+export default function SettlementPage({ s, commit, notify }: { s: Session; commit: Commit; notify: (text: string) => void }) {
+  // Picks live in the session so they autosave, sync to other windows and travel with an exported session file.
+  const winner: Team | null = s.settlement?.winner ?? (s.score.A > s.score.B ? 'A' : s.score.B > s.score.A ? 'B' : null), baseId = s.settlement?.baseId;
+  const setWinner = (team: Team) => commit(v => ({ ...v, settlement: { ...v.settlement, winner: team } }), `정산 이긴 팀 · ${s.teams[team]}`, false);
+  const setBaseId = (id: string) => commit(v => ({ ...v, settlement: { ...v.settlement, baseId: id } }), undefined, false);
   const result = settlement(s.players, winner ?? 'A', s.teamSize, baseId);
   const exportMemo = async () => {
     if (!result.base) return;
@@ -45,9 +47,9 @@ export default function SettlementPage({ s, notify }: { s: Session; notify: (tex
         <table>
           <thead><tr><th>선수</th><th>받아온 펀딩 · 두당</th><th>차액 · {result.base.name} 기준</th><th>반띵</th></tr></thead>
           <tbody>{(() => {
-            // Team totals sit first and stay quiet (grey band, no colour): context for the rows, not the thing to act on.
+            // Team totals sit first and stay quiet (grey band, no colour, no sign): context for the rows, not the thing to act on.
             const sum = (pick: (w: typeof result.winners[number]) => number) => result.winners.reduce((total, w) => total + pick(w), 0);
-            return <tr className="sum"><td>{s.teams[winner]} 합계</td><td>두당 {number(sum(w => w.per))}개</td><td>{signed(sum(w => w.diff))}</td><td className="half">{signed(sum(w => w.half))}</td></tr>;
+            return <tr className="sum"><td>{s.teams[winner]} 합계</td><td>두당 {number(sum(w => w.per))}개</td><td>{number(Math.abs(sum(w => w.diff)))}개</td><td className="half">{number(Math.abs(sum(w => w.half)))}개</td></tr>;
           })()}{result.winners.map(({ player, per, diff, half }) => {
             const tone = diff > 0 ? 'receive' : diff < 0 ? 'send' : '', isBase = player === result.base;
             return <tr key={player.id} className={isBase ? 'base' : ''}>

@@ -231,3 +231,10 @@ test('정산 메모: 기준 선수가 받는 줄, 구분선, 보내는 줄 순�
   assert.equal(settlementText(settlement(players,'A',4,'정영재')).includes('----------'),false,'받을 것이 없으면 구분선도 없다');
   assert.equal(settlementFileName('변현제',new Date(2026,9,30)),'261030프로리그 정산(변현제).txt');
 });
+test('세션의 정산 선택은 저장되고, 잘못된 값이면 그 선택만 버리고 세션은 불러온다',()=>{
+  const kept=validateSession(JSON.parse(JSON.stringify({...createSession(),settlement:{winner:'B',baseId:'x'}})));
+  assert.deepEqual(kept.settlement,{winner:'B',baseId:'x'});
+  const dropped=validateSession(JSON.parse(JSON.stringify({...createSession(),settlement:{winner:'C'}})));
+  assert.equal(dropped.settlement,undefined);
+  assert.equal(validateSession(JSON.parse(JSON.stringify(createSession()))).settlement,undefined,'예전 세션 파일도 그대로 불러온다');
+});

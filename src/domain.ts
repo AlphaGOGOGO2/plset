@@ -103,6 +103,8 @@ export interface Session {
   patrons: Patron[];
   draw: DrawRun | null;
   logs: { id: string; at: number; text: string }[];
+  // The settlement tab's picks; absent until the host chooses (the winner then defaults to the higher score).
+  settlement?: { winner?: Team; baseId?: string };
 }
 export const uid = () => crypto.randomUUID();
 export const number = (n: number) => n.toLocaleString('ko-KR');
@@ -161,6 +163,8 @@ export function validateSession(input: unknown): Session {
   const s = input as Session;
   if(!s || s.version!==1 || typeof s.title!=='string' || s.title.length>100 || !Number.isInteger(s.teamSize) || s.teamSize<1 || s.teamSize>30 || !Array.isArray(s.players) || s.players.length>60) throw new Error('올바른 PL SET 세션 파일이 아닙니다.');
   if(s.patrons===undefined)s.patrons=[];
+  // Settlement picks are a convenience: a malformed value is dropped instead of rejecting the whole session.
+  if(s.settlement!==undefined&&(!s.settlement||typeof s.settlement!=='object'||![undefined,'A','B'].includes(s.settlement.winner)||!(s.settlement.baseId===undefined||typeof s.settlement.baseId==='string')))delete s.settlement;
   if(!Array.isArray(s.patrons)||s.patrons.length>500||s.patrons.some(p=>!p||typeof p.id!=='string'||!p.id||typeof p.nickname!=='string'||!p.nickname.trim()||p.nickname.length>60||!Number.isSafeInteger(p.amount)||p.amount<0||p.amount>100000000||typeof p.note!=='string'||p.note.length>200)||new Set(s.patrons.map(p=>p.id)).size!==s.patrons.length)throw new Error('귀인 펀딩 내역을 확인해주세요.');
   const ids=new Set<string>();
   for(const p of s.players) {
