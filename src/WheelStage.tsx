@@ -122,7 +122,7 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
    const bezel=ctx.createLinearGradient(CX-56,CY-56,CX+56,CY+56);bezel.addColorStop(0,'#e9d7a6');bezel.addColorStop(.5,'#8d7a4e');bezel.addColorStop(1,'#d9c58e');ctx.beginPath();ctx.arc(CX,CY,56,0,TAU);ctx.strokeStyle=bezel;ctx.lineWidth=3;ctx.stroke();
    const dome=ctx.createRadialGradient(CX-16,CY-18,4,CX,CY,54);dome.addColorStop(0,'#3a4b40');dome.addColorStop(.6,'#1c2620');dome.addColorStop(1,'#0e1511');ctx.beginPath();ctx.arc(CX,CY,52,0,TAU);ctx.fillStyle=dome;ctx.fill();
    ctx.beginPath();ctx.arc(CX,CY,46,0,TAU);ctx.strokeStyle='#ffffff10';ctx.lineWidth=1;ctx.stroke();
-   if(!onStart)text('PL / SET',CX,CY,14,'#e1d7be',700);
+   if(!onStart)text('PROLEAGUE',CX,CY,12,'#e1d7be',700);
    // Brass pointer on a pivot pin; it rotates by `tilt` when a peg pushes it.
    ctx.save();ctx.shadowColor='#000a';ctx.shadowBlur=10;ctx.shadowOffsetY=4;ctx.translate(CX,CY-R-20);ctx.rotate(tilt);
    const brass=ctx.createLinearGradient(-15,0,15,0);brass.addColorStop(0,'#c7ac70');brass.addColorStop(.42,'#f6e6b8');brass.addColorStop(.6,'#e2cb92');brass.addColorStop(1,'#a88e58');

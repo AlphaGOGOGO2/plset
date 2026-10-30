@@ -65,7 +65,7 @@
 .funding-details .table-toolbar { min-height: 44px; padding: 4px 12px; gap: 12px; }
 .auto-sort-label { font-size: 12px; color: #a2b59c; }
 .search-input { width: 160px; font-size: 15px; }
-.funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 32px 196px minmax(130px, 1fr) minmax(130px, .85fr) 150px minmax(120px, .8fr); gap: 10px; padding: 0 12px; }
+.funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 32px minmax(196px, 1.15fr) minmax(130px, 1fr) minmax(130px, .85fr) 150px minmax(120px, .8fr); gap: 10px; padding: 0 12px; }
 .funding-panel .table-header { height: 30px; font-size: 14px; color: #afbeb0; }
 .funding-panel .table-row { min-height: 44px; }
 .funding-panel .row-index { font-size: 16px; }
@@ -235,7 +235,7 @@
   .bench-player .portrait-small { height: 92px; }
   .bench-player strong { font-size: 20px; }
   .funding-workspace { grid-template-columns: minmax(0, 1fr) 270px; }
-  .funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 28px 178px minmax(110px, 1fr) minmax(110px, .85fr) 140px minmax(100px, .8fr); gap: 8px; padding: 0 10px; }
+  .funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 28px minmax(178px, 1.15fr) minmax(110px, 1fr) minmax(110px, .85fr) 140px minmax(100px, .8fr); gap: 8px; padding: 0 10px; }
   .funding-panel .player-cell strong { font-size: 21px; }
   .funding-panel .converted { font-size: 22px; }
   .funding-panel .quick-add button { padding: 4px 6px; }
@@ -250,7 +250,7 @@
   .participant-entry-actions .race-entry-search { width: 320px; }
   .participant-overview-body { grid-template-columns: minmax(0, 1fr) 280px; }
   .funding-workspace { grid-template-columns: minmax(0, 1fr) 238px; }
-  .funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 24px 154px minmax(92px, 1fr) minmax(90px, .8fr) 122px minmax(88px, .7fr); gap: 6px; padding: 0 8px; }
+  .funding-panel .table-header, .funding-panel .table-row { grid-template-columns: 24px minmax(154px, 1.15fr) minmax(92px, 1fr) minmax(90px, .8fr) 122px minmax(88px, .7fr); gap: 6px; padding: 0 8px; }
   .funding-panel .player-cell { gap: 5px; }
   .funding-panel .player-cell strong { font-size: 20px; }
   .funding-panel .player-cell .portrait-small { width: 25px; height: 31px; }
@@ -266,10 +266,24 @@
 /* Funding desk: leader crown and per-player notes */
 .funding-panel .table-header > span:nth-child(5) { text-align: center; }
 .funding-panel .table-header > span:last-child { text-align: left; padding-left: 4px; }
-.funding-panel .leader-crown { flex-shrink: 0; margin-left: 2px; color: #f0d48a; filter: drop-shadow(0 0 4px #e9c46a99) drop-shadow(0 1px 1px #0008); animation: crown-glow 2.6s ease-in-out infinite; }
+.funding-panel .leader-crown { flex-shrink: 0; margin-left: 0; color: #f0d48a; filter: drop-shadow(0 0 4px #e9c46a99) drop-shadow(0 1px 1px #0008); animation: crown-glow 2.6s ease-in-out infinite; }
 @keyframes crown-glow { 50% { filter: drop-shadow(0 0 8px #f3d48acc) drop-shadow(0 1px 1px #0008); } }
 @media (prefers-reduced-motion: reduce) { .funding-panel .leader-crown { animation: none; } }
 .funding-panel .note-input { width: 100%; min-width: 0; height: 34px; padding: 4px 8px; border: 1px solid transparent; border-radius: 5px; background: transparent; font-size: 14px; color: #c9d4c5; transition: border-color .15s, background .15s; }
 .funding-panel .note-input::placeholder { color: #5f6e63; }
 .funding-panel .note-input:hover, .funding-panel .note-input:focus { border-color: #3b453c; background: #101712; outline: none; }
 .funding-panel .note-input.note-default::placeholder { color: #d0a79a; font-weight: 600; letter-spacing: .2px; }
+/* The cell's 5px gap already spaces the tie arrows; their own margin made the leader's name + crown + arrows 8px too wide and
+   truncated names like "정명훈" to "정…" on narrower windows. */
+.funding-panel .player-cell .tie-order { margin-left: 0; flex-shrink: 0; }
+/* Proleague Console brand: starjoa logo with a two-line wordmark, and a starjoa.kr link above the version. */
+.sidebar .console-brand, .loading .console-brand { display: flex; align-items: center; gap: 8px; padding-left: 6px; font-size: 14px; font-weight: 800; letter-spacing: .3px; line-height: 1.15; color: #f1f1f1; }
+.console-brand img { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
+.console-brand > span { color: inherit; margin: 0; transform: none; font-weight: 800; display: block; }
+.sidebar-site { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 7px 8px; border-radius: 6px; color: #cfcfcf; text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: .3px; }
+.sidebar-site:hover { background: #ffffff0d; color: #fff; }
+.sidebar-site img { width: 22px; height: 22px; border-radius: 5px; }
+/* The web console has no title strip (desktop only), so the sidebar and workspace start at the top edge. */
+.app-shell.web .sidebar { top: 0; }
+.app-shell.web .workspace { padding-top: 0; }
+.sidebar .console-brand { margin: 4px 0 22px; }
