@@ -233,9 +233,12 @@ export default function PinballStage({ run, items, rank, map = 0, variant = 'pla
         pill(W/2-230,H/2-200,460,420,'#131a1bf8',10);text(run?.mapFormat==='winners'&&!mapExtra?`1~${mapPool}경기 확정 · ${mapPool+1}·${mapPool+2}경기 추첨 대기`:'경기 맵 확정',W/2,H/2-160,22,'#dcc598',700,'center');
         for(let i=0;i<schedule.length;i++){const m=race.marbles.find(p=>p.item.id===schedule[i]),y=H/2-114+i*Math.min(36,Math.floor(320/Math.max(1,schedule.length)));text(`${i+1}경기`,W/2-150,y+6,17,'#a8b6aa',600);text(m?.item.label??'대기',W/2+50,y+6,24,'#f0eee3',700,'center');}
       } else if (!inspection&&(finished || !lastWinner&&arrived.length>0)) {
-        const winner = race.marbles.find(m => m.item.id === arrived[selectedRank - 1]); pill(W / 2 - 210, H / 2 - 175, 420, 350, '#131a1bf8', 10);
-        text(!lastWinner?'첫번째 당첨':'마지막 당첨', W / 2, H / 2 - 120, 20, '#d5bb8e', 600, 'center'); if (winner) marble(winner.index, W / 2, H / 2 - 40, 50);
-        text(winner?.item.label ?? '추첨 완료', W / 2, H / 2 + 62, 40, '#f1ece0', 700, 'center'); text('추첨 완료', W / 2, H / 2 + 118, 17, '#9cb3bf', 500, 'center');
+        // A short landscape card near the top: the settings panel reopens over the lower stage once the draw ends and used to hide
+        // the winner's name when the card sat in the middle.
+        const winner = race.marbles.find(m => m.item.id === arrived[selectedRank - 1]), top = 56, left = W / 2 - 230;
+        pill(left, top, 460, 170, '#131a1bf8', 10); if (winner) marble(winner.index, left + 85, top + 85, 50);
+        text(!lastWinner?'첫번째 당첨':'마지막 당첨', left + 160, top + 50, 18, '#d5bb8e', 600, 'left');
+        text(winner?.item.label ?? '추첨 완료', left + 160, top + 104, 40, '#f1ece0', 700, 'left'); text('추첨 완료', left + 160, top + 140, 16, '#9cb3bf', 500, 'left');
       }
     }
     function frame() { if (disposed) return; advance(); if (!stageRef.current?.closest('[hidden]')) render(); raf = requestAnimationFrame(frame); }
