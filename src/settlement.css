@@ -26,5 +26,10 @@
 .settlement-empty{margin:0;font-size:13px;color:var(--muted)}
 .settlement-base{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-bottom:10px}.settlement-base>span{font-size:13px;color:var(--muted)}
 .settlement-base .segmented{flex-wrap:wrap}.settlement-base .segmented button{white-space:nowrap}
-.settlement-list tr.base td{background:#ffffff08}.settlement-list td.send b{color:var(--muted)}
+.settlement-list tr.base td{background:#ffffff08}.settlement-list td.send b{color:var(--red);font-weight:800}.settlement-list td.receive b{color:#cfcfcf;font-weight:600}.settlement-list td.half{padding-left:18px;border-left:1px solid #ffffff12}
 .settlement-hint{margin:10px 0 0;font-size:12px;color:var(--muted)}
+.settlement-hint .send{color:var(--red)}
+.settlement-team-totals{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:4px;font-size:13px;color:var(--muted)}
+.settlement-team-totals b{color:#e5e5e5;font-variant-numeric:tabular-nums}.settlement-team-totals small{font-size:12px}
+.settlement-team-totals .won b{color:#fff}
+.settlement-list tr.sum td{background:#ffffff0b;color:#a8a8a8;font-size:14px;font-weight:600;padding:8px 10px}

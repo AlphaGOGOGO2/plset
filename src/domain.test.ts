@@ -219,6 +219,8 @@ test('정산: 기준 선수의 두당과 팀원 두당의 차액을 보여준다
   assert.equal(r.base?.name,'김택용','기준을 고르지 않으면 두당이 가장 많은 선수');
   assert.deepEqual(r.winners.map(w=>w.diff),[0,-500,-1300,-1500],'기준 선수가 보내는 차액은 음수');
   assert.deepEqual(settlement(players,'A',4,'이현제').winners.map(w=>w.diff),[500,0,-800,-1000],'기준보다 두당이 많은 팀원에게서는 받으므로 양수');
+  assert.deepEqual(r.winners.map(w=>w.half),[0,-250,-650,-750],'반띵은 차액의 절반');
+  assert.deepEqual(settlement([p('가',4,'A',1),p('나',0,'A',2)],'A',4,'가').winners.map(w=>w.half),[0,0],'홀수 차액은 0 쪽으로 버리고 -0을 만들지 않는다');
   assert.equal(settlement(players,'A',4,'임홍규').base?.name,'김택용','이긴 팀이 아닌 선수를 기준으로 고르면 최다 두당으로 돌아간다');
   assert.equal(settlement([],'B',5).base,undefined);
 });
