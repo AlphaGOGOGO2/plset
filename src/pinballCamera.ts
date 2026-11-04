@@ -18,7 +18,8 @@ export function zoneIntensity(zones: Zone[], x: number, y: number) {
   return best;
 }
 // Slow motion only while the cut-line marble is inside a zone and has someone to race.
-export function timeScale(intensity: number, contested: boolean) { return contested && intensity > 0 ? Math.max(.2, 1 - intensity) : 1; }
+// Floor at .35 (about 3x slower): the reference's .2 made the final approach drag on stream.
+export function timeScale(intensity: number, contested: boolean) { return contested && intensity > 0 ? Math.max(.35, 1 - intensity) : 1; }
 // Finish drama is height-based, like reference zoomY; lateral movement must not cancel it.
 export function finishIntensity(zoomY: number, y: number) { return Math.max(0, 1 - Math.abs(zoomY - y) / 5); }
 export function cameraFocus(active: Tracked[], targetIndex: number, arrived: number, zoomY: number) {

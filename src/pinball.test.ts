@@ -59,7 +59,7 @@ test('결승 구역 강도와 시간배율', () => {
   assert.equal(timeScale(0, true), 1);
   assert.equal(timeScale(.5, false), 1);
   assert.equal(timeScale(.5, true), .5);
-  assert.equal(timeScale(1, true), .2);
+  assert.equal(timeScale(1, true), .35);
 });
 
 test('순위는 0.25유닛 이상 앞서야 바뀐다', () => {
