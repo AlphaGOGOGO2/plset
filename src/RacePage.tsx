@@ -51,7 +51,7 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
       <div className="field-label draw-ball-count-field">출전<div className="draw-order-readout">{new Set(items.map(i=>i.playerId??i.id)).size}명 · 구슬 {items.length}/{RACE_MAX}개</div></div>
       <div className="pinball-view-row" role="group" aria-label="보기 설정">
         <button type="button" aria-pressed={showNames} onClick={() => setShowNames(v => !v)}><Tag size={14}/> 이름표 {showNames ? 'ON' : 'OFF'}</button>
-        <button type="button" disabled={running} onClick={() => { setSetupEdited(true); setPreviewSeed(randomSeed()); }}><Shuffle size={14}/> 출발 순서 섞기</button>
+        <button type="button" className="race-shuffle-button" disabled={running} onClick={() => { setSetupEdited(true); setPreviewSeed(randomSeed()); }}><Shuffle size={14}/> 출발 순서 섞기</button>
         <BgmVolumeControl volume={bgmVolume} onChange={setBgmVolume}/>
         <SfxVolumeControl/>
         <small className="race-bgm-note">{SOUND_CREDIT}</small>

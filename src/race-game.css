@@ -59,3 +59,7 @@
 .race-result:not(.race-result-live) h2{font-size:26px;margin-top:4px}
 .race-result-ranking{margin-top:10px}
 .race-result .race-result-ranking li{line-height:18px}
+
+/* The shuffle button is the one setup action hosts reach for every race, so it carries the gold accent instead of the muted toggle look. */
+.pinball-view-row button.race-shuffle-button{background:var(--gold);border-color:var(--gold);color:#1c1a12;font-weight:700}
+.pinball-view-row button.race-shuffle-button:hover:not(:disabled){background:#e6cf9c;border-color:#e6cf9c;color:#1c1a12}

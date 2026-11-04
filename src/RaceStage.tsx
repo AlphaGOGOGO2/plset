@@ -31,7 +31,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
   const canvasRef = useRef<HTMLCanvasElement>(null), stageRef = useRef<HTMLDivElement>(null), labelsRef = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false), [status, setStatus] = useState(''), [hud, setHud] = useState<Hud>(EMPTY);
   const [speed, setSpeed] = useState(1.5); const speedRef = useRef(1.5);
-  const [boardOpen,setBoardOpen]=useState(true),[view,setView]=useState<'chase'|'overview'>('chase');const viewRef=useRef(view);viewRef.current=view;
+  const [boardOpen,setBoardOpen]=useState(true),[view,setView]=useState<'chase'|'tail'|'overview'>('chase');const viewRef=useRef(view);viewRef.current=view;
   const [mini,setMini]=useState({path:'',viewBox:'0 0 100 100'});
   const callback = useRef(onFinish); callback.current = onFinish;
   const showNamesRef = useRef(showNames); showNamesRef.current = showNames;
@@ -199,14 +199,15 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
       if (viewRef.current==='overview') {target.copy(overviewCenter).add(overviewOffset);look.copy(overviewCenter);}
       else if (!run||!moving) { const s0 = race.samples.find(s=>s.s>=9)!; target.copy(s0.p).addScaledVector(s0.up, 11).addScaledVector(s0.tangent, -17).addScaledVector(s0.side,4+Math.sin(frameNow/6000)*1.5); look.copy(s0.p).addScaledVector(s0.tangent, 10); }
       else if (active.length) {
-        const pack = active.slice(0, finalDuel ? 2 : 5), weights = pack.map((m, i) => finalDuel ? 1 : i ? Math.max(0,1-Math.abs(pack[0].progress-m.progress)/32) : 1.4), total = weights.reduce((a, b) => a + b, 0);
+        // Tail view frames the last-place marble and the few just ahead of it; pack[0] is always the camera subject.
+        const packSize = finalDuel ? 2 : 5, pack = viewRef.current==='tail' ? active.slice(-packSize).reverse() : active.slice(0, packSize), weights = pack.map((m, i) => finalDuel ? 1 : i ? Math.max(0,1-Math.abs(pack[0].progress-m.progress)/32) : 1.4), total = weights.reduce((a, b) => a + b, 0);
         tmp.set(0, 0, 0); pack.forEach((m, i) => tmp.addScaledVector(marbleMeshes[m.index].position,weights[i])); tmp.divideScalar(total);
         const spread = Math.min(24,pack.length > 1 ? Math.abs(pack[0].progress - pack[pack.length - 1].progress) : 0), meanProgress=pack.reduce((a,m,i)=>a+m.progress*weights[i],0)/total,s = race.samples.reduce((a,b)=>Math.abs(a.s-meanProgress)<Math.abs(b.s-meanProgress)?a:b);
         const finishFocus=Math.max(0,1-(race.finish-pack[0].progress)/32);
         target.copy(tmp).addScaledVector(s.tangent, -(12 + spread * .28-finishFocus*1.8)).add(tmp2.set(0, 6.8 + spread * .16-finishFocus*.7, 0)); look.copy(tmp).addScaledVector(s.tangent, 5);
       } else { const s = race.samples[race.samples.length - 1]; target.copy(s.p).addScaledVector(s.up, 14).addScaledVector(s.tangent, -16); look.copy(s.p); }
       camPos.lerp(target, 1-Math.exp(-dt/190)); camLook.lerp(look, 1-Math.exp(-dt/145));
-      const cameraSubject=leader;
+      const cameraSubject=viewRef.current==='tail'?active[active.length-1]:leader;
       const finishTension=moving&&cameraSubject?Math.max(0,1-(race.finish-cameraSubject.progress)/32):0;
       const desiredFov=viewRef.current==='overview'?60:!moving?60:58+Math.min(6,(cameraSubject?.body.velocity.length()??0)*.2)-finishTension*10;
       const nextFov=camera.fov+(desiredFov-camera.fov)*(1-Math.exp(-dt/450));
@@ -270,7 +271,7 @@ export default function RaceStage({ run, items, map = 0, previewSeed = 412, show
     {hud.countdown > 0 ? <div className="race-countdown"><strong>{hud.countdown}</strong><span>잠시 후 출발</span></div> : null}
     {hud.winner ? <div className={`race-result${hud.complete?'':' race-result-live'}`} style={{ ['--race-accent' as string]: accent }}><div className="race-result-label">{hud.complete?'RACE FINISHED':'WINNER'} · 첫번째 완주</div><h2>{hud.winner.label}</h2>{hud.complete?<ol className="race-result-ranking" style={{ ['--race-columns' as string]: Math.ceil(hud.finishers.length / 10), ['--race-n' as string]: hud.finishers.length }}>{hud.finishers.map((r, i) => <li key={r.id}><span>{i + 1}</span><b>{r.label}</b><small>{r.detail}</small></li>)}</ol>:<small>나머지 참가자 레이스 진행 중</small>}</div> : null}
     {status ? <div className="pinball-loading" role="status">{status}</div> : null}
-    <div className="race-camera-controls" role="group" aria-label="레이스 카메라"><button aria-pressed={view==='chase'} onClick={()=>setView('chase')}>선두 추적</button><button aria-pressed={view==='overview'} onClick={()=>setView('overview')}>전체 코스</button></div>
+    <div className="race-camera-controls" role="group" aria-label="레이스 카메라"><button aria-pressed={view==='chase'} onClick={()=>setView('chase')}>선두 추적</button><button aria-pressed={view==='tail'} onClick={()=>setView('tail')}>꼴찌 추적</button><button aria-pressed={view==='overview'} onClick={()=>setView('overview')}>전체 코스</button></div>
     <div className="pinball-speed-controls" role="group" aria-label="레이스 재생 속도">{([1, 1.5, 2, 2.5] as const).map(value => <button key={value} aria-label={`${value}배속`} aria-pressed={speed === value} onClick={() => { speedRef.current = value; setSpeed(value); }}>{value}×</button>)}</div>
     <button className="pinball-fullscreen" title="전체 화면 · F" aria-label={fullscreen ? '레이스 전체 화면 종료' : '레이스 전체 화면'} onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void stageRef.current?.requestFullscreen().catch(() => {}); }}>{fullscreen ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}</button>
   </div>;
