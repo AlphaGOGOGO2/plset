@@ -1,0 +1,17 @@
+/* Motion effects: sliding nav highlight, page enter, and the team-placement slam. Spring timing lives in the components; this file only positions the layers. */
+.sidebar nav button { position: relative; }
+.sidebar nav button > * { position: relative; z-index: 1; }
+.sidebar nav button.active { background: none; border-color: transparent; }
+.sidebar nav .nav-active { position: absolute; inset: 0; z-index: 0; border-radius: 6px; background: #25372c; border: 1px solid #35513f; }
+.sidebar nav .nav-icon { display: flex; flex-shrink: 0; }
+.sidebar nav button .nav-icon > svg { width: 18px; height: 18px; }
+.page-stage { min-width: 0; }
+.page-stage[hidden] { display: none; }
+.team-card { position: relative; }
+.team-impact { position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit; }
+.team-A .team-impact { box-shadow: inset 0 0 0 2px #a4e5bc, inset 0 0 28px #a4e5bc66, 0 0 22px #a4e5bc55; }
+.team-B .team-impact { box-shadow: inset 0 0 0 2px #9ec8ec, inset 0 0 28px #9ec8ec66, 0 0 22px #9ec8ec55; }
+.team-slot-motion { display: flex; min-width: 0; }
+.team-slot-motion > .team-slot { flex: 1; }
+.bench-slot { display: flex; flex: 0 0 108px; min-width: 0; }
+.bench-slot > .bench-player { flex: 1; }

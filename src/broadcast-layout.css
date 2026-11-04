@@ -280,6 +280,8 @@
 .sidebar .console-brand, .loading .console-brand { display: flex; align-items: center; gap: 8px; padding-left: 6px; font-size: 14px; font-weight: 800; letter-spacing: .3px; line-height: 1.15; color: #f1f1f1; }
 .console-brand img { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
 .console-brand > span { color: inherit; margin: 0; transform: none; font-weight: 800; display: block; }
+/* "구글에 / 스타조아 검색" prompt above the starjoa.kr link, so viewers on stream know how to find the site. */
+.sidebar-search { margin: 0 0 8px; padding: 0 8px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.45; letter-spacing: .2px; color: #cec19d; }
 .sidebar-site { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 7px 8px; border-radius: 6px; color: #cfcfcf; text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: .3px; }
 .sidebar-site:hover { background: #ffffff0d; color: #fff; }
 .sidebar-site img { width: 22px; height: 22px; border-radius: 5px; }

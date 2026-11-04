@@ -59,6 +59,7 @@
     "cannon-es": "^0.20.0",
     "lucide-react": "^1.61.0",
     "matter-js": "^0.20.0",
+    "motion": "^14.9.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "three": "^0.170.0"
