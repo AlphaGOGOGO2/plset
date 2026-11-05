@@ -79,6 +79,11 @@
 .pinball-layout .draw-custom-items { grid-column: 1 / -1; order: 2; }
 .draw-custom-items .field-label { margin: 0; }
 .draw-custom-items input { width: 100%; min-height: 42px; }
+.draw-custom-entry { display: flex; align-items: end; gap: 8px; }
+.draw-custom-entry .field-label { flex: 1; min-width: 0; }
+.draw-custom-entry .field-label small { font-size: 11px; font-weight: 400; color: #a7b1a5; }
+.draw-custom-entry .button { flex-shrink: 0; height: 42px; padding: 0 16px; margin: 0; }
+.draw-custom-empty { margin: 9px 0 0; color: #a7b1a5; font-size: 12px; }
 .draw-custom-badges { display: flex; flex-wrap: wrap; gap: 7px; max-height: 110px; overflow-y: auto; margin-top: 9px; }
 .draw-custom-badges:empty { display: none; }
 .draw-custom-badge { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 6px 7px 6px 12px; border: 1px solid #c9ba9338; border-radius: 6px; background: #c9ba930c; color: #e1dac8; font-size: 15px; font-weight: 600; }
