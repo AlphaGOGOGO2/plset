@@ -4,7 +4,7 @@ import { seeded, shuffle, type DrawItem, type DrawRun } from './domain';
 import { playSfx, startLoop } from './sfx';
 
 const W=1000,H=640,CX=500,CY=370,R=232,TAU=Math.PI*2,DURATION=7600,REVEAL=650,FLASH=600,TILT=.38;
-const COLORS=['#e7b879','#89bca8','#91b7d8','#d39baa','#b9acd1','#c1cc8e','#82bfbd','#d7a889','#a3b4cb','#d7c17f'];
+const COLORS=['#f7b84e','#54c59c','#63b6ed','#ee85a7','#af90ed','#b5d66a','#48c9c4','#efa16b','#8faee5','#ebce58'];
 const font='"Manrope Variable", "Noto Sans KR", sans-serif';
 type GameWindow=Window&{render_game_to_text?:()=>string;advanceTime?:(ms:number)=>void};
 const wrap=(angle:number)=>(angle%TAU+TAU)%TAU;
@@ -79,7 +79,7 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
    // Ground shadow + thick bevelled rim so the disc reads as a solid object lit from the upper left.
    const ground=ctx.createRadialGradient(CX,CY+R+30,0,CX,CY+R+30,R*.95);ground.addColorStop(0,'#00000070');ground.addColorStop(1,'#00000000');
    ctx.save();ctx.translate(CX,CY+R+30);ctx.scale(1,.11);ctx.translate(-CX,-(CY+R+30));ctx.fillStyle=ground;ctx.fillRect(CX-R*1.2,CY+R+30-R,R*2.4,R*2);ctx.restore();
-   ctx.save();ctx.shadowColor='#000a';ctx.shadowBlur=34;ctx.shadowOffsetY=14;ctx.beginPath();ctx.arc(CX,CY,R+22,0,TAU);ctx.fillStyle='#1c2621';ctx.fill();ctx.restore();
+   ctx.save();ctx.shadowColor='#0006';ctx.shadowBlur=24;ctx.shadowOffsetY=10;ctx.beginPath();ctx.arc(CX,CY,R+22,0,TAU);ctx.fillStyle='#1c2621';ctx.fill();ctx.restore();
    const rim=ctx.createRadialGradient(CX-60,CY-80,R-40,CX,CY,R+24);rim.addColorStop(0,'#4a5d50');rim.addColorStop(.55,'#2c3a31');rim.addColorStop(1,'#151d18');
    ctx.beginPath();ctx.arc(CX,CY,R+22,0,TAU);ctx.fillStyle=rim;ctx.fill();
    ctx.beginPath();ctx.arc(CX,CY,R+21.5,0,TAU);ctx.strokeStyle='#c9bc8e66';ctx.lineWidth=1.5;ctx.stroke();
@@ -87,15 +87,14 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
    ctx.beginPath();ctx.arc(CX,CY,R+5,0,TAU);ctx.strokeStyle='#ffffff14';ctx.lineWidth=1;ctx.stroke();
    for(let i=0;i<n;i++){
     const a=angle+i*sector,b=a+sector,base=COLORS[i%COLORS.length];
-    const face=ctx.createRadialGradient(CX,CY,36,CX,CY,R);face.addColorStop(0,shade(base,.3));face.addColorStop(.7,shade(base,.06));face.addColorStop(1,shade(base,-.14));
+    const face=ctx.createRadialGradient(CX,CY,36,CX,CY,R);face.addColorStop(0,shade(base,.08));face.addColorStop(.7,base);face.addColorStop(1,shade(base,-.025));
     ctx.beginPath();ctx.moveTo(CX,CY);ctx.arc(CX,CY,R,a,b);ctx.closePath();ctx.fillStyle=face;ctx.fill();
-    ctx.strokeStyle='#0d1510aa';ctx.lineWidth=2;ctx.stroke();
+    ctx.strokeStyle='#0d151066';ctx.lineWidth=1.5;ctx.stroke();
     ctx.beginPath();ctx.moveTo(CX+Math.cos(a)*40,CY+Math.sin(a)*40);ctx.lineTo(CX+Math.cos(a)*(R-2),CY+Math.sin(a)*(R-2));ctx.strokeStyle='#ffffff2e';ctx.lineWidth=1;ctx.stroke();
    }
-   // One fixed light source: a soft specular sweep over the top-left and a vignette toward the edge.
+   // A light reflection keeps the face vivid; depth comes from the rim instead of a dark vignette.
    ctx.save();ctx.beginPath();ctx.arc(CX,CY,R,0,TAU);ctx.clip();
-   const spec=ctx.createRadialGradient(CX-90,CY-120,10,CX-90,CY-120,R*1.25);spec.addColorStop(0,'#ffffff30');spec.addColorStop(.5,'#ffffff0c');spec.addColorStop(1,'#ffffff00');ctx.fillStyle=spec;ctx.fillRect(0,0,W,H);
-   const vignette=ctx.createRadialGradient(CX,CY,R*.72,CX,CY,R);vignette.addColorStop(0,'#00000000');vignette.addColorStop(1,'#00000022');ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
+   const spec=ctx.createRadialGradient(CX-90,CY-120,10,CX-90,CY-120,R*1.25);spec.addColorStop(0,'#ffffff14');spec.addColorStop(.5,'#ffffff06');spec.addColorStop(1,'#ffffff00');ctx.fillStyle=spec;ctx.fillRect(0,0,W,H);
    ctx.restore();
    if(finished){
     for(let i=0;i<n;i++){if(i===selected)continue;const a=angle+i*sector;ctx.beginPath();ctx.moveTo(CX,CY);ctx.arc(CX,CY,R,a,a+sector);ctx.closePath();ctx.fillStyle='#0b120d66';ctx.fill();}

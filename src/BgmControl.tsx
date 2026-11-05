@@ -32,4 +32,4 @@ export function BgmVolumeControl({ volume, onChange }: { volume: number; onChang
   </div>;
 }
 
-export const SOUND_CREDIT = 'AI(Suno·ElevenLabs)로 직접 제작한 BGM·효과음 · 기존 곡 저작권과 무관';
+export const SOUND_CREDIT = 'AI로 직접 제작한 BGM·효과음';

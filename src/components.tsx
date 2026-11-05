@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Users, Radio, Timer, CircleDot, Trophy, ArrowUpRight, Plus, Play, Pause, RotateCcw } from 'lucide-react';
 import { clockRemaining, clockText, funding, number, rankByFunding, teamMembers, type Player, type Scene, type Session, type Team } from './domain';
 import { portraitUrl } from './roster';
+import { playSfx, preloadSfx } from './sfx';
 /** The most recent team placement: which player landed on which team, and a nonce so repeat placements re-trigger. */
 export type Slam = { id: string; team: Team; n: number };
 export function Portrait({player,small=false}:{player:Pick<Player,'name'|'race'|'rosterId'>;small?:boolean}){
@@ -54,12 +55,20 @@ export function TeamCard({s,team,slam=null,onDrop,onRemove,onName}:{s:Session;te
   const players=teamMembers(s.players,team);
   const [dragOver,setDragOver]=useState(false);
   const card=useRef<HTMLElement>(null);
+  const sounded=useRef<number|null>(null);
+  useEffect(()=>{if(onDrop)preloadSfx('teamPlace');},[!!onDrop]);
+  // Fire at the spring's first landing, not at the click or after its bounce settles.
+  const soundLanding=(id:string)=>{
+    if(!slam||slam.id!==id||sounded.current===slam.n)return;
+    sounded.current=slam.n;
+    if(!card.current?.closest('[hidden]'))playSfx('teamPlace');
+  };
   // Shake the whole card on each placement; skipped when the OS asks for reduced motion.
   useEffect(()=>{if(!slam||!card.current||matchMedia('(prefers-reduced-motion: reduce)').matches)return;card.current.animate([{transform:'translate(0,0)'},{transform:'translate(-3px,1px)'},{transform:'translate(3px,-1px)'},{transform:'translate(-2px,0)'},{transform:'translate(2px,0)'},{transform:'translate(0,0)'}],{duration:320,easing:'ease-out'});},[slam?.n]);
   return <section ref={card} className={`team-card team-${team}${dragOver?' drag-over':''}`} aria-label={`${team}팀 선수`} onDragOver={onDrop?e=>{e.preventDefault();e.dataTransfer.dropEffect='move';setDragOver(true);}:undefined} onDragLeave={()=>setDragOver(false)} onDrop={onDrop?e=>{e.preventDefault();setDragOver(false);onDrop(e.dataTransfer.getData('text/plain'));}:undefined}>
     <div className="team-card-head"><span className="team-letter">{team}</span><div><span className="eyebrow">{team==='A'?'HOME SIDE':'AWAY SIDE'}</span>{onName?<input className="team-name-input" aria-label={`${team}팀 이름`} maxLength={30} defaultValue={s.teams[team]} key={s.teams[team]} onBlur={e=>onName(e.target.value.trim()||`TEAM ${team}`)}/>:<h2>{s.teams[team]}</h2>}</div><span className="team-capacity">{players.length} / {s.teamSize}</span></div>
     {slam?<motion.span className="team-impact" key={slam.n} initial={{opacity:1,scale:.97}} animate={{opacity:0,scale:1.02}} transition={{duration:.6,ease:'easeOut'}} aria-hidden="true"/>:null}
-    <div className="team-slots" style={{gridTemplateColumns:`repeat(${Math.min(5,Math.max(s.teamSize,players.length))},minmax(0,1fr))`}}><AnimatePresence mode="popLayout" initial={false}>{Array.from({length:Math.max(s.teamSize,players.length)},(_,i)=>{const p=players[i];return <motion.div className="team-slot-motion" key={p?.id??i} initial={p&&slam?.id===p.id?{scale:1.35,opacity:0}:false} animate={{scale:1,opacity:1}} exit={p?{scale:.6,opacity:0}:undefined} transition={{type:'spring',stiffness:600,damping:24,mass:.8}}><div className={`team-slot ${p?'filled':''}`} draggable={!!p&&!!onDrop} onDragStart={p&&onDrop?e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',p.id);}:undefined}><span className="slot-no">{String(i+1).padStart(2,'0')}</span>{p?<><Portrait player={p} small/><RaceMark race={p.race}/><strong>{p.name}</strong>{onRemove?<button className="remove-player" aria-label={`${p.name} 팀에서 제외`} title="미배정으로 이동" draggable={false} onMouseDown={e=>{e.stopPropagation();e.preventDefault();e.currentTarget.focus();}} onDragStart={e=>{e.preventDefault();e.stopPropagation();}} onClick={e=>{e.stopPropagation();onRemove(p.id);}}>×</button>:null}</>:<span className="slot-empty">{onDrop?'드래그하여 배정':'선수 대기 중'}</span>}</div></motion.div>;})}</AnimatePresence></div>
+    <div className="team-slots" style={{gridTemplateColumns:`repeat(${Math.min(5,Math.max(s.teamSize,players.length))},minmax(0,1fr))`}}><AnimatePresence mode="popLayout" initial={false}>{Array.from({length:Math.max(s.teamSize,players.length)},(_,i)=>{const p=players[i];return <motion.div className="team-slot-motion" key={p?.id??i} onUpdate={latest=>{if(p&&typeof latest.scale==='number'&&latest.scale<=1)soundLanding(p.id);}} initial={p&&slam?.id===p.id?{scale:1.35,opacity:0}:false} animate={{scale:1,opacity:1}} exit={p?{scale:.6,opacity:0}:undefined} transition={{type:'spring',stiffness:600,damping:24,mass:.8}}><div className={`team-slot ${p?'filled':''}`} draggable={!!p&&!!onDrop} onDragStart={p&&onDrop?e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',p.id);}:undefined}><span className="slot-no">{String(i+1).padStart(2,'0')}</span>{p?<><Portrait player={p} small/><RaceMark race={p.race}/><strong>{p.name}</strong>{onRemove?<button className="remove-player" aria-label={`${p.name} 팀에서 제외`} title="미배정으로 이동" draggable={false} onMouseDown={e=>{e.stopPropagation();e.preventDefault();e.currentTarget.focus();}} onDragStart={e=>{e.preventDefault();e.stopPropagation();}} onClick={e=>{e.stopPropagation();onRemove(p.id);}}>×</button>:null}</>:<span className="slot-empty">{onDrop?'드래그하여 배정':'선수 대기 중'}</span>}</div></motion.div>;})}</AnimatePresence></div>
     <div className="team-card-foot"><span>종족 구성</span><div className="team-race-counts" role="group" aria-label={`${team}팀 종족 구성`}>{(['T','P','Z'] as const).map(race=>{const count=players.filter(p=>p.race===race).length;return <span className="team-race-count" key={race} aria-label={`${{T:'테란',P:'프로토스',Z:'저그'}[race]} ${count}명`}><RaceMark race={race}/><b>{count}</b><small>명</small></span>;})}</div></div>
   </section>;
 }

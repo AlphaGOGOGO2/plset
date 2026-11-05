@@ -133,7 +133,14 @@
 
 .wheel-canvas.can-spin { cursor: pointer; }
 
-.wheel-editor-layout .draw-controls { grid-template-columns: auto minmax(100px,1fr) auto auto; }
+.wheel-editor-layout .draw-controls { grid-template-columns: auto auto minmax(90px,1fr) auto auto; }
+.wheel-arrange-field > span { display: flex; align-items: center; gap: 10px; }
+.wheel-arrange-field small { color: #a7b1a5; font-size: 11px; font-weight: 400; }
+.wheel-arrange-buttons { display: flex; gap: 6px; }
+.wheel-arrange-buttons button { height: 39px; padding: 0 12px; border: 1px solid #3b453c; border-radius: 5px; background: #252b27; color: #e0e5dc; font-size: 14px; white-space: nowrap; }
+.wheel-arrange-buttons button:hover:not(:disabled) { background: #354039; border-color: #7a887b; }
+.wheel-arrange-buttons button[aria-pressed="true"] { background: #d4c59f; border-color: #d4c59f; color: #252820; }
+.wheel-arrange-buttons button:disabled { opacity: .4; cursor: not-allowed; }
 .wheel-count-control { display: flex; align-items: center; gap: 4px; height: 39px; border: 1px solid #3b453c; border-radius: 5px; background: #111715; padding: 2px; }
 .wheel-count-control button { display: grid; place-items: center; width: 34px; height: 33px; padding: 0; border: 0; border-radius: 3px; background: #293228; }
 .wheel-count-control input { width: 44px; padding: 0; border: 0; background: none; text-align: right; font-size: 21px; font-weight: 700; }
@@ -148,7 +155,7 @@
 
 .sidebar-version { align-items: center; padding: 16px 8px; margin-top: 12px; font-size: 11px; letter-spacing: .8px; color: #879580; }
 .sidebar-version b { font-size: 14px; font-weight: 600; color: #cec19d; letter-spacing: .2px; }
-/* Pinball: one full-height stage; settings float over it at the bottom-left, view tools sit top-right under the fullscreen button. */
+/* Pinball: one full-height stage; settings float at bottom-right, view tools sit below the fullscreen button. */
 .draw-layout.pinball-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); height: calc(100vh - 134px); gap: 0; }
 @media (max-height: 1000px) { .draw-layout.pinball-layout { height: calc(100vh - 120px); } }
 .pinball-layout .stage-panel { position: relative; }
@@ -180,6 +187,8 @@
 .pinball-settings-close:hover { background: #ffffff12; color: #fff; }
 .pinball-settings-toggle { position: absolute; left: 14px; bottom: 14px; z-index: 3; display: flex; gap: 6px; align-items: center; height: 34px; padding: 0 14px; border: 1px solid #ffffff22; border-radius: 8px; background: #0f1516ee; color: #d3c7a2; font-size: 13px; }
 .pinball-settings-toggle:hover { background: #1a2325; color: #f0e6cf; }
+.pinball-layout:not(.race-layout) .pinball-settings, .pinball-layout:not(.race-layout) .pinball-settings-toggle { left: auto; right: 14px; }
+.pinball-layout:not(.race-layout) .draw-result { left: 14px; right: auto; }
 .pinball-layout .draw-result:not(:has(strong)) { display: none; }
 .pinball-layout .pinball-stage:fullscreen .pinball-settings, .pinball-layout .pinball-stage:fullscreen .pinball-settings-toggle { display: none; }
 .pinball-view-row { grid-column: 1 / -1; order: 1; display: flex; gap: 6px; }
@@ -187,3 +196,8 @@
 .pinball-view-row button[aria-pressed=true] { color: #e5d6b0; border-color: #a99e6d80; background: #c9ba9324; }
 .pinball-view-row button:disabled { opacity: .4; }
 .pinball-view-row button:hover:not(:disabled) { color: #f0e6cf; }
+.pinball-layout:not(.race-layout) .pinball-view-row { flex-wrap: wrap; align-items: center; }
+.pinball-view-row button.pinball-shuffle-button { background: #d4c59f; border-color: #d4c59f; color: #252820; font-weight: 700; }
+.pinball-view-row button.pinball-shuffle-button:hover:not(:disabled) { background: #ead8a9; border-color: #ead8a9; color: #252820; }
+.pinball-sound-inline { display: flex; align-items: center; gap: 8px; padding-left: 10px; margin-left: 4px; border-left: 1px solid #ffffff24; }
+.pinball-view-row .pinball-sound-credit { flex-basis: 100%; margin: 0; }

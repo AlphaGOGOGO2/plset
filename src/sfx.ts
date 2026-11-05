@@ -1,6 +1,6 @@
 // Race and roulette sound effects (generated with ElevenLabs). Silent in the ?output broadcast window so the operator window is the only audio source.
 export type Sfx = 'countdown' | 'go' | 'boost' | 'win' | 'finish' | 'bumper' | 'lead' | 'tension' | 'cheer' | 'wheelStart' | 'wheelTick'
-  | 'pinballBounce' | 'pinballBumper' | 'pinballBreak';
+  | 'pinballBounce' | 'pinballBumper' | 'pinballBreak' | 'teamPlace';
 export type SfxLoop = 'wheelSpin';
 export const SFX_VOLUME = 0.5;
 const KEY = 'plset-race-sfx-volume', OUTPUT = new URLSearchParams(location.search).has('output');
@@ -14,6 +14,7 @@ const MIX: Record<Sfx | SfxLoop, { file: string; gain: number; gap: number }> = 
   wheelTick: { file: 'wheel-tick.mp3', gain: .45, gap: 35 }, wheelSpin: { file: 'wheel-spin.wav', gain: .6, gap: 0 },
   pinballBounce: { file: 'pinball-bounce.mp3', gain: .25, gap: 70 }, pinballBumper: { file: 'pinball-bumper.mp3', gain: .55, gap: 90 },
   pinballBreak: { file: 'pinball-break.mp3', gain: .7, gap: 80 },
+  teamPlace: { file: 'team-place.mp3', gain: .8, gap: 60 },
 };
 const sources = new Map<Sfx, HTMLAudioElement>(), lastPlayed = new Map<Sfx, number>(), listeners = new Set<() => void>();
 const url = (name: Sfx | SfxLoop) => `${import.meta.env.BASE_URL}audio/sfx/${MIX[name].file}`;
@@ -24,6 +25,14 @@ export function subscribeSfxVolume(listener: () => void) { listeners.add(listene
 export function setSfxVolume(value: number) {
   volume = value; listeners.forEach(listener => listener());
   try { localStorage.setItem(KEY, String(value)); } catch { /* Storage may be unavailable; the volume still applies for this session. */ }
+}
+
+export function preloadSfx(name: Sfx) {
+  if (OUTPUT || sources.has(name)) return;
+  const source = new Audio(url(name));
+  source.preload = 'auto';
+  source.load();
+  sources.set(name, source);
 }
 
 export function playSfx(name: Sfx) {
