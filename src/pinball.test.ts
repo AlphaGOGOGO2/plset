@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
 import { createPinball, configurePinballBinary, currentCourse, replayCourse, COURSE_ORDER } from './pinball';
 import { courses, ROTOR_TUNING } from './courses';
-import { Camera, cameraFocus, finishIntensity, INITIAL_ZOOM, RankTracker, timeScale, VIEW_H, VIEW_W, zoneIntensity } from './pinballCamera';
+import { Camera, cameraFocus, courseFrame, finishIntensity, INITIAL_ZOOM, RankTracker, timeScale, VIEW_H, VIEW_W, zoneIntensity, type CourseWalls } from './pinballCamera';
 import { createSession, validateSession } from './domain';
 
 const require = createRequire(import.meta.url);
@@ -79,6 +79,39 @@ test('카메라는 대상을 따라가고 결승 구역에서 줌인한다', () 
   assert.ok(Math.abs(camera.position.y - 50) < .5, `y ${camera.position.y}`); assert.ok(Math.abs(camera.zoom - 1) < .05, `zoom ${camera.zoom}`);
   for (let i = 0; i < 200; i++) camera.update({ target: { id: 'a', x: 13, y: 110 }, rival: { id: 'b', x: 13, y: 109 }, intensity: 1, focusOnRival: false, zones: [], viewSize });
   assert.ok(camera.zoom > 3.5, `zoom ${camera.zoom}`);
+});
+
+test('코스 카메라는 화면 크기와 구슬 간격에 관계없이 좌우 벽에 맞춘다', () => {
+  const walls: CourseWalls = [[[9, -30], [9, 100]], [[17, -30], [17, 100]]];
+  for (const width of [800, 1200, 1920]) {
+    const viewSize = { x: width / INITIAL_ZOOM, y: width * 9 / 16 / INITIAL_ZOOM };
+    const frame = courseFrame(40, viewSize, walls);
+    assert.ok(Math.abs(8 * frame.zoom / viewSize.x - .94) < .00001);
+    assert.equal(frame.position.x, 13);
+    for (const gap of [2, 20, 60]) {
+      const camera = new Camera(); camera.reset({ x: 13, y: 40 }, 2);
+      for (let i = 0; i < 240; i++) camera.update({ target: { id: 'a', x: 10, y: 40 }, rival: { id: 'b', x: 16, y: 40 - gap }, intensity: 0, focusOnRival: false, zones: [], viewSize, walls });
+      assert.ok(Math.abs(camera.zoom - frame.zoom) < .001);
+      assert.equal(camera.position.x, 13);
+      assert.equal(camera.position.y, 40);
+    }
+  }
+});
+
+test('코스 카메라는 굽은 통로의 화면 안 벽을 담고 결승 줌인을 유지한다', () => {
+  const viewSize = { x: 20, y: 11.25 };
+  for (const course of courses.slice(10)) {
+    const walls = course.entities.slice(0, 2).flatMap(e => e.shape.type === 'polyline' ? [e.shape.points] : []);
+    for (const y of [10, 21, 40, 61, 85]) {
+      const frame = courseFrame(y, viewSize, walls), halfHeight = viewSize.y / frame.zoom / 2;
+      for (const wall of walls) for (const [x, wallY] of wall) if (Math.abs(wallY - y) <= halfHeight) {
+        assert.ok(Math.abs(x - frame.position.x) * frame.zoom <= viewSize.x / 2 + .001, `${course.title} y=${y}`);
+      }
+    }
+    const camera = new Camera(); camera.reset({ x: 13, y: course.zoomY }, 1);
+    for (let i = 0; i < 240; i++) camera.update({ target: { id: 'a', x: 13, y: course.zoomY }, intensity: 1, focusOnRival: false, zones: [], viewSize, walls });
+    assert.ok(Math.abs(camera.zoom - 4) < .001);
+  }
 });
 
 test('기존 DrawRun map 0..4는 수정 전 모든 틱의 궤적·도착순·완료시간을 유지한다', async () => {

@@ -5,6 +5,35 @@ export const INITIAL_ZOOM = 60, VIEW_W = 1600, VIEW_H = 900;
 export type Point = { x: number; y: number };
 export type Zone = { x: number; y: number; w: number; h: number };
 export type Tracked = Point & { id: string };
+export type CourseWalls = readonly (readonly (readonly [number, number])[])[];
+
+// Fit the visible section of the outer walls, rather than the gap between racers.
+// Include bends within the viewport so a diagonal lane does not clip at the edges.
+export function courseFrame(y: number, viewSize: Point, walls: CourseWalls) {
+  const bounds = (zoom: number) => {
+    const halfHeight = viewSize.y / zoom / 2, top = y - halfHeight, bottom = y + halfHeight;
+    const xs: number[] = [];
+    for (const points of walls) {
+      if (!points.length) continue;
+      if (top <= points[0][1]) xs.push(points[0][0]);
+      if (bottom >= points[points.length - 1][1]) xs.push(points[points.length - 1][0]);
+      for (let i = 1; i < points.length; i++) {
+        const [ax, ay] = points[i - 1], [bx, by] = points[i];
+        if (by < top || ay > bottom) continue;
+        if (ay === by) { xs.push(ax, bx); continue; }
+        for (const at of [Math.max(top, ay), Math.min(bottom, by)]) xs.push(ax + (bx - ax) * (at - ay) / (by - ay));
+      }
+    }
+    return { left: Math.min(...xs), right: Math.max(...xs) };
+  };
+  let low = .1, high = 4;
+  for (let i = 0; i < 24; i++) {
+    const zoom = (low + high) / 2, { left, right } = bounds(zoom);
+    if ((right - left) * zoom <= viewSize.x * .94) low = zoom; else high = zoom;
+  }
+  const { left, right } = bounds(low);
+  return { position: { x: (left + right) / 2, y }, zoom: low };
+}
 
 const FRAME_PADDING = 2, MIN_FRAME_ZOOM = .6, FRAME_RELEASE_ZOOM = .35, FOCUS_BLEND_FRAMES = 40, ZONE_BLEND_FRAMES = 60, SWITCH_DELAY_FRAMES = 20, SWITCH_BLEND_FRAMES = 36;
 const RANK_EMA_SEC = .4, RANK_MARGIN = .25;
@@ -74,15 +103,15 @@ export class Camera {
     this.position.y = interpolate(this.position.y, point.y, k);
   }
   // `dt` is the frame time in ms; smoothing is tuned to 1/10 per frame at 60fps and scales with dropped frames.
-  update({ target, rival, intensity, focusOnRival, zones, viewSize, marbles, dt = 1000 / 60 }: { target?: Tracked; rival?: Tracked; intensity: number; focusOnRival: boolean; zones: Zone[]; viewSize: Point; marbles?: Tracked[]; dt?: number }) {
+  update({ target, rival, intensity, focusOnRival, zones, viewSize, marbles, walls, dt = 1000 / 60 }: { target?: Tracked; rival?: Tracked; intensity: number; focusOnRival: boolean; zones: Zone[]; viewSize: Point; marbles?: Tracked[]; walls?: CourseWalls; dt?: number }) {
     dt = Math.max(0, Math.min(100, dt));
     if(this.inspecting){this.inspecting=false;this.switchFrom={position:{...this.position},zoom:this.zoom};this.switchProgress=0;}
-    if (target) this.aim(target, rival, intensity, focusOnRival, zones, viewSize, dt / (1000 / 60), marbles);
+    if (target) this.aim(target, rival, intensity, focusOnRival, zones, viewSize, dt / (1000 / 60), marbles, walls);
     const k = 1 - Math.pow(.9, dt / (1000 / 60));
     this.position.x = interpolate(this.position.x, this.targetPosition.x, k); this.position.y = interpolate(this.position.y, this.targetPosition.y, k);
     this.zoom = interpolate(this.zoom, this.targetZoom, k);
   }
-  private aim(current: Tracked, currentRival: Tracked | undefined, intensity: number, focusOnRival: boolean, zones: Zone[], viewSize: Point, frames: number, marbles?: Tracked[]) {
+  private aim(current: Tracked, currentRival: Tracked | undefined, intensity: number, focusOnRival: boolean, zones: Zone[], viewSize: Point, frames: number, marbles?: Tracked[], walls?: CourseWalls) {
     const { target, rival } = this.pickPair({ target: current, rival: currentRival }, frames, marbles);
     const isCurrent = target.id === current.id && rival?.id === currentRival?.id;
     const fitZoom = rival ? Math.min(viewSize.x / 2 / (Math.abs(rival.x - target.x) / 2 + FRAME_PADDING), viewSize.y / 2 / (Math.abs(rival.y - target.y) / 2 + FRAME_PADDING)) : 0;
@@ -90,6 +119,12 @@ export class Camera {
     this.focusWeight = focusOnRival && isCurrent && rival ? Math.min(1, this.focusWeight + step) : Math.max(0, this.focusWeight - step);
     let { position, zoom } = frameView(target, rival, fitZoom, intensity, viewSize);
     if (rival && this.focusWeight > 0) { const w = smoothstep(this.focusWeight), view = frameView(rival, target, fitZoom, intensity, viewSize); position = { x: position.x + (view.position.x - position.x) * w, y: position.y + (view.position.y - position.y) * w }; zoom += (view.zoom - zoom) * w; }
+    if (walls?.length === 2 && walls.every(wall => wall.length >= 2)) {
+      const focusY = target.y + ((rival?.y ?? target.y) - target.y) * smoothstep(this.focusWeight);
+      const frame = courseFrame(focusY, viewSize, walls);
+      position = frame.position;
+      zoom = Math.max(frame.zoom, 4 * intensity);
+    }
     // These are cameraZones, separate from finish intensity / slow motion.
     const zone = zones.find(z => z.w > 0 && z.h > 0 && Math.abs(target.x - z.x) <= z.w / 2 && Math.abs(target.y - z.y) <= z.h / 2);
     if (zone) this.zone = zone;

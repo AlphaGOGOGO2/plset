@@ -185,11 +185,10 @@ export default function PinballStage({ run, items, rank, map = 0, variant = 'pla
       if(inspection)camera.inspect(inspection,dt);
       else if (moving && active.length) {
         const marbles = active.map(m => ({ id: m.item.id, x: mx(m), y: my(m) }));
-        // Match the reference: front pair first, then the winning cut-line; zoom
-        // intensity uses that same cut-line throughout, just like slow motion.
-        // Wheel of fortune uses free pair tracking; our old scripted room
-        // centres overrode it and introduced extra pans/1.5x zooms mid-course.
-        camera.update({ ...cameraFocus(marbles, state.targetIndex, arrived.length, race.stage.zoomY), marbles, zones: [], viewSize, dt });
+        // Follow the front runner / winning cut-line while fitting the visible
+        // outer walls. Racer separation must not shrink the whole course.
+        const walls = race.stage.entities.slice(0, 2).flatMap(e => e.shape.type === 'polyline' ? [e.shape.points] : []);
+        camera.update({ ...cameraFocus(marbles, state.targetIndex, arrived.length, race.stage.zoomY), marbles, walls, zones: [], viewSize, dt });
       } else { camera.update({ intensity: 0, focusOnRival: false, zones: [], viewSize, dt }); }
       const Z = worldScale * camera.zoom, sx = (x: number) => W / 2 + (x - camera.position.x) * Z, sy = (y: number) => H / 2 + (y - camera.position.y) * Z;
       ctx.fillStyle = '#0b0f10'; ctx.fillRect(0, 0, W, H);
