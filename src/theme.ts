@@ -3,6 +3,27 @@
 // green/mint band are rotated toward the theme hue, while gold (leader), red (danger),
 // blue (team B) and photos stay untouched. The choice is a local preference, not session data.
 export interface Theme { id: string; name: string; description: string; hue: number | null; saturation: number; lightness: number }
+// Light mode is derived from the same stylesheets: every color keeps its hue and saturation but
+// its lightness is mirrored (l -> 1 - l), so white text on near-black becomes black text on near-white.
+// Shadows are left alone because they must stay dark on a light surface as well.
+export type Mode = 'dark' | 'light';
+// Light surfaces lean toward the starjoa.kr ivory/champagne palette (#f3f0e9, #e6e2d9): mirrored neutrals
+// get a warm tint that grows with lightness, so paper-like surfaces are warm while dark text stays neutral.
+export const LIGHT_TINT = { hue: 42, warmth: 0.3, maxSaturation: 0.06 };
+export const MODES: Mode[] = ['dark', 'light'];
+const MODE_KEY = 'plset.mode';
+const SHADOW_PROPERTY = /shadow|^filter$/;
+let currentMode: Mode = (() => { try { return localStorage.getItem(MODE_KEY) === 'light' ? 'light' : 'dark'; } catch { return 'dark'; } })();
+const modeListeners = new Set<() => void>();
+export const getMode = () => currentMode;
+export function setMode(next: Mode) {
+  if (next === currentMode) return;
+  currentMode = next;
+  try { localStorage.setItem(MODE_KEY, next); } catch { /* Storage may be unavailable; the mode still applies for this session. */ }
+  modeListeners.forEach(fn => fn());
+}
+export const toggleMode = () => setMode(currentMode === 'dark' ? 'light' : 'dark');
+export function subscribeMode(fn: () => void) { modeListeners.add(fn); return () => { modeListeners.delete(fn); }; }
 export const BRAND_HUE = 135;
 const BAND: [number, number] = [80, 180];
 export const THEMES: Theme[] = [
@@ -43,65 +64,84 @@ export function hslToRgb(h: number, s: number, l: number): [number, number, numb
   const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
   return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
 }
-export function remapRgba(color: Rgba, theme: Theme): Rgba {
-  const [h, s, l] = rgbToHsl(color.r, color.g, color.b);
-  if (s === 0 || h < BAND[0] || h > BAND[1]) return color;
-  const hue = theme.hue === null ? h : (((theme.hue + (h - BRAND_HUE)) % 360) + 360) % 360;
-  const [r, g, b] = hslToRgb(hue, Math.min(1, s * theme.saturation), Math.max(0, Math.min(1, l + theme.lightness)));
+export function remapRgba(color: Rgba, theme: Theme, mode: Mode = 'dark'): Rgba {
+  let [h, s, l] = rgbToHsl(color.r, color.g, color.b);
+  const tinted = s > 0 && h >= BAND[0] && h <= BAND[1];
+  if (!tinted && mode === 'dark') return color;
+  if (tinted) {
+    h = theme.hue === null ? h : (((theme.hue + (h - BRAND_HUE)) % 360) + 360) % 360;
+    s = Math.min(1, s * theme.saturation);
+    l = Math.max(0, Math.min(1, l + theme.lightness));
+  }
+  if (mode === 'light') {
+    l = 1 - l;
+    if (s <= LIGHT_TINT.maxSaturation && l > 0.5) { h = LIGHT_TINT.hue; s = LIGHT_TINT.warmth * ((l - 0.5) / 0.5) ** 2; }
+  }
+  const [r, g, b] = hslToRgb(h, s, l);
   return { r, g, b, a: color.a };
 }
-export function remapHex(hex: string, theme: Theme) { const c = parseHex(hex); return c ? toHex(remapRgba(c, theme)) : hex; }
+export function remapHex(hex: string, theme: Theme, mode: Mode = 'dark') { const c = parseHex(hex); return c ? toHex(remapRgba(c, theme, mode)) : hex; }
 // Serialized CSSOM text uses rgb()/rgba(); custom properties keep their raw hex values.
 const RGB = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/g, HEX = /#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b/gi;
-export function remapText(text: string, theme: Theme) {
+export function remapText(text: string, theme: Theme, mode: Mode = 'dark') {
   return text
-    .replace(RGB, (m, r, g, b, a) => { const next = remapRgba({ r: +r, g: +g, b: +b, a: a === undefined ? 1 : +a }, theme); return next === null ? m : `rgb${next.a < 1 ? 'a' : ''}(${Math.round(next.r)}, ${Math.round(next.g)}, ${Math.round(next.b)}${next.a < 1 ? `, ${next.a}` : ''})`; })
-    .replace(HEX, m => remapHex(m, theme));
+    .replace(RGB, (m, r, g, b, a) => { const next = remapRgba({ r: +r, g: +g, b: +b, a: a === undefined ? 1 : +a }, theme, mode); return next === null ? m : `rgb${next.a < 1 ? 'a' : ''}(${Math.round(next.r)}, ${Math.round(next.g)}, ${Math.round(next.b)}${next.a < 1 ? `, ${next.a}` : ''})`; })
+    .replace(HEX, m => remapHex(m, theme, mode));
+}
+// Shadows keep their dark-mode colors in light mode: a drop shadow must stay dark on a light surface.
+export function remapDeclaration(name: string, value: string, theme: Theme, mode: Mode = 'dark') {
+  return remapText(value, theme, SHADOW_PROPERTY.test(name) ? 'dark' : mode);
 }
 const HAS_COLOR = /rgba?\(|#[0-9a-f]{3,8}\b/i;
 // Only color-bearing declarations are cloned, in source order, so layout properties and the
 // original cascade between same-specificity rules are left exactly as the stylesheets define them.
-function colorDeclarations(style: CSSStyleDeclaration, theme: Theme) {
+function colorDeclarations(style: CSSStyleDeclaration, theme: Theme, mode: Mode) {
   const decls: string[] = [];
   for (let i = 0; i < style.length; i++) {
     const name = style[i], value = style.getPropertyValue(name);
     if (!HAS_COLOR.test(value)) continue;
-    decls.push(`${name}:${remapText(value, theme)}${style.getPropertyPriority(name) ? ' !important' : ''}`);
+    decls.push(`${name}:${remapDeclaration(name, value, theme, mode)}${style.getPropertyPriority(name) ? ' !important' : ''}`);
   }
   return decls;
 }
-function collect(rules: CSSRuleList, theme: Theme, out: string[]) {
+function collect(rules: CSSRuleList, theme: Theme, mode: Mode, out: string[]) {
   for (const rule of Array.from(rules)) {
-    if (rule instanceof CSSStyleRule) { const decls = colorDeclarations(rule.style, theme); if (decls.length) out.push(`${rule.selectorText}{${decls.join(';')}}`); }
-    else if (rule instanceof CSSMediaRule) { const inner: string[] = []; collect(rule.cssRules, theme, inner); if (inner.length) out.push(`@media ${rule.conditionText}{${inner.join('')}}`); }
-    else if (rule instanceof CSSSupportsRule) { const inner: string[] = []; collect(rule.cssRules, theme, inner); if (inner.length) out.push(`@supports ${rule.conditionText}{${inner.join('')}}`); }
+    if (rule instanceof CSSStyleRule) { if (MODE_SCOPED.test(rule.selectorText)) continue; const decls = colorDeclarations(rule.style, theme, mode); if (decls.length) out.push(`${rule.selectorText}{${decls.join(';')}}`); }
+    else if (rule instanceof CSSMediaRule) { const inner: string[] = []; collect(rule.cssRules, theme, mode, inner); if (inner.length) out.push(`@media ${rule.conditionText}{${inner.join('')}}`); }
+    else if (rule instanceof CSSSupportsRule) { const inner: string[] = []; collect(rule.cssRules, theme, mode, inner); if (inner.length) out.push(`@supports ${rule.conditionText}{${inner.join('')}}`); }
   }
 }
+// Rules the stylesheets scope to a mode themselves are hand-tuned for it; they are copied as written.
+export const MODE_SCOPED = /\[data-mode\b/;
 const STYLE_ID = 'plset-theme';
-export function buildThemeCss(theme: Theme, sheets: Iterable<CSSStyleSheet> = document.styleSheets) {
-  if (theme.id === DEFAULT_THEME.id) return '';
+export function buildThemeCss(theme: Theme, mode: Mode = 'dark', sheets: Iterable<CSSStyleSheet> = document.styleSheets) {
+  if (theme.id === DEFAULT_THEME.id && mode === 'dark') return '';
   const out: string[] = [];
   for (const sheet of Array.from(sheets)) {
     if ((sheet.ownerNode as Element | null)?.id === STYLE_ID) continue;
-    try { collect(sheet.cssRules, theme, out); } catch { /* cross-origin sheet */ }
+    try { collect(sheet.cssRules, theme, mode, out); } catch { /* cross-origin sheet */ }
   }
   return out.join('\n');
 }
-export function applyTheme(theme: Theme) {
+export function applyTheme(theme: Theme, mode: Mode = 'dark') {
   document.getElementById(STYLE_ID)?.remove();
-  const css = buildThemeCss(theme);
+  const css = buildThemeCss(theme, mode);
   document.documentElement.dataset.theme = theme.id;
+  document.documentElement.dataset.mode = mode;
+  document.documentElement.style.colorScheme = mode;
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', mode === 'light' ? '#ebebeb' : '#101514');
   if (!css) return;
   const style = document.createElement('style'); style.id = STYLE_ID; style.textContent = css; document.head.append(style);
 }
-// The app always runs in black & white; there is no theme picker.
+// The app always runs in black & white; there is no theme picker, only the dark/light switch.
 export const APP_THEME = themeById('mono');
-// Re-applies the theme when stylesheets are added later (dev HMR, lazy chunks).
+// Re-applies the theme when the mode changes or stylesheets are added later (dev HMR, lazy chunks).
 export function initTheme() {
-  applyTheme(APP_THEME);
+  applyTheme(APP_THEME, getMode());
+  subscribeMode(() => applyTheme(APP_THEME, getMode()));
   let pending = 0;
   new MutationObserver(records => {
     if (!records.some(r => Array.from(r.addedNodes).some(n => (n instanceof HTMLStyleElement && n.id !== STYLE_ID) || n instanceof HTMLLinkElement))) return;
-    cancelAnimationFrame(pending); pending = requestAnimationFrame(() => applyTheme(APP_THEME));
+    cancelAnimationFrame(pending); pending = requestAnimationFrame(() => applyTheme(APP_THEME, getMode()));
   }).observe(document.head, { childList: true });
 }

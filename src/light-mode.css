@@ -1,0 +1,51 @@
+/* Light mode is generated at runtime by theme.ts: every color's lightness is mirrored and light
+   neutrals are tinted toward the starjoa.kr ivory. Rules scoped to [data-mode=light] are the
+   exceptions the engine copies verbatim, so the colors below are the actual light-mode values.
+   Palette: charcoal ink #242527 on ivory paper #f3f0e9, champagne #8a6d2a as the accent. */
+[data-mode=light] button:hover:not(:disabled){filter:brightness(.95)}
+[data-mode=light] .button.primary:hover:not(:disabled){filter:brightness(1.15)}
+
+/* Primary action: the site's ivory-on-charcoal CTA, inverted for a light surface. */
+[data-mode=light] .button.primary{background:#242527;border-color:#242527;color:#f3f0e9}
+
+/* Race (종족) marks: vivid solid inks so each race still reads at a glance on paper.
+   Terran deep blue and Zerg deep violet carry ivory letters; Protoss gold is bright, so it takes charcoal. */
+[data-mode=light] .race-T{background:#1d5ee0;color:#f3f0e9;border-color:#1d5ee0}
+[data-mode=light] .race-Z{background:#7a2fe0;color:#f3f0e9;border-color:#7a2fe0}
+[data-mode=light] .race-P{background:#f0b11c;color:#242527;border-color:#e0a312}
+[data-mode=light] .portrait-T{background:#faf8f3;border-color:#1d5ee0;box-shadow:inset 0 0 0 1px #1d5ee0}
+[data-mode=light] .portrait-Z{background:#faf8f3;border-color:#7a2fe0;box-shadow:inset 0 0 0 1px #7a2fe0}
+[data-mode=light] .portrait-P{background:#faf8f3;border-color:#e0a312;box-shadow:inset 0 0 0 1px #e0a312}
+[data-mode=light] .race-entry-T .race-entry-player{background:#faf8f3;border-color:#1d5ee0;box-shadow:inset 0 0 0 1px #1d5ee0}
+[data-mode=light] .race-entry-Z .race-entry-player{background:#faf8f3;border-color:#7a2fe0;box-shadow:inset 0 0 0 1px #7a2fe0}
+[data-mode=light] .race-entry-P .race-entry-player{background:#faf8f3;border-color:#e0a312;box-shadow:inset 0 0 0 1px #e0a312}
+/* Team view (팀별): the same paper cards, ringed in the team inks (A charcoal, B champagne). */
+[data-mode=light] .race-entry-A .race-entry-player{background:#faf8f3;border-color:#242527;box-shadow:inset 0 0 0 1px #242527}
+[data-mode=light] .race-entry-B .race-entry-player{background:#faf8f3;border-color:#8a6d2a;box-shadow:inset 0 0 0 1px #8a6d2a}
+[data-mode=light] .race-entry-T .race-entry-search:focus-within{border-color:#1d5ee0}
+[data-mode=light] .race-entry-Z .race-entry-search:focus-within{border-color:#7a2fe0}
+[data-mode=light] .race-entry-P .race-entry-search:focus-within{border-color:#e0a312}
+
+/* Roulette: the canvas paints its own paper background in light mode; keep the letterbox around it identical. */
+[data-mode=light] .wheel-stage,[data-mode=light] .wheel-stage .wheel-canvas{background:#f3f0e9}
+
+/* Team cards (팀 편성 · 정산): plain paper cards instead of smoky green / blue gradients.
+   Team A is marked in charcoal ink, Team B in champagne, matching the site's two-tone + accent. */
+[data-mode=light] .team-card,[data-mode=light] .team-B{background:#faf8f3;border-color:#d9d4c8}
+[data-mode=light] .team-card-head{border-bottom-color:#e4dfd3}
+[data-mode=light] .team-card-foot{border-top-color:#e4dfd3}
+[data-mode=light] .team-letter{background:#242527;border-color:#242527;color:#f3f0e9}
+[data-mode=light] .team-B .team-letter{background:#8a6d2a;border-color:#8a6d2a;color:#f6f0dc}
+[data-mode=light] .team-slot{border-color:#cfc9bb}
+[data-mode=light] .team-slot.filled,[data-mode=light] .team-B .team-slot.filled{background:#f1eee8;border-color:#cfc9bb}
+[data-mode=light] .team-card.drag-over{border-color:#242527;box-shadow:inset 0 0 0 1px #24252740}
+[data-mode=light] .team-card.drag-over .team-slot:not(.filled){background:#24252708;border-color:#24252760}
+[data-mode=light] .team-A .team-impact{box-shadow:inset 0 0 0 2px #242527,inset 0 0 28px #24252733,0 0 22px #24252733}
+[data-mode=light] .team-B .team-impact{box-shadow:inset 0 0 0 2px #8a6d2a,inset 0 0 28px #8a6d2a33,0 0 22px #8a6d2a33}
+[data-mode=light] .team-mark{background:#242527;border-color:#242527;color:#f3f0e9}
+[data-mode=light] .race-entry-B .team-mark{background:#8a6d2a;border-color:#8a6d2a;color:#f6f0dc}
+[data-mode=light] .team-switch{background:#f1eee8;border-color:#d9d4c8;color:#8a877f}
+[data-mode=light] .team-switch.assigned-A{color:#242527;border-color:#242527}
+[data-mode=light] .team-switch.assigned-B{color:#8a6d2a;border-color:#8a6d2a}
+[data-mode=light] .bench-player button{background:#f1eee8;border-color:#cfc9bb;color:#242527}
+[data-mode=light] .bench-player button:last-child{background:#f3ecd8;border-color:#d8c89a;color:#8a6d2a}

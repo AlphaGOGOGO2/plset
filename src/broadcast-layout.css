@@ -295,9 +295,3 @@
 .app-shell.web .sidebar { top: 0; }
 .app-shell.web .workspace { padding-top: 0; }
 .sidebar .console-brand { margin: 4px 0 22px; }
-
-.sidebar-mystar-group { display: flex; flex-direction: column; align-items: center; gap: 7px; margin: 14px 8px 12px; padding: 12px 0; border-top: 1px solid #ffffff20; border-bottom: 1px solid #ffffff20; color: #fff; text-decoration: none; transition: background-color .15s; }
-.sidebar-mystar-group:hover { background: #ffffff0d; }
-.sidebar-mystar { width: 100%; margin: 0; padding: 4px 0; color: #fff; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: .3px; }
-.sidebar-mystar-beta { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; min-height: 24px; padding: 2px 10px; border: 1px solid #ffffff30; border-radius: 5px; background: #ffffff08; color: #fff; font-size: 11px; font-weight: 500; letter-spacing: .5px; line-height: 1.2; text-decoration: none; }
-.sidebar-mystar-group:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }

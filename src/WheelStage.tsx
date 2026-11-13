@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { getMode } from './theme';
 import { Maximize2, Minimize2, Play, RotateCcw } from 'lucide-react';
 import { seeded, shuffle, type DrawItem, type DrawRun } from './domain';
 import { playSfx, startLoop } from './sfx';
 
 const W=1000,H=640,CX=500,CY=370,R=232,TAU=Math.PI*2,DURATION=7600,REVEAL=650,FLASH=600,TILT=.38;
+// The stage is painted on the canvas, so it follows the console's dark/light mode here rather than via CSS.
+const STAGE={dark:{bg:'#141b18',glowIn:'#35433438',glowOut:'#141b1800',status:'#8c9b90',win:'#d8c598',label:'#e0e5dc',winLabel:'#f0e7d0'},light:{bg:'#f3f0e9',glowIn:'#d9cfb655',glowOut:'#f3f0e900',status:'#6e6b64',win:'#8a6d2a',label:'#242527',winLabel:'#5a4a23'}};
 const COLORS=['#f7b84e','#54c59c','#63b6ed','#ee85a7','#af90ed','#b5d66a','#48c9c4','#efa16b','#8faee5','#ebce58'];
 const font='"Manrope Variable", "Noto Sans KR", sans-serif';
 type GameWindow=Window&{render_game_to_text?:()=>string;advanceTime?:(ms:number)=>void};
@@ -72,10 +75,11 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
    const revealAt=start+duration+REVEAL,finished=stopped&&now>=revealAt,flash=finished?Math.max(0,1-(now-revealAt)/FLASH):0;
    // The name under the heading stays hidden while spinning; it appears only at the reveal.
    const shown=finished?entries.find(item=>item.id===(latest.current?.results[run!.rank-1]??winnerId)):undefined;
-   ctx.fillStyle='#141b18';ctx.fillRect(0,0,W,H);
-   const glow=ctx.createRadialGradient(CX,CY,120,CX,CY,340);glow.addColorStop(0,'#35433438');glow.addColorStop(1,'#141b1800');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
-   text(editing?'원판 설정':finished?'당첨':run?stopped?'':'추첨 중':'추첨 대기',CX,26,14,finished?'#d8c598':'#8c9b90',600);
-   text(editing?'각 칸에 항목을 입력하세요':finished?shown?.label??'':run?shown?.label??'':entries.length?`${entries.length}개 항목`:'항목을 추가해주세요',CX,67,finished?40+12*flash:30,finished?'#f0e7d0':'#e0e5dc',700,780);
+   const stage=STAGE[getMode()];
+   ctx.fillStyle=stage.bg;ctx.fillRect(0,0,W,H);
+   const glow=ctx.createRadialGradient(CX,CY,120,CX,CY,340);glow.addColorStop(0,stage.glowIn);glow.addColorStop(1,stage.glowOut);ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+   text(editing?'원판 설정':finished?'당첨':run?stopped?'':'추첨 중':'추첨 대기',CX,26,14,finished?stage.win:stage.status,600);
+   text(editing?'각 칸에 항목을 입력하세요':finished?shown?.label??'':run?shown?.label??'':entries.length?`${entries.length}개 항목`:'항목을 추가해주세요',CX,67,finished?40+12*flash:30,finished?stage.winLabel:stage.label,700,780);
    // Ground shadow + thick bevelled rim so the disc reads as a solid object lit from the upper left.
    const ground=ctx.createRadialGradient(CX,CY+R+30,0,CX,CY+R+30,R*.95);ground.addColorStop(0,'#00000070');ground.addColorStop(1,'#00000000');
    ctx.save();ctx.translate(CX,CY+R+30);ctx.scale(1,.11);ctx.translate(-CX,-(CY+R+30));ctx.fillStyle=ground;ctx.fillRect(CX-R*1.2,CY+R+30-R,R*2.4,R*2);ctx.restore();

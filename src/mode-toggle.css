@@ -1,0 +1,10 @@
+/* Sidebar dark/light switch. Colors are dark-mode values; theme.ts mirrors them for light mode. */
+.sidebar-mode{display:flex;align-items:center;gap:6px;width:100%;margin:0 0 4px;padding:7px 6px;border:0;border-radius:6px;background:none;color:#cfcfcf;font-size:12px;font-weight:600;letter-spacing:.2px;text-align:left}
+.sidebar-mode-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-mode:hover{background:#ffffff0d;color:#fff}
+.sidebar-mode-icon{display:grid;place-items:center;width:18px;height:18px;border-radius:5px;background:#ffffff14;color:#e8e8e8;flex-shrink:0}
+.sidebar-mode-track{position:relative;margin-left:auto;width:26px;height:15px;border-radius:999px;background:#3a433c;flex-shrink:0;transition:background .15s}
+.sidebar-mode-track::after{content:'';position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#cfcfcf;transition:transform .15s,background .15s}
+.sidebar-mode[aria-checked=true] .sidebar-mode-track{background:#cec19d}
+.sidebar-mode[aria-checked=true] .sidebar-mode-track::after{transform:translateX(11px);background:#1a1a1a}
+@media (prefers-reduced-motion:reduce){.sidebar-mode-track,.sidebar-mode-track::after{transition:none}}
