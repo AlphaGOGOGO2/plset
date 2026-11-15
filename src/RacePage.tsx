@@ -72,8 +72,8 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
       </div>}
       <button type="button" className="button primary" onClick={start} disabled={running || items.length < 2 || items.length>RACE_MAX}><Play size={16} fill="currentColor"/>{running ? '레이스 진행 중' : displayedRun?.finishedAt?'다시 경주':'레이스 시작'}</button>
       {running && displayedRun ? <button type="button" className="button" onClick={() => commit(v => ({ ...v, draw: null }), '진행 중 레이스 취소')}><X size={14}/> 레이스 취소</button> : null}
-      <button type="button" className="pinball-settings-close" aria-label="설정 접기" onClick={() => setSettingsOpen(false)}><X size={14}/></button>
-    </section> : <button type="button" className="pinball-settings-toggle" onClick={() => setSettingsOpen(true)}><SlidersHorizontal size={14}/> 설정</button>}
+      <button type="button" data-viewer-ok className="pinball-settings-close" aria-label="설정 접기" onClick={() => setSettingsOpen(false)}><X size={14}/></button>
+    </section> : <button type="button" data-viewer-ok className="pinball-settings-toggle" onClick={() => setSettingsOpen(true)}><SlidersHorizontal size={14}/> 설정</button>}
     <div className="draw-result">{winner ? <>
       <span className="result-label">첫번째 완주</span><strong>{givenName(winner.label)}</strong><Check size={19}/>
       <button type="button" className="button" data-viewer-ok onClick={()=>void copyResults()}><Copy size={13}/> 결과 복사</button>
