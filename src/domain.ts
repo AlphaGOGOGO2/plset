@@ -55,14 +55,16 @@ export function sessionReport(s: Session, now = new Date()): string {
 }
 // Spectator slots go to the top funders; the host pastes this line into chat.
 export function spectatorText(players: Player[], count = 6) { return `관전 : ${rankByFunding(players.filter(p=>p.active)).slice(0,count).map(p=>givenName(p.name)).join('-')}`; }
-// Team names follow the first assigned player unless the host typed a custom name.
-export function withTeamNames(s: Session): Session {
+// Team names follow the first assigned player. A name the host typed stays only while that first player stays:
+// when `prev` shows the team had a different first player (or none), the name goes back to following.
+export function withTeamNames(s: Session, prev?: Session): Session {
   const autoNames = new Set(s.players.map(p=>`${givenName(p.name)}팀`));
   const teams = { ...s.teams };
   for (const team of ['A','B'] as Team[]) {
     const first = teamMembers(s.players, team)[0];
     const auto = first ? `${givenName(first.name)}팀` : defaultTeamName(team);
-    if (teams[team]===defaultTeamName(team) || autoNames.has(teams[team])) teams[team] = auto;
+    const firstChanged = !!prev && teamMembers(prev.players, team)[0]?.id !== first?.id;
+    if (firstChanged || teams[team]===defaultTeamName(team) || autoNames.has(teams[team])) teams[team] = auto;
   }
   return { ...s, teams };
 }

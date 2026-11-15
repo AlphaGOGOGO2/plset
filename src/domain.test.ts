@@ -119,6 +119,16 @@ test('팀 이름은 처음 들어간 선수의 성을 뺀 이름을 따르고 �
   assert.equal(next.teams.A,'TEAM A');
   next=withTeamNames({...next,teams:{...next.teams,B:'우리팀'},players:setTeam(next.players,song.id,'B',5000)});
   assert.equal(next.teams.B,'우리팀');
+  // With the previous session passed in, a typed name lasts only while the same player stays first.
+  let named:typeof s={...s,players:setTeam(s.players,hong.id,'A',1000)};named=withTeamNames(named,s);
+  let renamed:typeof s={...named,teams:{...named.teams,A:'우리팀'}};
+  let after=withTeamNames({...renamed,players:setTeam(renamed.players,young.id,'A',2000)},renamed);
+  assert.equal(after.teams.A,'우리팀');
+  after=withTeamNames({...after,players:setTeam(after.players,hong.id,null,3000)},after);
+  assert.equal(after.teams.A,'영진팀');
+  renamed={...after,teams:{...after.teams,A:'다른팀'}};
+  after=withTeamNames({...renamed,players:renamed.players.map(p=>({...p,team:null}))},renamed);
+  assert.equal(after.teams.A,'TEAM A');
 });
 test('관전 복사는 펀딩 상위 6명의 성을 뺀 이름을 순위대로 잇는다',()=>{
   const s=createSession();let players=s.players;

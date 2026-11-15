@@ -31,7 +31,7 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
   const pickTeamPlayer=(p:Player)=>{
     if(running||!teamSource)return;
     if(p.team!==source&&players.length>=s.teamSize){notify(`${source}팀은 ${s.teamSize}명까지 선택할 수 있습니다.`);return;}
-    setEditingTeam(true);setSetupEdited(true);commit(v=>withTeamNames({...v,players:setTeam(v.players,p.id,p.team===source?null:source)}),`${p.name} ${source}팀 ${p.team===source?'제외':'선택'}`);
+    setEditingTeam(true);setSetupEdited(true);commit(v=>withTeamNames({...v,players:setTeam(v.players,p.id,p.team===source?null:source)},v),`${p.name} ${source}팀 ${p.team===source?'제외':'선택'}`);
   };
   const addCustomItem = () => { const label = customDraft.trim(); if (!label) return; if (customNames.includes(label)) { notify('이미 추가한 항목입니다.'); return; } if (customNames.length >= RACE_MAX) { notify(`레이스는 ${RACE_MAX}명까지입니다.`); return; } setSetupEdited(true); setCustomNames(names => [...names, label]); setCustomDraft(''); };
   const start = () => {
