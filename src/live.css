@@ -9,3 +9,7 @@
 .app-shell.viewer .session-strip input { pointer-events: none; }
 .app-shell.viewer .main-content :is(button, select, input, textarea):not([data-viewer-ok], [data-viewer-ok] *) { cursor: default; }
 a.button { color: inherit; text-decoration: none; }
+
+.follow-toggle { gap: 7px; }
+.follow-toggle b { min-width: 30px; padding: 2px 6px; border-radius: 4px; font-size: 11px; letter-spacing: .04em; text-align: center; background: #ffffff14; color: #9aa394; }
+.follow-toggle.on b { background: #8fd69a; color: #10160f; }

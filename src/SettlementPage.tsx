@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Download, Trophy } from 'lucide-react';
 import { Portrait, TeamCard } from './components';
 import { number, settlement, settlementFileName, settlementText, teamMembers, type Session, type Team } from './domain';
@@ -6,11 +7,13 @@ import { saveText } from './saveText';
 const signed = (n: number) => `${n > 0 ? '+' : ''}${number(n)}개`;
 
 type Commit = (update: (s: Session) => Session, label?: string, history?: boolean) => void;
-export default function SettlementPage({ s, commit, notify }: { s: Session; commit: Commit; notify: (text: string) => void }) {
+export default function SettlementPage({ s, commit, notify, viewer = false }: { s: Session; commit: Commit; notify: (text: string) => void; viewer?: boolean }) {
+  // A viewer picks whose view to read for themselves; it starts on the host's pick and never leaves their browser.
+  const [ownBaseId, setOwnBaseId] = useState<string>();
   // Picks live in the session so they autosave, sync to other windows and travel with an exported session file.
-  const winner: Team | null = s.settlement?.winner ?? (s.score.A > s.score.B ? 'A' : s.score.B > s.score.A ? 'B' : null), baseId = s.settlement?.baseId;
+  const winner: Team | null = s.settlement?.winner ?? (s.score.A > s.score.B ? 'A' : s.score.B > s.score.A ? 'B' : null), baseId = (viewer ? ownBaseId : undefined) ?? s.settlement?.baseId;
   const setWinner = (team: Team) => commit(v => ({ ...v, settlement: { ...v.settlement, winner: team } }), `정산 이긴 팀 · ${s.teams[team]}`, false);
-  const setBaseId = (id: string) => commit(v => ({ ...v, settlement: { ...v.settlement, baseId: id } }), undefined, false);
+  const setBaseId = (id: string) => viewer ? setOwnBaseId(id) : commit(v => ({ ...v, settlement: { ...v.settlement, baseId: id } }), undefined, false);
   const result = settlement(s.players, winner ?? 'A', s.teamSize, baseId);
   const exportMemo = async () => {
     if (!result.base) return;
@@ -39,10 +42,10 @@ export default function SettlementPage({ s, commit, notify }: { s: Session; comm
     </div>
     {!winner ? <p className="settlement-empty">경기가 끝나면 이긴 팀을 선택하세요.</p> : <section className="panel settlement-list" aria-label={`${s.teams[winner]} 정산`}>
       <header><h2>{s.teams[winner]} · 승리</h2><span>{result.winners.length}명</span>
-        {result.base ? <button type="button" className="button settlement-export" onClick={() => void exportMemo()} title={`${result.base.name} 기준 정산을 메모장 파일로 저장`}><Download size={14}/> 내보내기</button> : null}</header>
+        {result.base ? <button type="button" className="button settlement-export" data-viewer-ok onClick={() => void exportMemo()} title={`${result.base.name} 기준 정산을 메모장 파일로 저장`}><Download size={14}/> 내보내기</button> : null}</header>
       {result.winners.length && result.base ? <>
         <div className="settlement-base"><span>누구 기준으로 볼까요?</span>
-          <div className="segmented" role="group" aria-label="기준 선수">{result.winners.map(({ player }) => <button key={player.id} type="button" className={player === result.base ? 'selected' : ''} aria-pressed={player === result.base} onClick={() => setBaseId(player.id)}>{player.name}</button>)}</div>
+          <div className="segmented" role="group" aria-label="기준 선수" data-viewer-ok>{result.winners.map(({ player }) => <button key={player.id} type="button" className={player === result.base ? 'selected' : ''} aria-pressed={player === result.base} onClick={() => setBaseId(player.id)}>{player.name}</button>)}</div>
         </div>
         <table>
           <thead><tr><th>선수</th><th>받아온 펀딩 · 두당</th><th>차액 · {result.base.name} 기준</th><th>반띵</th></tr></thead>
