@@ -12,6 +12,7 @@ import DrawStage from './DrawStage';
 import RoulettePage from './RoulettePage';
 import RacePage from './RacePage';
 import PatronsPage from './PatronsPage';
+import { PAGES, parseHash, buildHash, ROOM_NAMES, type Page } from './mode';
 import { useSession } from './useSession';
 import { version as appVersion } from '../package.json';
 import PlayerManager from './PlayerManager';
@@ -21,10 +22,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import type { Slam } from './components';
 
 type Commit = (update:(s:Session)=>Session,label?:string,history?:boolean)=>void;
-type Page = 'board'|'teams'|'pinball'|'wheel'|'race'|'patrons'|'settlement';
-const PAGES:Page[]=['board','teams','pinball','wheel','race','patrons','settlement'];
 // The open tab lives in the URL hash so the browser's back/forward buttons move between tabs.
-const pageFromHash=():Page=>{const id=location.hash.slice(1) as Page;return PAGES.includes(id)?id:'board';};
+const pageFromHash=():Page=>parseHash(location.hash).page;
 const OUTPUT=new URLSearchParams(location.search).has('output');
 const LOGO=`${import.meta.env.BASE_URL}brand/starjoa-logo.webp`;
 function Button({children,onClick,primary=false,disabled=false,className='',title}:{children:ReactNode;onClick?:()=>void;primary?:boolean;disabled?:boolean;className?:string;title?:string}) {return <button className={`button ${primary?'primary':''} ${className}`} onClick={onClick} disabled={disabled} title={title}>{children}</button>;}

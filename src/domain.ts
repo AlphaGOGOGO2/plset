@@ -102,7 +102,7 @@ export interface Session {
   timer: { label: string; remaining: number; deadline: number | null };
   patrons: Patron[];
   draw: DrawRun | null;
-  logs: { id: string; at: number; text: string }[];
+  logs: { id: string; at: number; text: string; private?: boolean }[];
   // The settlement tab's picks; absent until the host chooses (the winner then defaults to the higher score).
   settlement?: { winner?: Team; baseId?: string };
 }
@@ -172,7 +172,7 @@ export function validateSession(input: unknown): Session {
     ids.add(p.id);
   }
   if(typeof s.notes!=='string' || s.notes.length>5000 || !s.teams || !['A','B'].every(k=>typeof s.teams[k as Team]==='string' && s.teams[k as Team].length<=30) || !s.score || !['A','B'].every(k=>Number.isInteger(s.score[k as Team]) && s.score[k as Team]>=0 && s.score[k as Team]<=99) || !['board','teams','draw','timer'].includes(s.scene)) throw new Error('진행판 데이터를 확인해주세요.');
-  if(!s.timer || !Number.isFinite(s.timer.remaining) || s.timer.remaining<0 || s.timer.remaining>86400000 || !(s.timer.deadline===null || Number.isFinite(s.timer.deadline)) || typeof s.timer.label!=='string' || s.timer.label.length>100 || !Array.isArray(s.logs) || s.logs.length>100 || s.logs.some(l=>!l || typeof l.id!=='string' || typeof l.text!=='string' || l.text.length>500 || !Number.isFinite(l.at))) throw new Error('타이머 또는 기록을 확인해주세요.');
+  if(!s.timer || !Number.isFinite(s.timer.remaining) || s.timer.remaining<0 || s.timer.remaining>86400000 || !(s.timer.deadline===null || Number.isFinite(s.timer.deadline)) || typeof s.timer.label!=='string' || s.timer.label.length>100 || !Array.isArray(s.logs) || s.logs.length>100 || s.logs.some(l=>!l || typeof l.id!=='string' || typeof l.text!=='string' || l.text.length>500 || !Number.isFinite(l.at) || !(l.private===undefined||typeof l.private==='boolean'))) throw new Error('타이머 또는 기록을 확인해주세요.');
   if(s.draw!==null) {
     const d=s.draw;
     if(d?.winner!==undefined && !['first','last'].includes(d.winner)) throw new Error('당첨자 설정을 확인해주세요.');
