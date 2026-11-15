@@ -248,3 +248,17 @@ test('세션의 정산 선택은 저장되고, 잘못된 값이면 그 선택만
   assert.equal(dropped.settlement,undefined);
   assert.equal(validateSession(JSON.parse(JSON.stringify(createSession()))).settlement,undefined,'예전 세션 파일도 그대로 불러온다');
 });
+test('추첨 결과 배정과 참가 해제도 팀 이름 규칙을 따른다',()=>{
+  const s=createSession();const hong=s.players.find(p=>p.name==='임홍규')!,young=s.players.find(p=>p.name==='유영진')!;
+  // Draw result path: setTeam stamps teamAt, so a later assignment queues behind the current first player.
+  let prev:typeof s=withTeamNames({...s,players:setTeam(s.players,hong.id,'A',1000)},s);
+  prev={...prev,teams:{...prev.teams,A:'우리팀'}};
+  let next=withTeamNames({...prev,players:setTeam(prev.players,young.id,'A',Date.now())},prev);
+  assert.equal(next.teams.A,'우리팀');assert.deepEqual(teamMembers(next.players,'A').map(p=>p.id),[hong.id,young.id]);
+  // Deactivating the first player of a renamed team hands the name to the next first player.
+  const off={...next,players:next.players.map(p=>p.id===hong.id?{...p,active:false,team:null}:p)};
+  assert.equal(withTeamNames(off,next).teams.A,'영진팀');
+  // Deactivating the only player returns to the default name.
+  const solo=withTeamNames({...prev,players:prev.players.map(p=>p.id===hong.id?{...p,active:false,team:null}:p)},prev);
+  assert.equal(solo.teams.A,'TEAM A');
+});

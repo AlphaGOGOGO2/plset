@@ -23,3 +23,5 @@ export function buildHash(mode: Mode, target: Page) {
   const head = mode.kind === 'host' ? 'host' : `watch=${mode.room}`;
   return target === 'board' ? `#${head}` : `#${head}/${target}`;
 }
+// A viewer who is following goes wherever the host is. Picking a tab by hand switches following off, so no page needs an exception.
+export const followTarget = (follow: boolean, hostPage: Page | null | undefined, current: Page): Page | null => follow && hostPage && hostPage !== current ? hostPage : null;

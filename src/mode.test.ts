@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildHash, parseHash } from './mode';
+import { buildHash, followTarget, parseHash } from './mode';
 
 test('plain hashes stay solo and keep the existing page links working', () => {
   assert.deepEqual(parseHash(''), { mode: { kind: 'solo' }, page: 'board' });
@@ -25,4 +25,11 @@ test('buildHash round-trips', () => {
   assert.equal(buildHash({ kind: 'host' }, 'board'), '#host');
   assert.equal(buildHash({ kind: 'watch', room: 'major' }, 'board'), '#watch=major');
   assert.equal(buildHash({ kind: 'solo' }, 'board'), '#board');
+});
+test('a following viewer goes wherever the host goes, including into and out of 귀인', () => {
+  assert.equal(followTarget(true, 'patrons', 'board'), 'patrons');
+  assert.equal(followTarget(true, 'board', 'patrons'), 'board');
+  assert.equal(followTarget(true, 'race', 'race'), null);
+  assert.equal(followTarget(true, undefined, 'board'), null);
+  assert.equal(followTarget(false, 'race', 'board'), null);
 });
