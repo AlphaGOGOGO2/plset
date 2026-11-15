@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
-import { Flag, Plus, X } from 'lucide-react';
+import { Flag, Plus, RotateCcw, X } from 'lucide-react';
 import { Portrait, RaceMark } from './components';
 import { number, patronFunding, teamMembers, uid, type Patron, type Session, type Team } from './domain';
 type Commit=(update:(s:Session)=>Session,label?:string,history?:boolean)=>void;
@@ -63,7 +63,7 @@ export default function PatronsPage({s,commit,notify}:{s:Session;commit:Commit;n
   </form>
   <div className="patrons-workspace">
    <section className="panel patron-ledger">
-    <div className="patron-table-wrap"><table aria-label="귀인 펀딩 내역"><thead><tr><th scope="col">#</th><th scope="col">닉네임</th><th scope="col">TOTAL</th><th scope="col">두당.</th><th scope="col">비고</th><th scope="col"><span className="patron-sr-only">삭제</span></th></tr></thead><tbody>
+    <div className="patron-table-wrap"><table aria-label="귀인 펀딩 내역"><thead><tr><th scope="col">#</th><th scope="col">닉네임</th><th scope="col">TOTAL</th><th scope="col">두당.</th><th scope="col">비고</th><th scope="col"><button className="patron-reset-button" type="button" aria-label="귀인 초기화" title="귀인 목록 전체 삭제 · 실행 취소로 복원" disabled={!entries.length} onClick={()=>{commit(value=>({...value,patrons:[]}),'귀인 초기화');notify('귀인 초기화됨 · 실행 취소로 복원할 수 있습니다');}}><RotateCcw size={12}/>초기화</button></th></tr></thead><tbody>
      {entries.map((entry,i)=><tr key={entry.id}><td className="patron-row-index">{String(i+1).padStart(2,'0')}</td>
       <td><input key={entry.nickname} aria-label={`${i+1}번 귀인 닉네임`} maxLength={60} defaultValue={entry.nickname} onKeyDown={blurOnEnter} onBlur={e=>{const name=e.target.value.trim();if(!name){e.target.value=entry.nickname;notify('닉네임을 입력해주세요.');return;}update(entry.id,{nickname:name});}}/></td>
       <PatronAmounts amount={entry.amount} size={s.teamSize} index={i+1} onChange={value=>update(entry.id,{amount:value})} notify={notify}/>

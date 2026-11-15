@@ -15,7 +15,10 @@
 .patron-ledger th:first-child { width: 42px; }
 .patron-ledger th:nth-child(2) { width: 21%; }
 .patron-ledger th:nth-child(3), .patron-ledger th:nth-child(4) { width: 145px; text-align: right; padding-right: 26px; }
-.patron-ledger th:last-child { width: 50px; }
+.patron-ledger th:last-child { width: 76px; padding: 6px 10px 6px 0; text-align: right; }
+.patron-reset-button { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 8px; border: 1px solid #374033; border-radius: 5px; background: transparent; color: #98a592; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.patron-reset-button:hover:not(:disabled) { color: #f0c5bc; background: #653b362d; border-color: #ac746844; }
+.patron-reset-button:disabled { opacity: .4; cursor: default; }
 .patron-ledger td { padding: 7px 5px; border-bottom: 1px solid #ffffff09; }
 .patron-ledger tr:last-child td { border-bottom: 0; }
 .patron-ledger tbody tr:hover { background: #ffffff03; }
