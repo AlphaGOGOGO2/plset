@@ -14,11 +14,6 @@ export function useSession() {
   useEffect(()=>{
     let live=true;
     const receive=(next:Session)=>{ if(!live || !next)return; try { const s=validateSession(next); current.current=s; setState(s); }catch{setError('동기화 데이터를 읽지 못했습니다.');} };
-    if(window.plset) {
-      const stop=output ? window.plset.onState(receive) : ()=>{};
-      window.plset.load().then(({state,error})=>{ if(!live)return; const next=state ? validateSession(state) : createSession(); receive(next); setStatus('자동 저장됨'); if(error)setError(error); if(!state&&!output)window.plset!.save(next).catch(()=>setError('저장에 실패했습니다. 세션을 내보내 주세요.')); }).catch(()=>{if(live)setError('세션을 불러오지 못했습니다. 앱을 다시 실행해주세요.');});
-      return ()=>{live=false;stop();};
-    }
     channel.current=new BroadcastChannel('plset-session');
     channel.current.onmessage=e=>{if(output)receive(e.data);};
     try { const raw=localStorage.getItem(KEY); receive(raw?validateSession(JSON.parse(raw)):createSession()); setStatus('자동 저장됨'); }catch{receive(createSession());setError('기존 저장 데이터를 읽지 못했습니다.');}
@@ -29,8 +24,7 @@ export function useSession() {
   const persist=useCallback((next:Session)=>{
     const sequence=++saveSequence.current;
     current.current=next;setState(next);setStatus('저장 중');
-    if(window.plset)window.plset.save(next).then(()=>{if(sequence===saveSequence.current)setStatus('자동 저장됨');}).catch(()=>{setStatus('저장 실패');setError('저장에 실패했습니다. 내보내기로 백업해주세요.');});
-    else {try{localStorage.setItem(KEY,JSON.stringify(next));channel.current?.postMessage(next);setStatus('자동 저장됨');}catch{setStatus('저장 실패');setError('저장 공간이 부족합니다. 세션을 내보내 주세요.');}}
+    try{localStorage.setItem(KEY,JSON.stringify(next));channel.current?.postMessage(next);setStatus('자동 저장됨');}catch{setStatus('저장 실패');setError('저장 공간이 부족합니다. 세션을 내보내 주세요.');}
   },[]);
   const commit=useCallback((update:(s:Session)=>Session,label?:string,history=true)=>{
     if(output||!current.current)return;

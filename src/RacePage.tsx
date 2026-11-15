@@ -42,7 +42,7 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
     setSetupEdited(false); commit(v => ({ ...v, draw, scene: 'draw' }), `레이스 시작 · ${items.length}명`); setPreviewSeed(randomSeed());
   };
   const winner = displayedRun?.finishedAt ? displayedRun.items.find(i => i.id === displayedRun.results[0]) : undefined, winnerPlayerId = winner?.playerId ?? winner?.id;
-  const copyResults=async()=>{if(!displayedRun?.finishedAt)return;const text=displayedRun.results.map((id,i)=>`${i+1}위 ${displayedRun.items.find(p=>p.id===id)?.label??''}`).join('\n');try{if(window.plset){if(!await window.plset.copyText(text))throw new Error('copy failed');}else await navigator.clipboard.writeText(text);notify('레이스 순위를 복사했습니다.');}catch{notify('복사하지 못했습니다. 다시 시도해주세요.');}};
+  const copyResults=async()=>{if(!displayedRun?.finishedAt)return;const text=displayedRun.results.map((id,i)=>`${i+1}위 ${displayedRun.items.find(p=>p.id===id)?.label??''}`).join('\n');try{await navigator.clipboard.writeText(text);notify('레이스 순위를 복사했습니다.');}catch{notify('복사하지 못했습니다. 다시 시도해주세요.');}};
   return <div className="draw-layout pinball-layout race-layout"><section className="panel stage-panel">
     {visible || displayedRun ? <DrawStage mode="race" run={displayedRun} items={items} map={track} previewSeed={previewSeed} showNames={showNames} showPortraits={false} onFinish={onFinish}/> : null}
     {settingsOpen ? <section className="pinball-settings" aria-label="레이스 설정" data-running={running && !!displayedRun}>
