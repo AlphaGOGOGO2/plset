@@ -6,7 +6,7 @@ import { seeded, shuffle, type DrawItem } from './domain';
 // bumpers, pegs, spinners, dividers, boosters and ice on a continuous road. First across the finish line wins. Deterministic from the seed
 // (fixed 1/120 s steps, seeded start grid and obstacle jitter) so the control and output windows agree.
 export const ROAD_HALF = 4, WALL_H = 1.3, MARBLE_R = .5, MARBLE_MASS = 5, MAX_SPEED = 34, STEP = 1 / 120, FINISH_BACK = 24, CATCH_UP_GAP = 8;
-export type Feature = { kind: 'bumper'; t: number; u: number; r: number } | { kind: 'pegs'; t: number; count: number } | { kind: 'spinner'; t: number; speed: number } | { kind: 'gate'; t: number; period: number } | { kind: 'sweeper'; t: number; side: -1 | 1; period: number } | { kind: 'piston'; t: number; side: -1 | 1; period: number; lane?: number; phase?: number } | { kind: 'divider'; t: number; length: number } | { kind: 'booster'; t: number; power: number } | { kind: 'ice'; t0: number; t1: number };
+export type Feature = { kind: 'bumper'; t: number; u: number; r: number } | { kind: 'pegs'; t: number; count: number } | { kind: 'spinner'; t: number; speed: number; half?: number } | { kind: 'gate'; t: number; period: number } | { kind: 'sweeper'; t: number; side: -1 | 1; period: number } | { kind: 'piston'; t: number; side: -1 | 1; period: number; lane?: number; phase?: number } | { kind: 'divider'; t: number; length: number } | { kind: 'booster'; t: number; power: number } | { kind: 'ice'; t0: number; t1: number };
 export type Track = { title: string; accent: string; road: string; wall: string; sky: [string, string]; points: [number, number, number][]; features: Feature[]; sampleCount?: number };
 
 export const tracks: Track[] = [
@@ -55,7 +55,7 @@ export const tracks: Track[] = [
   {
     title: '도심', accent: '#ffcd71', road: '#4b5267', wall: '#8190ac', sky: ['#111a34', '#37405c'],
     points: [[0,64,20],[0,60,-10],[-20,55,-30],[-50,50,-30],[-70,44,-50],[-60,38,-75],[-25,32,-80],[10,27,-80],[45,22,-65],[55,18,-35],[35,14,-10],[12,10,10],[12,6,45],[12,2,80],[12,0,110]],
-    features: [{kind:'booster',t:.08,power:8},{kind:'pegs',t:.19,count:8},{kind:'divider',t:.3,length:12},{kind:'spinner',t:.4,speed:-2},{kind:'bumper',t:.48,u:-.5,r:.7},{kind:'bumper',t:.5,u:.5,r:.7},{kind:'booster',t:.58,power:9},{kind:'pegs',t:.73,count:7},{kind:'spinner',t:.82,speed:2.2},{kind:'booster',t:.9,power:8},{kind:'gate',t:.35,period:4.2},{kind:'gate',t:.65,period:3.8},{kind:'gate',t:.87,period:4.6},
+    features: [{kind:'booster',t:.08,power:8},{kind:'pegs',t:.19,count:8},{kind:'divider',t:.3,length:12},{kind:'spinner',t:.4,speed:-2,half:2.8},{kind:'bumper',t:.48,u:-.5,r:.7},{kind:'bumper',t:.5,u:.5,r:.7},{kind:'booster',t:.58,power:9},{kind:'pegs',t:.73,count:7},{kind:'spinner',t:.82,speed:2.2,half:2.8},{kind:'booster',t:.9,power:8},{kind:'gate',t:.35,period:4.2},{kind:'gate',t:.65,period:3.8},{kind:'gate',t:.87,period:4.6},
       {kind:'piston',t:.24,side:1,period:4.2},{kind:'piston',t:.60,side:-1,period:4.4},
       {kind:'piston',t:.9114,side:-1,lane:-1.35,period:4,phase:0},{kind:'piston',t:.9271,side:1,lane:1.35,period:4,phase:.5}],
   },
@@ -205,7 +205,7 @@ export async function createRace(items: DrawItem[], seed: number, trackIndex = 0
       body.quaternion.setFromVectors(new CANNON.Vec3(0, 1, 0), new CANNON.Vec3(q.up.x, q.up.y, q.up.z));
       body.addShape(new CANNON.Cylinder(radius, radius, 1, 8)); world.addBody(body); obstacles.push({ kind: 'peg', body, size: [radius, 1] });
     }
-    else if (f.kind === 'spinner') { const q = sampleAt(samples, f.t), pos = q.p.clone().addScaledVector(q.up, .5), body = new CANNON.Body({ type: CANNON.Body.KINEMATIC, material: wallMat, position: new CANNON.Vec3(pos.x, pos.y, pos.z) }); body.addShape(new CANNON.Box(new CANNON.Vec3(ROAD_HALF - .4, .3, .25))); body.angularVelocity.set(0, f.speed, 0); world.addBody(body); obstacles.push({ kind: 'spinner', body, size: [ROAD_HALF - .4, .3, .25] }); }
+    else if (f.kind === 'spinner') { const q = sampleAt(samples, f.t), half = f.half ?? ROAD_HALF - .4, pos = q.p.clone().addScaledVector(q.up, .5), body = new CANNON.Body({ type: CANNON.Body.KINEMATIC, material: wallMat, position: new CANNON.Vec3(pos.x, pos.y, pos.z) }); body.addShape(new CANNON.Box(new CANNON.Vec3(half, .3, .25))); body.angularVelocity.set(0, f.speed, 0); world.addBody(body); obstacles.push({ kind: 'spinner', body, size: [half, .3, .25] }); }
     else if (f.kind === 'divider') { const q = sampleAt(samples, f.t), pos = q.p.clone().addScaledVector(q.up, .6), body = new CANNON.Body({ type: CANNON.Body.STATIC, material: wallMat, position: new CANNON.Vec3(pos.x, pos.y, pos.z) }); body.quaternion.setFromVectors(new CANNON.Vec3(0, 0, 1), new CANNON.Vec3(q.tangent.x, q.tangent.y, q.tangent.z)); body.addShape(new CANNON.Box(new CANNON.Vec3(.25, .6, f.length / 2))); world.addBody(body); obstacles.push({ kind: 'divider', body, size: [.25, .6, f.length / 2] }); }
   }
   const boosters = track.features.filter((f): f is Extract<Feature, { kind: 'booster' }> => f.kind === 'booster').map(f => ({ ...f, s: sampleAt(samples, f.t).s }));
