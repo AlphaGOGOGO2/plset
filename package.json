@@ -10,7 +10,7 @@
     "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "build": "tsc -b && vite build --logLevel warn",
     "build:web": "node scripts/build-web.mjs",
-    "test": "tsx --test src/domain.test.ts src/theme.test.ts src/pinball.test.ts src/race.test.ts src/racePlayback.test.ts src/mode.test.ts src/share.test.ts"
+    "test": "tsx --test src/domain.test.ts src/theme.test.ts src/pinball.test.ts src/race.test.ts src/racePlayback.test.ts src/mode.test.ts src/share.test.ts src/live.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",
