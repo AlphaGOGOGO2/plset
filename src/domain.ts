@@ -109,6 +109,13 @@ export interface Session {
   settlement?: { winner?: Team; baseId?: string };
   // The host's pinball setup before a draw starts, so viewers see the same entrants and preview as the host.
   pinballSetup?: PinballSetup;
+  wheelSetup?: WheelSetup;
+}
+export interface WheelSetup { labels: string[]; arrangement: 'numbers'|'captains'|null; editing: boolean; edited: boolean }
+export function validWheelSetup(p: unknown): p is WheelSetup {
+  const v = p as WheelSetup;
+  return !!v && typeof v === 'object' && Array.isArray(v.labels) && v.labels.length >= 2 && v.labels.length <= 60 && v.labels.every(label => typeof label === 'string' && label.length <= 80)
+    && (v.arrangement === null || v.arrangement === 'numbers' || v.arrangement === 'captains') && typeof v.editing === 'boolean' && typeof v.edited === 'boolean';
 }
 export interface PinballSetup { variant: 'players'|'ace'|'maps'; map: number; source: 'players'|'custom'|'A'|'B'; customNames: string[]; winner: 'first'|'last'; mapFormat: 'proleague'|'winners'; aceCount: number; counts: Record<string,number>; seed: number; edited: boolean }
 export function validPinballSetup(p: unknown): p is PinballSetup {
@@ -176,6 +183,7 @@ export function validateSession(input: unknown): Session {
   // Settlement picks are a convenience: a malformed value is dropped instead of rejecting the whole session.
   if(s.settlement!==undefined&&(!s.settlement||typeof s.settlement!=='object'||![undefined,'A','B'].includes(s.settlement.winner)||!(s.settlement.baseId===undefined||typeof s.settlement.baseId==='string')))delete s.settlement;
   if(s.pinballSetup!==undefined&&!validPinballSetup(s.pinballSetup))delete s.pinballSetup;
+  if(s.wheelSetup!==undefined&&!validWheelSetup(s.wheelSetup))delete s.wheelSetup;
   if(!Array.isArray(s.patrons)||s.patrons.length>500||s.patrons.some(p=>!p||typeof p.id!=='string'||!p.id||typeof p.nickname!=='string'||!p.nickname.trim()||p.nickname.length>60||!Number.isSafeInteger(p.amount)||p.amount<0||p.amount>100000000||typeof p.note!=='string'||p.note.length>200)||new Set(s.patrons.map(p=>p.id)).size!==s.patrons.length)throw new Error('귀인 펀딩 내역을 확인해주세요.');
   const ids=new Set<string>();
   for(const p of s.players) {

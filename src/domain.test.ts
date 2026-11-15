@@ -254,6 +254,12 @@ test('세션의 핀볼 설정은 저장되고, 잘못된 값이면 그 설정만
   for(const bad of [{...setup,source:'unassigned'},{...setup,counts:{a:6}},{...setup,customNames:[1]},{...setup,aceCount:0},'x'])
     assert.equal(validateSession(JSON.parse(JSON.stringify({...createSession(),pinballSetup:bad}))).pinballSetup,undefined);
 });
+test('세션의 룰렛 설정은 저장되고, 잘못된 값이면 그 설정만 버리고 세션은 불러온다',()=>{
+  const setup={labels:['치킨','피자',''],arrangement:null,editing:true,edited:true};
+  assert.deepEqual(validateSession(JSON.parse(JSON.stringify({...createSession(),wheelSetup:setup}))).wheelSetup,setup);
+  for(const bad of [{...setup,labels:['하나']},{...setup,labels:[1,2]},{...setup,labels:['a','x'.repeat(81)]},{...setup,arrangement:'A'},{...setup,editing:1},'x'])
+    assert.equal(validateSession(JSON.parse(JSON.stringify({...createSession(),wheelSetup:bad}))).wheelSetup,undefined);
+});
 test('추첨 결과 배정과 참가 해제도 팀 이름 규칙을 따른다',()=>{
   const s=createSession();const hong=s.players.find(p=>p.name==='임홍규')!,young=s.players.find(p=>p.name==='유영진')!;
   // Draw result path: setTeam stamps teamAt, so a later assignment queues behind the current first player.

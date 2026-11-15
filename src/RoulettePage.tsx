@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Minus, Plus, RotateCcw, X } from 'lucide-react';
-import { randomSeed, teamMembers, type DrawItem, type DrawRun, type Session } from './domain';
+import { randomSeed, teamMembers, validWheelSetup, type DrawItem, type DrawRun, type Session, type WheelSetup } from './domain';
 import WheelStage from './WheelStage';
 type Commit=(update:(s:Session)=>Session,label?:string,history?:boolean)=>void;
-export default function RoulettePage({s,commit,notify,onFinish,visible}:{s:Session;commit:Commit;notify:(text:string)=>void;onFinish:(ids:string[])=>void;visible:boolean}){
+export default function RoulettePage({s,commit,notify,onFinish,visible,viewer=false}:{viewer?:boolean;s:Session;commit:Commit;notify:(text:string)=>void;onFinish:(ids:string[])=>void;visible:boolean}){
  const previous=s.draw?.mode==='wheel'?s.draw:null;
- const [labels,setLabels]=useState<string[]>(()=>previous?.items.map(item=>item.label)??Array(6).fill(''));
+ const saved=validWheelSetup(s.wheelSetup)?s.wheelSetup:null;
+ const [labels,setLabels]=useState<string[]>(()=>saved?.labels??previous?.items.map(item=>item.label)??Array(6).fill(''));
  const [countDraft,setCountDraft]=useState<string|null>(null);
- const [arrangement,setArrangement]=useState<'numbers'|'captains'|null>(()=>previous&&previous.items.every((item,i)=>item.label===String(i+1))?'numbers':null);
- const [editing,setEditing]=useState(!previous),[edited,setEdited]=useState(false);
+ const [arrangement,setArrangement]=useState<'numbers'|'captains'|null>(()=>saved?saved.arrangement:previous&&previous.items.every((item,i)=>item.label===String(i+1))?'numbers':null);
+ const [editing,setEditing]=useState(saved?saved.editing:!previous),[edited,setEdited]=useState(saved?.edited??false);
+ // The wheel is set up in local state, so the host publishes it and viewers mirror it (otherwise they see their own empty slots).
+ useEffect(()=>{if(viewer)return;const next:WheelSetup={labels,arrangement,editing,edited};if(JSON.stringify(s.wheelSetup)!==JSON.stringify(next))commit(v=>({...v,wheelSetup:next}),undefined,false);},[labels,arrangement,editing,edited]);
+ useEffect(()=>{const p=s.wheelSetup;if(!viewer||!validWheelSetup(p))return;setLabels(p.labels);setArrangement(p.arrangement);setEditing(p.editing);setEdited(p.edited);setCountDraft(null);},[s.wheelSetup]);
  const busy=!!previous&&!previous.finishedAt;
  const run=s.draw?.mode==='wheel'&&(!edited||!s.draw.finishedAt)?s.draw:null;
  const items:DrawItem[]=labels.map((label,i)=>({id:`wheel-${i}`,label,playerId:s.players.find(player=>player.active&&player.name===label.trim())?.id}));
