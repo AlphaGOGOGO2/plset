@@ -8,11 +8,11 @@ const signed = (n: number) => `${n > 0 ? '+' : ''}${number(n)}개`;
 
 type Commit = (update: (s: Session) => Session, label?: string, history?: boolean) => void;
 export default function SettlementPage({ s, commit, notify, viewer = false }: { s: Session; commit: Commit; notify: (text: string) => void; viewer?: boolean }) {
-  // A viewer picks whose view to read for themselves; it starts on the host's pick and never leaves their browser.
-  const [ownBaseId, setOwnBaseId] = useState<string>();
+  // A viewer picks the winning team and whose view to read for themselves; both start on the host's pick and never leave their browser.
+  const [ownBaseId, setOwnBaseId] = useState<string>(), [ownWinner, setOwnWinner] = useState<Team>();
   // Picks live in the session so they autosave, sync to other windows and travel with an exported session file.
-  const winner: Team | null = s.settlement?.winner ?? (s.score.A > s.score.B ? 'A' : s.score.B > s.score.A ? 'B' : null), baseId = (viewer ? ownBaseId : undefined) ?? s.settlement?.baseId;
-  const setWinner = (team: Team) => commit(v => ({ ...v, settlement: { ...v.settlement, winner: team } }), `정산 이긴 팀 · ${s.teams[team]}`, false);
+  const winner: Team | null = (viewer ? ownWinner : undefined) ?? s.settlement?.winner ?? (s.score.A > s.score.B ? 'A' : s.score.B > s.score.A ? 'B' : null), baseId = (viewer ? ownBaseId : undefined) ?? s.settlement?.baseId;
+  const setWinner = (team: Team) => viewer ? setOwnWinner(team) : commit(v => ({ ...v, settlement: { ...v.settlement, winner: team } }), `정산 이긴 팀 · ${s.teams[team]}`, false);
   const setBaseId = (id: string) => viewer ? setOwnBaseId(id) : commit(v => ({ ...v, settlement: { ...v.settlement, baseId: id } }), undefined, false);
   const result = settlement(s.players, winner ?? 'A', s.teamSize, baseId);
   const exportMemo = async () => {
@@ -25,7 +25,7 @@ export default function SettlementPage({ s, commit, notify, viewer = false }: { 
     <div className="patrons-heading"><h1>정산</h1></div>
     <section className="settlement-winner" aria-label="이긴 팀 선택">
       <div className="settlement-winner-head"><h2>이긴 팀 선택</h2><span>이긴 팀 카드를 누르세요.</span></div>
-      <div className="settlement-teams" role="radiogroup" aria-label="이긴 팀">{(['A', 'B'] as const).map(team =>
+      <div className="settlement-teams" role="radiogroup" aria-label="이긴 팀" data-viewer-ok>{(['A', 'B'] as const).map(team =>
         // The roster card holds sections, so the picker is a radio-role wrapper rather than a <button>.
         <div key={team} role="radio" tabIndex={0} aria-checked={winner === team} aria-label={`${s.teams[team]} 승리`} className={`settlement-team-pick${winner === team ? ' selected' : ''}`}
           onClick={() => setWinner(team)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setWinner(team); } }}>

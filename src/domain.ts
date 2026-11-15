@@ -107,6 +107,14 @@ export interface Session {
   logs: { id: string; at: number; text: string; private?: boolean }[];
   // The settlement tab's picks; absent until the host chooses (the winner then defaults to the higher score).
   settlement?: { winner?: Team; baseId?: string };
+  // The host's pinball setup before a draw starts, so viewers see the same entrants and preview as the host.
+  pinballSetup?: PinballSetup;
+}
+export interface PinballSetup { variant: 'players'|'ace'|'maps'; map: number; source: 'players'|'custom'|'A'|'B'; customNames: string[]; winner: 'first'|'last'; mapFormat: 'proleague'|'winners'; aceCount: number; counts: Record<string,number>; seed: number; edited: boolean }
+export function validPinballSetup(p: unknown): p is PinballSetup {
+  const v = p as PinballSetup;
+  return !!v && typeof v === 'object' && ['players','ace','maps'].includes(v.variant) && Number.isInteger(v.map) && ['players','custom','A','B'].includes(v.source) && Array.isArray(v.customNames) && v.customNames.length <= 60 && v.customNames.every(n => typeof n === 'string' && n.length <= 100)
+    && ['first','last'].includes(v.winner) && ['proleague','winners'].includes(v.mapFormat) && Number.isInteger(v.aceCount) && v.aceCount >= 1 && v.aceCount <= 5 && !!v.counts && typeof v.counts === 'object' && !Array.isArray(v.counts) && Object.values(v.counts).every(n => Number.isInteger(n) && n >= 0 && n <= 5) && Number.isFinite(v.seed) && typeof v.edited === 'boolean';
 }
 export const uid = () => crypto.randomUUID();
 export const number = (n: number) => n.toLocaleString('ko-KR');
@@ -167,6 +175,7 @@ export function validateSession(input: unknown): Session {
   if(s.patrons===undefined)s.patrons=[];
   // Settlement picks are a convenience: a malformed value is dropped instead of rejecting the whole session.
   if(s.settlement!==undefined&&(!s.settlement||typeof s.settlement!=='object'||![undefined,'A','B'].includes(s.settlement.winner)||!(s.settlement.baseId===undefined||typeof s.settlement.baseId==='string')))delete s.settlement;
+  if(s.pinballSetup!==undefined&&!validPinballSetup(s.pinballSetup))delete s.pinballSetup;
   if(!Array.isArray(s.patrons)||s.patrons.length>500||s.patrons.some(p=>!p||typeof p.id!=='string'||!p.id||typeof p.nickname!=='string'||!p.nickname.trim()||p.nickname.length>60||!Number.isSafeInteger(p.amount)||p.amount<0||p.amount>100000000||typeof p.note!=='string'||p.note.length>200)||new Set(s.patrons.map(p=>p.id)).size!==s.patrons.length)throw new Error('귀인 펀딩 내역을 확인해주세요.');
   const ids=new Set<string>();
   for(const p of s.players) {

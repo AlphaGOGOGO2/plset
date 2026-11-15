@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, ArrowUpRight, Calculator, Check, ChevronDown, CircleDot, Copy, Crown, Download, Flag, Heart, Image as ImageIcon, LayoutDashboard, Minus, Play, Plus, RotateCcw, Shuffle, SlidersHorizontal, Tag, Trophy, Undo2, Users, X } from 'lucide-react';
-import { addMap, mapSchedule, allocateTeams, removeMap, sessionMaps, clockRemaining, clockText, createSession, funding, number, randomSeed, rankByFunding, reportFileName, safeAmount, sessionReport, setAmount, setNote, setTeam, spectatorText, swapTie, uid, validateSession, withTeamNames, type DrawRun, type Player, type Scene, type Session, type Team } from './domain';
+import { addMap, mapSchedule, allocateTeams, removeMap, sessionMaps, clockRemaining, clockText, createSession, funding, number, randomSeed, rankByFunding, reportFileName, safeAmount, sessionReport, setAmount, setNote, setTeam, spectatorText, swapTie, uid, validateSession, validPinballSetup, withTeamNames, type DrawRun, type PinballSetup, type Player, type Scene, type Session, type Team } from './domain';
 import { BroadcastBoard, Clock, FundingSummary, OutputHeader, Portrait, RaceMark, TeamCard } from './components';
 import { BgmVolumeControl, SOUND_CREDIT, useBgm } from './BgmControl';
 import SfxVolumeControl from './SfxVolumeControl';
@@ -124,6 +124,10 @@ function DrawPage({s,commit,notify,onFinish,mode,visible}:{visible:boolean;mode:
   };
   const running=!!s.draw&&!s.draw.finishedAt;
   useEffect(()=>{setSettingsOpen(!running);},[running]);
+  // The setup lives in this component until a draw starts, so the host publishes it and a viewer mirrors it.
+  // Keyed on the local setup only: a setup arriving from another window never triggers a publish back.
+  useEffect(()=>{if(VIEWER||mode!=='pinball')return;const next:PinballSetup={variant,map,source,customNames,winner:winnerSetting,mapFormat,aceCount,counts:quantities,seed:previewSeed,edited:setupEdited};if(JSON.stringify(s.pinballSetup)!==JSON.stringify(next))commit(v=>({...v,pinballSetup:next}),undefined,false);},[variant,map,source,customNames,winnerSetting,mapFormat,aceCount,quantities,previewSeed,setupEdited]);
+  useEffect(()=>{const p=s.pinballSetup;if(!VIEWER||mode!=='pinball'||!validPinballSetup(p))return;setVariant(p.variant);setMap(currentCourse(p.map));setSource(p.source);setCustomNames(p.customNames);setWinnerSetting(p.winner);setMapFormat(p.mapFormat);setAceCount(p.aceCount);setQuantities(p.counts);setPreviewSeed(p.seed);setSetupEdited(p.edited);},[s.pinballSetup]);
   const displayedRun=s.draw?.mode===mode&&(!setupEdited||!s.draw.finishedAt)?s.draw:null;
   const resultIsMaps=displayedRun?.variant==='maps';
   const mapNext=!!(resultIsMaps&&displayedRun?.mapFormat==='winners'&&displayedRun.finishedAt&&!displayedRun.mapOpening);

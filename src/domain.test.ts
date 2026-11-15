@@ -248,6 +248,12 @@ test('세션의 정산 선택은 저장되고, 잘못된 값이면 그 선택만
   assert.equal(dropped.settlement,undefined);
   assert.equal(validateSession(JSON.parse(JSON.stringify(createSession()))).settlement,undefined,'예전 세션 파일도 그대로 불러온다');
 });
+test('세션의 핀볼 설정은 저장되고, 잘못된 값이면 그 설정만 버리고 세션은 불러온다',()=>{
+  const setup={variant:'players',map:0,source:'custom',customNames:['치킨','피자'],winner:'last',mapFormat:'proleague',aceCount:1,counts:{a:0,b:5},seed:7,edited:true};
+  assert.deepEqual(validateSession(JSON.parse(JSON.stringify({...createSession(),pinballSetup:setup}))).pinballSetup,setup);
+  for(const bad of [{...setup,source:'unassigned'},{...setup,counts:{a:6}},{...setup,customNames:[1]},{...setup,aceCount:0},'x'])
+    assert.equal(validateSession(JSON.parse(JSON.stringify({...createSession(),pinballSetup:bad}))).pinballSetup,undefined);
+});
 test('추첨 결과 배정과 참가 해제도 팀 이름 규칙을 따른다',()=>{
   const s=createSession();const hong=s.players.find(p=>p.name==='임홍규')!,young=s.players.find(p=>p.name==='유영진')!;
   // Draw result path: setTeam stamps teamAt, so a later assignment queues behind the current first player.
