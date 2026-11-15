@@ -76,7 +76,7 @@ export default function RacePage({ s, commit, notify, onFinish, visible }: { s: 
     </section> : <button type="button" className="pinball-settings-toggle" onClick={() => setSettingsOpen(true)}><SlidersHorizontal size={14}/> 설정</button>}
     <div className="draw-result">{winner ? <>
       <span className="result-label">첫번째 완주</span><strong>{givenName(winner.label)}</strong><Check size={19}/>
-      <button type="button" className="button" onClick={()=>void copyResults()}><Copy size={13}/> 결과 복사</button>
+      <button type="button" className="button" data-viewer-ok onClick={()=>void copyResults()}><Copy size={13}/> 결과 복사</button>
       {s.players.some(p => p.id === winnerPlayerId) ? <div className="result-assign">{(['A', 'B'] as Team[]).map(team => <button key={team} onClick={() => { if (s.players.filter(p => p.active && p.team === team).length >= s.teamSize) { notify(`${team}팀 정원이 가득 찼습니다.`); return; } commit(v => ({ ...v, players: v.players.map(p => p.id === winnerPlayerId ? { ...p, team } : p) }), `레이스 결과 ${winner.label} → ${team}팀`); notify(`${winner.label} 선수를 ${team}팀에 배정했습니다.`); }}>{team}팀 배정 <ArrowUpRight size={13}/></button>)}</div> : null}
     </> : null}</div>
   </section></div>;

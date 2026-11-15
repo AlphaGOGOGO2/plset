@@ -40,7 +40,7 @@ export default function PatronsPage({s,commit,notify}:{s:Session;commit:Commit;n
   <div className="patron-overview">
    <section className="panel patron-match-roster" aria-label="오늘 경기">
     <div className="patron-roster-heading"><h2>{view==='players'?'오늘 경기 참가자':'팀별 현황'}</h2><span>{view==='players'?`${players.length}명`:`A ${teamMembers(s.players,'A').length}명 · B ${teamMembers(s.players,'B').length}명`}</span>
-     <div className="segmented patron-view-toggle" role="group" aria-label="참가자 보기 전환">{([['players','참가자'],['teams','팀별 현황']] as const).map(([id,label])=><button key={id} type="button" className={view===id?'selected':''} aria-pressed={view===id} onClick={()=>setView(id)}>{label}</button>)}</div>
+     <div className="segmented patron-view-toggle" data-viewer-ok role="group" aria-label="참가자 보기 전환">{([['players','참가자'],['teams','팀별 현황']] as const).map(([id,label])=><button key={id} type="button" className={view===id?'selected':''} aria-pressed={view===id} onClick={()=>setView(id)}>{label}</button>)}</div>
     </div>
     {view==='players'?<>
      <div className="patron-roster-list" style={{gridTemplateColumns:`repeat(${players.length<=5?Math.max(players.length,1):Math.ceil(players.length/2)},minmax(0,1fr))`}}>{players.map(player=><div className="patron-roster-card" key={player.id}><div className="patron-roster-portrait"><Portrait player={player} small/><RaceMark race={player.race}/></div><strong>{player.name}</strong></div>)}</div>
@@ -55,13 +55,13 @@ export default function PatronsPage({s,commit,notify}:{s:Session;commit:Commit;n
     <textarea aria-label="진행 메모" maxLength={5000} value={s.notes} onChange={e=>commit(v=>({...v,notes:e.target.value}),undefined,false)}/>
    </section>
   </div>
-  <form className="panel patron-entry-form" onSubmit={event=>{event.preventDefault();add();}} onKeyDown={event=>{if(event.key==='Enter'&&(event.nativeEvent.isComposing||event.keyCode===229))event.preventDefault();}}>
+  <form className="panel patron-entry-form" data-viewer-ok onSubmit={event=>{event.preventDefault();add();}} onKeyDown={event=>{if(event.key==='Enter'&&(event.nativeEvent.isComposing||event.keyCode===229))event.preventDefault();}}>
    <label className="field-label">닉네임<input ref={nameRef} aria-label="귀인 닉네임" maxLength={60} autoComplete="off" value={nickname} onChange={e=>setNickname(e.target.value)}/></label>
    {(['total','per'] as const).map(unit=><label className="field-label" key={unit}>{unit==='total'?'TOTAL':'두당.'}<div className="patron-count-input"><input aria-label={`귀인 ${unit==='total'?'TOTAL':'두당'} 입력`} type="number" min={unit==='total'?1:0} max={unit==='total'?100000000:Math.floor(100000000/s.teamSize)} step={1} inputMode="numeric" value={amounts[unit]} onChange={e=>setAmountDraft({unit,raw:e.target.value})}/><span>개</span></div></label>)}
    <label className="field-label patron-note-field">비고<input aria-label="귀인 비고" maxLength={200} autoComplete="off" value={note} onChange={e=>setNote(e.target.value)}/></label>
    <button className="button primary" type="submit" disabled={!valid}><Plus size={17}/>추가</button>
   </form>
-  <div className="patrons-workspace">
+  <div className="patrons-workspace" data-viewer-ok>
    <section className="panel patron-ledger">
     <div className="patron-table-wrap"><table aria-label="귀인 펀딩 내역"><thead><tr><th scope="col">#</th><th scope="col">닉네임</th><th scope="col">TOTAL</th><th scope="col">두당.</th><th scope="col">비고</th><th scope="col"><button className="patron-reset-button" type="button" aria-label="귀인 초기화" title="귀인 목록 전체 삭제 · 실행 취소로 복원" disabled={!entries.length} onClick={()=>{commit(value=>({...value,patrons:[]}),'귀인 초기화');notify('귀인 초기화됨 · 실행 취소로 복원할 수 있습니다');}}><RotateCcw size={12}/>초기화</button></th></tr></thead><tbody>
      {entries.map((entry,i)=><tr key={entry.id}><td className="patron-row-index">{String(i+1).padStart(2,'0')}</td>

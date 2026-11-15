@@ -26,7 +26,7 @@ export function useBgm(file: string, playing: boolean, storageKey: string) {
 }
 
 export function BgmVolumeControl({ volume, onChange }: { volume: number; onChange: (value: number) => void }) {
-  return <div className="race-bgm-volume" role="group" aria-label="BGM 볼륨">
+  return <div className="race-bgm-volume" role="group" aria-label="BGM 볼륨" data-viewer-ok>
     <button type="button" aria-pressed={volume > 0} aria-label={volume > 0 ? 'BGM 끄기' : 'BGM 켜기'} onClick={() => onChange(volume > 0 ? 0 : BGM_VOLUME)}>{volume > 0 ? <Volume2 size={14}/> : <VolumeX size={14}/>} BGM</button>
     <input type="range" aria-label="BGM 볼륨" min={0} max={1} step={0.05} value={volume} onChange={e => onChange(e.currentTarget.valueAsNumber)}/>
   </div>;

@@ -56,7 +56,7 @@ export default function ParticipantRoster({ s, commit, onLibrary, notify }: {
   return <section className="panel roster-entry-panel">
     <div className="roster-entry-header">
       <h2>참가자 <span>{s.players.filter(p => p.active).length} / {s.teamSize * 2}명</span></h2>
-      <div className="segmented participant-view-toggle" role="group" aria-label="참가자 보기 기준">
+      <div className="segmented participant-view-toggle" data-viewer-ok role="group" aria-label="참가자 보기 기준">
         <button className={view === 'race' ? 'selected' : ''} aria-pressed={view === 'race'} onClick={() => setView('race')}>종족별</button>
         <button className={view === 'team' ? 'selected' : ''} aria-pressed={view === 'team'} onClick={() => setView('team')}>팀별</button>
       </div>

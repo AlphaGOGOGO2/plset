@@ -62,6 +62,8 @@ export function useSession(mode:Mode) {
         if(!alive)return;
         if(!account){location.replace('/proleague/room');return;}
         load(`${KEY}.${account}`,KEY);
+        // An ?output window only displays; connecting it would register a second host and replace the real one.
+        if(output)return;
         host.current=connectHost(account,url,setStatusOf);
         if(current.current)host.current.send(current.current,page.current);
       }).catch(()=>{if(alive)setError('계정을 확인하지 못했습니다. 새로고침해 주세요.');});

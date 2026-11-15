@@ -1,0 +1,10 @@
+.live-chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border: 1px solid #ffffff18; border-radius: 15px; color: #b8c2ae; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.live-chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #7f8f79; }
+.live-chip.live-live { color: #dfe8d6; border-color: #a4b59a55; }
+.live-chip.live-live::before { background: #8fd69a; box-shadow: 0 0 0 3px #8fd69a2e; }
+.live-chip.live-reconnecting::before, .live-chip.live-connecting::before, .live-chip.live-waiting::before { background: #daca9e; }
+.live-chip.live-down, .live-chip.live-replaced, .live-chip.live-login, .live-chip.live-closed, .live-chip.live-stale { color: #f0c5bc; border-color: #ac746844; }
+.live-chip.live-down::before, .live-chip.live-replaced::before, .live-chip.live-login::before, .live-chip.live-closed::before, .live-chip.live-stale::before { background: #e08a7a; }
+.live-ended { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.app-shell.viewer .session-strip input { pointer-events: none; }
+.app-shell.viewer .main-content :is(button, select, input, textarea):not([data-viewer-ok], [data-viewer-ok] *) { cursor: default; }
