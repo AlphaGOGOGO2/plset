@@ -21,6 +21,7 @@ export function rebaseClock(s: Session, offset: number): Session {
     ...s,
     timer: { ...s.timer, deadline: s.timer.deadline === null ? null : s.timer.deadline - offset },
     draw: s.draw ? { ...s.draw, startedAt: s.draw.startedAt - offset, finishedAt: s.draw.finishedAt === null ? null : s.draw.finishedAt - offset } : s.draw,
+    ...(s.mapDraw ? { mapDraw: { ...s.mapDraw, startedAt: s.mapDraw.startedAt - offset } } : {}),
   };
 }
 

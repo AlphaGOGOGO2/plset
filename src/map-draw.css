@@ -1,0 +1,69 @@
+/* Map draw tab: a spotlight card in the middle, the game slots filling left to right below it. */
+.mapdraw { display: grid; gap: 12px; min-width: 0; }
+.mapdraw-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 46px; padding: 7px 14px; border-bottom: 1px solid var(--line); }
+.mapdraw-head > div:first-child { display: flex; align-items: center; gap: 10px; }
+.mapdraw-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.mapdraw-actions, .mapdraw-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mapdraw-actions .button, .mapdraw-add .button { height: 34px; font-size: 14px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; }
+.mapdraw-add input { height: 34px; width: 170px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: inherit; font-size: 14px; }
+.mapdraw-format button { min-width: 62px; }
+/* A single super-ace slot should not stretch across the whole row. */
+.mapdraw[data-format=ace] .mapdraw-slots { grid-template-columns: minmax(92px, 150px); justify-content: center; }
+.mapdraw-owner { color: var(--blue); border-color: #9abceb55; }
+.mapdraw-owner.mine { color: var(--gold); border-color: #d6bb8655; }
+
+.map-card { display: grid; gap: 6px; min-width: 0; text-align: center; }
+.map-card-art { position: relative; aspect-ratio: 1; border-radius: 9px; overflow: hidden; border: 1px solid var(--line); background: #0c100f; display: grid; place-items: center; }
+.map-card-art img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
+.map-card-art span { padding: 6px; font-weight: 700; color: var(--muted); overflow-wrap: anywhere; line-height: 1.25; }
+.map-card strong { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-card-hidden .map-card-art { background: repeating-linear-gradient(135deg, #171d1a 0 10px, #1c2420 10px 20px); }
+.map-card-hidden .map-card-art span { font-family: 'Manrope Variable', sans-serif; font-size: 64px; font-weight: 800; color: #2f3a33; }
+
+.mapdraw-spotlight { display: grid; justify-items: center; gap: 10px; padding: 18px 14px 14px; background: radial-gradient(60% 90% at 50% 40%, #a4e5bc12, transparent 70%); transition: background .4s; }
+.mapdraw[data-extra] .mapdraw-spotlight { background: radial-gradient(60% 90% at 50% 40%, #d6bb8622, transparent 70%); }
+.mapdraw-caption { font-family: 'Manrope Variable', 'Noto Sans KR', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -.01em; color: var(--mint); animation: mapdraw-caption .35s cubic-bezier(.2, .7, .2, 1); }
+.mapdraw[data-extra] .mapdraw-caption { color: var(--gold); }
+.mapdraw[data-phase=idle] .mapdraw-caption, .mapdraw[data-phase=done] .mapdraw-caption { color: inherit; }
+.mapdraw-hint { margin: 0; min-height: 21px; font-size: 14px; color: var(--muted); text-align: center; }
+.mapdraw-center { position: relative; width: min(250px, 30vh, 60vw); aspect-ratio: 1 / 1.14; display: grid; place-items: start center; }
+.mapdraw-center-card { width: 100%; }
+.mapdraw-center-card .map-card strong { font-size: 22px; }
+.mapdraw-center-card .map-card-art { border-radius: 12px; border-width: 2px; box-shadow: 0 18px 40px #0008; }
+.mapdraw-center-card.rolling .map-card-art { border-color: #a4e5bc66; }
+.mapdraw-center-card.rolling { animation: mapdraw-flick .11s ease-out; }
+.mapdraw-center-card.rolling .map-card-art { border-color: #a4e5bc66; }
+.mapdraw[data-phase=roll] .mapdraw-center { animation: mapdraw-shake .28s linear infinite; }
+.mapdraw[data-extra][data-phase=roll] .mapdraw-center { animation-duration: .2s; }
+.mapdraw[data-extra] .mapdraw-center-card.rolling .map-card-art { border-color: #d6bb8699; }
+.mapdraw-center-card.locked .map-card-art { border-color: var(--mint); box-shadow: 0 0 0 4px #a4e5bc33, 0 0 46px #a4e5bc66, 0 18px 40px #0008; }
+.mapdraw[data-extra] .mapdraw-center-card.locked .map-card-art { border-color: var(--gold); box-shadow: 0 0 0 4px #d6bb8640, 0 0 54px #d6bb8680, 0 18px 40px #0008; }
+.mapdraw-center-card.locked strong { color: var(--mint); }
+.mapdraw[data-extra] .mapdraw-center-card.locked strong { color: var(--gold); }
+.mapdraw-center-card.finished { opacity: .45; }
+
+.mapdraw-slots { list-style: none; margin: 0; padding: 12px 14px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 10px; border-top: 1px solid var(--line); }
+.mapdraw-slot { display: grid; gap: 6px; min-width: 0; align-content: start; }
+.mapdraw-slot-no { font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; letter-spacing: .02em; }
+.mapdraw-slot.extra .mapdraw-slot-no { color: var(--gold); }
+.mapdraw-slot.placed .mapdraw-slot-no { color: inherit; }
+.mapdraw-slot.extra.placed .mapdraw-slot-no { color: var(--gold); }
+.mapdraw-slot-card { position: relative; }
+.mapdraw-slot-empty { aspect-ratio: 1; border: 1px dashed var(--line); border-radius: 9px; display: grid; place-items: center; font-family: 'Manrope Variable', sans-serif; font-size: 26px; font-weight: 800; color: #2a322c; margin-bottom: 27px; }
+.mapdraw-slot.extra .mapdraw-slot-empty { border-color: #d6bb8640; color: #d6bb8640; }
+.mapdraw-slot.current .mapdraw-slot-empty { border-style: solid; border-color: var(--mint); color: var(--mint); animation: mapdraw-pulse .9s ease-in-out infinite; }
+.mapdraw-slot.extra.current .mapdraw-slot-empty { border-color: var(--gold); color: var(--gold); }
+.mapdraw-slot.extra .map-card-art { border-color: #d6bb8666; }
+
+.mapdraw-pool-list { list-style: none; margin: 0; padding: 12px 14px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 112px)); gap: 10px; }
+.mapdraw-pool-list li { position: relative; min-width: 0; }
+.mapdraw-pool-list .map-card strong { font-size: 13px; }
+.mapdraw-remove { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: #101514cc; border: 1px solid var(--line); color: inherit; opacity: 0; transition: opacity .15s; }
+.mapdraw-pool-list li:hover .mapdraw-remove, .mapdraw-remove:focus-visible { opacity: 1; }
+.mapdraw-pool .empty-state { padding: 0 14px 16px; }
+
+@keyframes mapdraw-flick { from { transform: scale(.94); filter: brightness(1.5) blur(1.5px); } to { transform: none; filter: none; } }
+@keyframes mapdraw-shake { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-2px) rotate(-.5deg); } 75% { transform: translateX(2px) rotate(.5deg); } }
+@keyframes mapdraw-pulse { 0%, 100% { box-shadow: 0 0 0 0 #a4e5bc00; } 50% { box-shadow: 0 0 0 4px #a4e5bc33; } }
+@keyframes mapdraw-caption { from { opacity: 0; transform: translateY(8px) scale(.94); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .mapdraw-center, .mapdraw-center-card.rolling, .mapdraw-slot.current .mapdraw-slot-empty, .mapdraw-caption { animation: none !important; } }

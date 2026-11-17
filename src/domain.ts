@@ -76,6 +76,25 @@ export function mapSchedule(run: DrawRun): string[] { return [...(run.mapOpening
 // The match-map pool is editable per session; legacy files fall back to the seven stock maps.
 export const MAX_MAPS = 30;
 export const sessionMaps = (s: Session): DrawItem[] => s.maps ?? MATCH_MAPS;
+// Map draw tab. With n maps in the pool:
+//   full — n games, every map exactly once (7 maps: the 7-game set)
+//   plus — the same n games, then MAP_DRAW_EXTRA more that re-use pool maps, never the same one twice (7 maps: the 9-game set)
+//   ace  — a single game picked from the whole pool (the super ace decider)
+// Nothing but the seed is stored, so the schedule cannot be edited after the draw starts.
+export const MAP_DRAW_EXTRA = 2;
+export const MAP_DRAW_FORMATS = ['full', 'plus', 'ace'] as const;
+export type MapDrawFormat = typeof MAP_DRAW_FORMATS[number];
+export interface MapDraw { format: MapDrawFormat; seed: number; startedAt: number; items: DrawItem[] }
+// How many of the games are the once-each block; the rest are picks from the whole pool.
+export const mapDrawBase = (run: Pick<MapDraw, 'format' | 'items'>) => run.format === 'ace' ? 0 : run.items.length;
+export function mapDrawGames(run: Pick<MapDraw, 'format' | 'seed' | 'items'>): string[] {
+  const picks = run.format === 'ace' ? 1 : run.format === 'plus' ? MAP_DRAW_EXTRA : 0;
+  return [...shuffle(run.items, run.seed).slice(0, mapDrawBase(run)), ...shuffle(run.items, (run.seed ^ 0x9E3779B9) >>> 0).slice(0, picks)].map(item => item.id);
+}
+export function validMapDraw(v: any): v is MapDraw {
+  return !!v && typeof v === 'object' && MAP_DRAW_FORMATS.includes(v.format) && Number.isInteger(v.seed) && Number.isFinite(v.startedAt) && Array.isArray(v.items) && v.items.length >= MAP_DRAW_EXTRA && v.items.length <= MAX_MAPS
+    && v.items.every((m: any) => !!m && typeof m.id === 'string' && !!m.id && typeof m.label === 'string' && !!m.label.trim() && m.label.length <= 30) && new Set(v.items.map((m: any) => m.id)).size === v.items.length;
+}
 export function addMap(s: Session, name: string): Session {
   const label = name.trim(), maps = sessionMaps(s);
   if (!label) throw new Error('맵 이름을 입력해주세요.');
@@ -110,6 +129,8 @@ export interface Session {
   // The host's pinball setup before a draw starts, so viewers see the same entrants and preview as the host.
   pinballSetup?: PinballSetup;
   wheelSetup?: WheelSetup;
+  // The map draw tab's last run (see mapDrawGames); null or absent until the host draws.
+  mapDraw?: MapDraw | null;
 }
 export interface WheelSetup { labels: string[]; arrangement: 'numbers'|'captains'|null; editing: boolean; edited: boolean }
 export function validWheelSetup(p: unknown): p is WheelSetup {
@@ -209,5 +230,6 @@ export function validateSession(input: unknown): Session {
   if(s.draw)validateMapDraw(s.draw);
   if(s.maps===undefined)s.maps=MATCH_MAPS.map(m=>({...m}));
   if(!Array.isArray(s.maps)||s.maps.length>MAX_MAPS||s.maps.some(m=>!m||typeof m.id!=='string'||!m.id||typeof m.label!=='string'||!m.label.trim()||m.label.length>30)||new Set(s.maps.map(m=>m.id)).size!==s.maps.length||new Set(s.maps.map(m=>m.label)).size!==s.maps.length)throw new Error('경기 맵 목록을 확인해주세요.');
+  if(s.mapDraw!==undefined&&s.mapDraw!==null&&!validMapDraw(s.mapDraw))throw new Error('맵 추첨 데이터를 확인해주세요.');
   return s;
 }
