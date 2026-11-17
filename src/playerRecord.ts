@@ -61,3 +61,39 @@ export async function fetchRecord(playerId: number, month: string, signal?: Abor
   if (!record || record.playerId !== playerId || record.month !== month) throw new Error('전적 서버의 응답을 읽을 수 없습니다.');
   return record;
 }
+
+// Records are loaded ahead of time when a player joins the session, so the modal usually opens with the numbers ready.
+// One request at a time: the server reads the source with a pause between pages and only works on two records at once.
+export const RECORD_TTL_MS = 15 * 60 * 1000;
+type Entry = { promise: Promise<PlayerRecord>; at: number; started: boolean; dropped: boolean };
+const entries = new Map<string, Entry>();
+let queue: Promise<unknown> = Promise.resolve();
+const keyOf = (playerId: number, month: string) => `${playerId}:${month}`;
+
+/**
+ * The player's record, from memory when it was loaded in the last 15 minutes. A background load (`urgent: false`) waits its
+ * turn behind earlier ones; an urgent load (someone opened the modal) starts at once, even if the same player is still waiting in line.
+ */
+export function loadRecord(playerId: number, month: string, { urgent = true, now = Date.now() }: { urgent?: boolean; now?: number } = {}): Promise<PlayerRecord> {
+  const key = keyOf(playerId, month), hit = entries.get(key);
+  if (hit && now - hit.at < RECORD_TTL_MS && (hit.started || !urgent)) return hit.promise;
+  if (hit) hit.dropped = true;
+  const entry: Entry = { at: now, started: urgent, dropped: false, promise: Promise.resolve(null as never) };
+  const run = () => { entry.started = true; return fetchRecord(playerId, month); };
+  if (urgent) entry.promise = run();
+  else {
+    // A waiting load that was taken over by an urgent one resolves with that one's result instead of fetching twice.
+    entry.promise = queue.then(() => entry.dropped ? entries.get(key)?.promise ?? run() : run());
+    queue = entry.promise.catch(() => {});
+  }
+  entries.set(key, entry);
+  // A failure is not remembered, so the next open or the retry button fetches again.
+  entry.promise.catch(() => { if (entries.get(key) === entry) entries.delete(key); });
+  return entry.promise;
+}
+/** Starts background loads for players whose record is not in memory yet. Failures are silent; the modal reports them when opened. */
+export function preloadRecords(playerIds: number[], month: string, now = Date.now()): void {
+  for (const id of new Set(playerIds)) { const hit = entries.get(keyOf(id, month)); if (!hit || now - hit.at >= RECORD_TTL_MS) void loadRecord(id, month, { urgent: false, now }).catch(() => {}); }
+}
+/** Forgets a player's record so the next load fetches it again (the modal's retry button). */
+export function forgetRecord(playerId: number, month: string): void { const key = keyOf(playerId, month), hit = entries.get(key); if (hit) hit.dropped = true; entries.delete(key); }

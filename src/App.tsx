@@ -23,7 +23,7 @@ import ParticipantRoster from './ParticipantRoster';
 import ModeToggle from './ModeToggle';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Slam } from './components';
-import { currentMonth, eloboardId, eloboardUrl, fetchRecord, monthLabel, VS_RACES, winRate, type PlayerRecord } from './playerRecord';
+import { currentMonth, eloboardId, eloboardUrl, forgetRecord, loadRecord, monthLabel, preloadRecords, VS_RACES, winRate, type PlayerRecord } from './playerRecord';
 
 type Commit = (update:(s:Session)=>Session,label?:string,history?:boolean)=>void;
 // The open tab lives in the URL hash so the browser's back/forward buttons move between tabs.
@@ -45,13 +45,14 @@ function PlayerRecordModal({player,onClose}:{player:Pick<Player,'name'|'race'|'r
   const [month]=useState(()=>currentMonth(Date.now()));
   const [attempt,setAttempt]=useState(0);
   const [state,setState]=useState<RecordState>({status:'loading'});
-  // Aborting on cleanup drops a response that lands after the modal closed, switched player, or was retried.
+  // The record is usually in memory already (preloaded when the player joined the session). `alive` drops a response
+  // that lands after the modal closed, switched player, or was retried; the load itself is kept for the next open.
   useEffect(()=>{
     if(id===null){setState({status:'error',message:NO_RECORD_LINK});return;}
-    const controller=new AbortController();
+    let alive=true;
     setState({status:'loading'});
-    fetchRecord(id,month,controller.signal).then(record=>{if(!controller.signal.aborted)setState({status:'loaded',record});},e=>{if(!controller.signal.aborted)setState({status:'error',message:e instanceof Error&&e.message?e.message:'전적을 불러오지 못했습니다.'});});
-    return ()=>controller.abort();
+    loadRecord(id,month).then(record=>{if(alive)setState({status:'loaded',record});},e=>{if(alive)setState({status:'error',message:e instanceof Error&&e.message?e.message:'전적을 불러오지 못했습니다.'});});
+    return ()=>{alive=false;};
   },[id,month,attempt]);
   const record=state.status==='loaded'?state.record:null,partial=record?VS_RACES.filter(v=>!record.vs[v.race].complete):[];
   const url=record?.url??(id===null?null:eloboardUrl(id,month));
@@ -59,7 +60,7 @@ function PlayerRecordModal({player,onClose}:{player:Pick<Player,'name'|'race'|'r
     <div className="record-head"><Portrait player={player}/><div className="record-head-text"><strong>{player.name}</strong><p className="record-subtitle">{monthLabel(month)} 프로리그</p></div></div>
     <div className="record-body" aria-busy={state.status==='loading'}>
       {state.status==='loading'?<p className="record-status" role="status"><span className="record-spinner" aria-hidden="true"/>전적을 이번 달 전체 경기를 불러오는 중입니다. 경기가 많은 선수는 10초 넘게 걸릴 수 있습니다.</p>:null}
-      {state.status==='error'?<div className="record-status record-error" role="alert"><p>{state.message}</p>{id!==null?<Button onClick={()=>setAttempt(n=>n+1)}><RotateCcw size={14}/> 다시 시도</Button>:null}</div>:null}
+      {state.status==='error'?<div className="record-status record-error" role="alert"><p>{state.message}</p>{id!==null?<Button onClick={()=>{forgetRecord(id,month);setAttempt(n=>n+1);}}><RotateCcw size={14}/> 다시 시도</Button>:null}</div>:null}
       {record?<>
         <div className="record-total"><span className="record-total-label">이번 달 전적</span><strong>{record.total.wins}승 {record.total.losses}패</strong><span className="record-total-rate">승률 <b>{winRate(record.total.wins,record.total.losses)}</b></span></div>
         <ul className="record-vs">{VS_RACES.map(({race,label})=>{const r=record.vs[race],games=r.wins+r.losses;return <li key={race}><span className="record-vs-label"><RaceMark race={race}/>{label}{r.complete?null:<span className="record-partial">일부 누락</span>}</span>{games?<><span className="record-vs-score">{r.wins}승 {r.losses}패</span><span className="record-vs-rate">{winRate(r.wins,r.losses)}</span><span className="record-bar" aria-hidden="true"><span style={{width:`${r.wins/games*100}%`}}/></span></>:<span className="record-none">경기 없음</span>}</li>;})}</ul>
@@ -193,6 +194,10 @@ export default function App() {
   useEffect(()=>{publishPage(page);},[page,publishPage]);
   useEffect(()=>{const target=VIEWER?followTarget(follow,live.hostPage,page):null;if(target)show(target);},[follow,live.hostPage,page,show]);
   const ready=!!s;
+  // Load each participant's record as soon as they are in the session, so 전적보기 opens without a wait.
+  // Viewers and the ?output window do not preload: by the time a viewer asks, the server already holds the host's result.
+  const recordIds=s?[...new Set(s.players.filter(p=>p.active).map(eloboardId).filter((id):id is number=>id!==null))].sort((a,b)=>a-b).join(','):'';
+  useEffect(()=>{if(VIEWER||OUTPUT||!recordIds)return;preloadRecords(recordIds.split(',').map(Number),currentMonth(Date.now()));},[recordIds]);
   useEffect(()=>VIEWER&&guardRef.current?guardViewer(guardRef.current):undefined,[ready]);
   const toastTimer=useRef<ReturnType<typeof setTimeout>|null>(null),importRef=useRef<HTMLInputElement>(null),sound=useRef(true);
   const notify=useCallback((text:string)=>{setToast(text);if(toastTimer.current)clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setToast(''),4200);},[]);
