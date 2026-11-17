@@ -48,4 +48,4 @@ export function mapDrawFrame(plan: MapDrawPlan, elapsed: number): MapDrawFrame {
 }
 
 // Clipboard form the hosts paste into chat: the first two letters of each map, in game order.
-export const mapOrderText = (labels: string[]) => labels.map(label => [...label.replace(/\s+/g, '')].slice(0, 2).join('')).join('-');
+export const mapOrderText = (labels: string[]) => labels.map(label => [...label.replace(/\s+/g, '')].slice(0, 2).join('')).join(' ');

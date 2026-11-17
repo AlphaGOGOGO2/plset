@@ -97,8 +97,8 @@ test('the super ace format draws one map, and every map can be it', () => {
 });
 
 test('the copied order is the first two letters of each map joined by hyphens', () => {
-  assert.equal(mapOrderText(['아이올로스', '녹아웃', '컬러리스페이트', '옥타곤']), '아이-녹아-컬러-옥타');
-  assert.equal(mapOrderText(['컬러리스 페이트', '백룸', '오디세이', '애티튜드', 'A']), '컬러-백룸-오디-애티-A');
+  assert.equal(mapOrderText(['아이올로스', '녹아웃', '컬러리스페이트', '옥타곤']), '아이 녹아 컬러 옥타');
+  assert.equal(mapOrderText(['컬러리스 페이트', '백룸', '오디세이', '애티튜드', 'A']), '컬러 백룸 오디 애티 A');
 });
 
 test('the flicker is a random walk, not a repeating lap', () => {
