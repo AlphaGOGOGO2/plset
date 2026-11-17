@@ -10,6 +10,8 @@ export interface RaceRecord extends WinLoss { complete: boolean }
 export interface PlayerRecord { playerId: number; month: string; total: WinLoss; vs: Record<Race, RaceRecord>; complete: boolean; url: string; fetchedAt: number }
 
 export const RECORD_ENDPOINT = '/api/proleague/record';
+// Hidden for now: while false, no button is shown and no record is requested.
+export const RECORD_ENABLED: boolean = false;
 /** Display order of the opponent races. */
 export const VS_RACES: { race: Race; label: string }[] = [{ race: 'T', label: '대 테란' }, { race: 'Z', label: '대 저그' }, { race: 'P', label: '대 토스' }];
 const IDS = data.ids as Record<string, number>;
