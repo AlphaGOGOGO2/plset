@@ -1,5 +1,5 @@
-export type Page = 'board' | 'teams' | 'pinball' | 'wheel' | 'race' | 'patrons' | 'settlement';
-export const PAGES: Page[] = ['board', 'teams', 'pinball', 'wheel', 'race', 'patrons', 'settlement'];
+export type Page = 'board' | 'teams' | 'pinball' | 'wheel' | 'race' | 'maps' | 'patrons' | 'settlement';
+export const PAGES: Page[] = ['board', 'teams', 'pinball', 'wheel', 'race', 'maps', 'patrons', 'settlement'];
 export const ROOM_NAMES = { major: '메이저 프로리그', kleague: 'K리그' } as const;
 export type RoomId = keyof typeof ROOM_NAMES;
 // solo: this browser only. host: broadcasts every change. watch: renders what the host broadcasts.
