@@ -45,7 +45,7 @@ export default function MapDrawPage({ s, commit, notify, visible, viewer = false
       if (key !== last) {
         last = key; setFrame(next);
         if (next.phase === 'roll' || next.phase === 'intro') playSfx('wheelTick');
-        else if (next.phase === 'hold') playSfx(plan!.steps[next.game].extra ? 'win' : 'teamPlace');
+        else if (next.phase === 'hold') playSfx('teamPlace');
         else if (live.current) playSfx('cheer');
       }
       if (next.phase !== 'done') id = requestAnimationFrame(loop);
