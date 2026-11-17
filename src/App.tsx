@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, ArrowUpRight, Calculator, Check, ChevronDown, CircleDot, Copy, Crown, Download, Flag, Heart, Image as ImageIcon, LayoutDashboard, Map as MapIcon, Minus, Play, Plus, RotateCcw, Shuffle, SlidersHorizontal, Tag, Trophy, Undo2, Users, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, ArrowUpRight, Calculator, Check, ChevronDown, CircleDot, Copy, Crown, Download, Flag, Heart, Image as ImageIcon, LayoutDashboard, Map as MapIcon, Minus, Play, Plus, Power, RotateCcw, Shuffle, SlidersHorizontal, Tag, Trophy, Undo2, Users, X } from 'lucide-react';
 import { addMap, mapSchedule, allocateTeams, removeMap, sessionMaps, clockRemaining, clockText, createSession, funding, number, randomSeed, rankByFunding, reportFileName, safeAmount, sessionReport, setAmount, setNote, setTeam, spectatorText, swapTie, uid, validateSession, validPinballSetup, withTeamNames, type DrawRun, type PinballSetup, type Player, type Scene, type Session, type Team } from './domain';
 import { BroadcastBoard, Clock, FundingSummary, OutputHeader, Portrait, RaceMark, TeamCard } from './components';
 import { BgmVolumeControl, SOUND_CREDIT, useBgm } from './BgmControl';
@@ -16,7 +16,7 @@ import MapDrawPage from './MapDrawPage';
 import { PAGES, parseHash, buildHash, followTarget, ROOM_NAMES, type Page } from './mode';
 import { useSession } from './useSession';
 import { guardViewer } from './viewerGuard';
-import type { HostStatus, ViewerStatus } from './live';
+import { closeRoom, type HostStatus, type ViewerStatus } from './live';
 import { version as appVersion } from '../package.json';
 import PlayerManager from './PlayerManager';
 import ParticipantRoster from './ParticipantRoster';
@@ -150,7 +150,7 @@ const VIEWER_LABEL:Record<ViewerStatus,string>={connecting:'연결 중',live:'�
 export default function App() {
   const {state:s,commit,undo,canUndo,status,error,setError,replace,live,publishPage}=useSession(MODE);
   const [page,setPage]=useState<Page>(pageFromHash),[modal,setModal]=useState<'players'|'settings'|null>(null),[toast,setToast]=useState('');
-  const [follow,setFollow]=useState(true),guardRef=useRef<HTMLDivElement>(null);
+  const [follow,setFollow]=useState(true),guardRef=useRef<HTMLDivElement>(null),[ending,setEnding]=useState(false);
   useEffect(()=>{const sync=()=>{const next=parseHash(location.hash);if(buildHash(next.mode,'board')!==buildHash(MODE,'board')){location.reload();return;}setPage(next.page);};window.addEventListener('popstate',sync);window.addEventListener('hashchange',sync);return ()=>{window.removeEventListener('popstate',sync);window.removeEventListener('hashchange',sync);};},[]);
   const show=useCallback((next:Page)=>{const hash=buildHash(MODE,next);if(location.hash!==hash)history.pushState(null,'',hash);setPage(next);},[]);
   // A viewer who picks a tab is browsing on their own until they switch following back on.
@@ -169,6 +169,8 @@ export default function App() {
   const exportReport=async()=>{if(!s)return;const name=reportFileName();try{const done=await saveText(name,sessionReport(s));if(done)notify(`${name} 파일을 ${done==='saved'?'저장':'내보냈'}습니다.`);}catch{notify('파일 저장에 실패했습니다.');}};
   const exportSession=async()=>{if(!s)return;try{const url=URL.createObjectURL(new Blob([JSON.stringify(s,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`PLSET-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);notify('세션 파일을 내보냈습니다.');}catch{notify('파일 저장에 실패했습니다.');}};
   const importSession=()=>importRef.current?.click();
+  // Ends the broadcast for everyone and returns to the room list. The session itself stays saved on this PC.
+  const endRoom=async()=>{if(ending||!confirm('방송을 종료할까요? 시청 중인 화면이 모두 종료됩니다.'))return;setEnding(true);try{await closeRoom();location.href='/proleague/room';}catch{setEnding(false);notify('방을 닫지 못했습니다. 다시 시도해 주세요.');}};
   if(!s)return <div className="loading"><div className="brand console-brand"><img src={LOGO} alt=""/><span>PROLEAGUE<br/>CONSOLE</span></div><p>{error||(VIEWER&&live.status==='closed'?'방송이 종료되었습니다':VIEWER&&live.status==='waiting'?'진행자 연결 대기 중':'진행실을 준비하고 있습니다…')}</p>{VIEWER?<a className="button" href="/proleague/room">방 목록으로</a>:null}</div>;
   if(OUTPUT)return <div className="output-shell"><OutputHeader s={s}/><main className={`output-scene output-${s.scene}`}>{s.scene==='board'?<BroadcastBoard s={s}/>:s.scene==='teams'?<div className="output-match"><TeamCard s={s} team="A"/><span className="output-vs">VS</span><TeamCard s={s} team="B"/></div>:s.scene==='timer'?<div className="output-timer"><span className="eyebrow">SESSION COUNTDOWN</span><h2>{s.timer.label}</h2><Clock timer={s.timer} large/></div>:<div className="output-draw"><DrawStage run={s.draw}/>{s.draw?.finishedAt?<div className="output-winner"><span>{s.draw.rank}번째 당첨</span><strong>{s.draw.items.find(p=>p.id===s.draw!.results[s.draw!.rank-1])?.label}</strong></div>:null}</div>}</main><footer className="output-footer"><span>STARCRAFT PROLEAGUE</span><span>{s.scene==='timer'?'TIME CONTROL':`WINNER’S SHARE · 두 ${number(funding(s.players,s.teamSize).per)}개`}</span><span>POWERED BY STARJOA.KR</span></footer></div>;
   const nav=[{id:'board' as Page,label:'진행 대시보드',caption:'Overview',icon:LayoutDashboard},{id:'teams' as Page,label:'팀 편성',caption:'Match builder',icon:Users},{id:'race' as Page,label:'레이스',caption:'Marble race',icon:Flag},{id:'wheel' as Page,label:'룰렛',caption:'Roulette',icon:Shuffle},{id:'maps' as Page,label:'맵 추첨',caption:'Map draw',icon:MapIcon},{id:'pinball' as Page,label:'핀볼',caption:'Pinball',icon:CircleDot},{id:'patrons' as Page,label:'귀인',caption:'Patrons',icon:Heart},{id:'settlement' as Page,label:'정산',caption:'Settlement',icon:Calculator}];
@@ -180,6 +182,7 @@ export default function App() {
   <a className="button" href="/proleague/room">나가기</a>
 </>:<>
   {HOST?<span className={`live-chip live-${live.status??'connecting'}`} role="status">{HOST_LABEL[live.status as HostStatus??'connecting']}</span>:null}
+  {HOST?<button type="button" className="button live-end" disabled={ending} title="방을 닫고 방 목록으로 돌아갑니다" onClick={()=>void endRoom()}><Power size={15}/> 종료하기</button>:null}
   <span className={`save-status ${status==='저장 실패'?'save-error':''}`}><Check size={13}/>{status}</span>
   <button className="icon-button" aria-label="실행 취소" title="실행 취소 · Ctrl+Z" disabled={!canUndo} onClick={undo}><Undo2 size={17}/></button>
   <Button onClick={exportReport} title="오늘 진행 내용을 메모장 파일로 저장"><Download size={15}/> 내보내기</Button>

@@ -18,6 +18,12 @@ export async function fetchMe(): Promise<{ account: string | null; url: string }
   return res.json();
 }
 
+/** Ends the broadcast: the site closes the room in the Worker, which disconnects every viewer. */
+export async function closeRoom() {
+  const res = await fetch('/api/live/close', { method: 'POST', cache: 'no-store' });
+  if (!res.ok) throw new Error('live/close');
+}
+
 /** Turns raw server frames into events. Pure, so the ordering and validation rules are testable without a socket. */
 export function viewerInbox() {
   let lastRev = -Infinity, invalid = 0;
