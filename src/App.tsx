@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, ArrowUpRight, Calculator, Check, ChevronDown, CircleDot, Copy, Crown, Download, Flag, Heart, Image as ImageIcon, LayoutDashboard, Map as MapIcon, Minus, Play, Plus, Power, RotateCcw, Shuffle, SlidersHorizontal, Tag, Trophy, Undo2, Users, X } from 'lucide-react';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { ArrowDownToLine, ArrowUpFromLine, ArrowUpRight, Calculator, ChartColumn, Check, ChevronDown, CircleDot, Copy, Crown, Download, Flag, Heart, Image as ImageIcon, LayoutDashboard, Map as MapIcon, Minus, Play, Plus, Power, RotateCcw, Shuffle, SlidersHorizontal, Tag, Trophy, Undo2, Users, X } from 'lucide-react';
 import { addMap, mapSchedule, allocateTeams, removeMap, sessionMaps, clockRemaining, clockText, createSession, funding, number, randomSeed, rankByFunding, reportFileName, safeAmount, sessionReport, setAmount, setNote, setTeam, spectatorText, swapTie, uid, validateSession, validPinballSetup, withTeamNames, type DrawRun, type PinballSetup, type Player, type Scene, type Session, type Team } from './domain';
 import { BroadcastBoard, Clock, FundingSummary, OutputHeader, Portrait, RaceMark, TeamCard } from './components';
 import { BgmVolumeControl, SOUND_CREDIT, useBgm } from './BgmControl';
@@ -23,6 +23,7 @@ import ParticipantRoster from './ParticipantRoster';
 import ModeToggle from './ModeToggle';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Slam } from './components';
+import { currentMonth, eloboardId, eloboardUrl, fetchRecord, monthLabel, VS_RACES, winRate, type PlayerRecord } from './playerRecord';
 
 type Commit = (update:(s:Session)=>Session,label?:string,history?:boolean)=>void;
 // The open tab lives in the URL hash so the browser's back/forward buttons move between tabs.
@@ -31,10 +32,42 @@ const OUTPUT=new URLSearchParams(location.search).has('output');
 const LOGO=`${import.meta.env.BASE_URL}brand/starjoa-logo.webp`;
 function Button({children,onClick,primary=false,disabled=false,className='',title,viewerOk=false}:{children:ReactNode;onClick?:()=>void;primary?:boolean;disabled?:boolean;className?:string;title?:string;viewerOk?:boolean}) {return <button className={`button ${primary?'primary':''} ${className}`} onClick={onClick} disabled={disabled} title={title} data-viewer-ok={viewerOk||undefined}>{children}</button>;}
 function PanelHead({eyebrow,title,children}:{eyebrow:string;title:string;children?:ReactNode}){return <div className="panel-heading"><div><span className="eyebrow">{eyebrow}</span><h2>{title}</h2></div><div className="panel-actions">{children}</div></div>;}
-function Modal({title,children,onClose}:{title:string;children:ReactNode;onClose:()=>void}) {
-  const ref=useRef<HTMLDialogElement>(null);
+function Modal({title,children,onClose,className='',viewerOk=false}:{title:ReactNode;children:ReactNode;onClose:()=>void;className?:string;viewerOk?:boolean}) {
+  const ref=useRef<HTMLDialogElement>(null),titleId=useId();
   useEffect(()=>{const d=ref.current;d?.showModal();return ()=>d?.close();},[]);
-  return <dialog ref={ref} className="modal" onCancel={onClose} onClick={e=>{if(e.target===ref.current)onClose();}}><div className="modal-head"><h2>{title}</h2><button className="icon-button" aria-label="닫기" onClick={onClose}><X size={20}/></button></div>{children}</dialog>;
+  return <dialog ref={ref} className={`modal${className?` ${className}`:''}`} aria-labelledby={titleId} data-viewer-ok={viewerOk||undefined} onCancel={onClose} onClick={e=>{if(e.target===ref.current)onClose();}}><div className="modal-head"><h2 id={titleId}>{title}</h2><button className="icon-button" aria-label="닫기" onClick={onClose}><X size={20}/></button></div>{children}</dialog>;
+}
+type RecordState={status:'loading'}|{status:'error';message:string}|{status:'loaded';record:PlayerRecord};
+const NO_RECORD_LINK='EloBoard 전적이 연결되지 않은 선수입니다.';
+// This month's pro league record for one player. Viewers may open it too, so the whole dialog is viewer-ok.
+function PlayerRecordModal({player,onClose}:{player:Pick<Player,'name'|'race'|'rosterId'>;onClose:()=>void}) {
+  const id=eloboardId(player);
+  const [month]=useState(()=>currentMonth(Date.now()));
+  const [attempt,setAttempt]=useState(0);
+  const [state,setState]=useState<RecordState>({status:'loading'});
+  // Aborting on cleanup drops a response that lands after the modal closed, switched player, or was retried.
+  useEffect(()=>{
+    if(id===null){setState({status:'error',message:NO_RECORD_LINK});return;}
+    const controller=new AbortController();
+    setState({status:'loading'});
+    fetchRecord(id,month,controller.signal).then(record=>{if(!controller.signal.aborted)setState({status:'loaded',record});},e=>{if(!controller.signal.aborted)setState({status:'error',message:e instanceof Error&&e.message?e.message:'전적을 불러오지 못했습니다.'});});
+    return ()=>controller.abort();
+  },[id,month,attempt]);
+  const record=state.status==='loaded'?state.record:null,partial=record?VS_RACES.filter(v=>!record.vs[v.race].complete):[];
+  const url=record?.url??(id===null?null:eloboardUrl(id,month));
+  return <Modal className="record-modal" viewerOk title={<span className="record-title"><RaceMark race={player.race}/>{player.name}</span>} onClose={onClose}>
+    <div className="record-head"><Portrait player={player}/><div className="record-head-text"><strong>{player.name}</strong><p className="record-subtitle">{monthLabel(month)} 프로리그</p></div></div>
+    <div className="record-body" aria-busy={state.status==='loading'}>
+      {state.status==='loading'?<p className="record-status" role="status"><span className="record-spinner" aria-hidden="true"/>전적을 이번 달 전체 경기를 불러오는 중입니다. 경기가 많은 선수는 10초 넘게 걸릴 수 있습니다.</p>:null}
+      {state.status==='error'?<div className="record-status record-error" role="alert"><p>{state.message}</p>{id!==null?<Button onClick={()=>setAttempt(n=>n+1)}><RotateCcw size={14}/> 다시 시도</Button>:null}</div>:null}
+      {record?<>
+        <div className="record-total"><span className="record-total-label">이번 달 전적</span><strong>{record.total.wins}승 {record.total.losses}패</strong><span className="record-total-rate">승률 <b>{winRate(record.total.wins,record.total.losses)}</b></span></div>
+        <ul className="record-vs">{VS_RACES.map(({race,label})=>{const r=record.vs[race],games=r.wins+r.losses;return <li key={race}><span className="record-vs-label"><RaceMark race={race}/>{label}{r.complete?null:<span className="record-partial">일부 누락</span>}</span>{games?<><span className="record-vs-score">{r.wins}승 {r.losses}패</span><span className="record-vs-rate">{winRate(r.wins,r.losses)}</span><span className="record-bar" aria-hidden="true"><span style={{width:`${r.wins/games*100}%`}}/></span></>:<span className="record-none">경기 없음</span>}</li>;})}</ul>
+        {partial.length?<p className="record-note">{partial.map(v=>v.label).join(', ')} 전적은 경기 수가 많아 일부가 빠졌을 수 있습니다. 정확한 기록은 아래 EloBoard 링크에서 확인하세요.</p>:null}
+      </>:null}
+    </div>
+    <p className="record-source">{url?<a href={url} target="_blank" rel="noopener">출처: EloBoard <ArrowUpRight size={13}/></a>:<span>출처: EloBoard</span>}<span className="record-source-note">해당 기능은 삭제될 수 있습니다.</span></p>
+  </Modal>;
 }
 function AmountInput({amount,divisor,label,onChange,onNavigate}:{amount:number;divisor:number;label:string;onChange:(n:number)=>void;onNavigate?:(direction:-1|0|1,input:HTMLInputElement)=>void}) {
   const [value,setValue]=useState(String(Math.floor(amount/divisor)));
@@ -79,6 +112,7 @@ function FundingPage({s,commit,onAdd,notify}:{s:Session;commit:Commit;onAdd:()=>
 function TeamsPage({s,commit,notify}:{s:Session;commit:Commit;notify:(t:string)=>void}) {
   const [benchDragOver,setBenchDragOver]=useState(false);
   const [slam,setSlam]=useState<Slam|null>(null);
+  const [recordOf,setRecordOf]=useState<Player|null>(null);
   const unassigned=s.players.filter(p=>p.active&&!p.team);
   const assign=(id:string,team:Team|null)=>{
     const p=s.players.find(p=>p.id===id&&p.active);if(!p)return;
@@ -88,8 +122,9 @@ function TeamsPage({s,commit,notify}:{s:Session;commit:Commit;notify:(t:string)=
     setSlam(team?{id,team,n:Date.now()}:null);
   };
   return <>
-    <section className={`panel bench-panel team-bench-panel${benchDragOver?' drag-over':''}`} aria-label="미배정 선수 덱" onDragOver={e=>{if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();e.dataTransfer.dropEffect='move';setBenchDragOver(true);}}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setBenchDragOver(false);}} onDrop={e=>{e.preventDefault();setBenchDragOver(false);assign(e.dataTransfer.getData('text/plain'),null);}}><PanelHead eyebrow="AVAILABLE PLAYERS" title="미배정 선수"><span className="count-pill">{unassigned.length}명</span><Button disabled={!s.players.some(p=>p.team)} onClick={()=>commit(v=>withTeamNames({...v,players:v.players.map(p=>({...p,team:null}))},v),'팀 배정 초기화')}><RotateCcw size={14}/> 배정 초기화</Button><Button primary onClick={()=>{try{const players=allocateTeams(s.players,s.teamSize,randomSeed());commit(v=>withTeamNames({...v,players},v),'무작위 팀 편성');notify('두 팀을 무작위로 편성했습니다.');}catch(e){notify((e as Error).message);}}}><Shuffle size={16}/> 무작위 팀 편성</Button></PanelHead><div className="bench-list"><AnimatePresence mode="popLayout" initial={false}>{unassigned.map(p=><motion.div className="bench-slot" key={p.id} layout initial={{scale:.8,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:.6,opacity:0}} transition={{type:'spring',stiffness:520,damping:32}}><div className="bench-player" draggable onDragStart={e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',p.id);}}><Portrait player={p} small/><RaceMark race={p.race}/><strong>{p.name}</strong><div className="bench-assign"><button aria-label={`${p.name} A팀 배정`} onClick={()=>assign(p.id,'A')}>A</button><button aria-label={`${p.name} B팀 배정`} onClick={()=>assign(p.id,'B')}>B</button></div></div></motion.div>)}</AnimatePresence>{!unassigned.length?<div className="empty-state"><Check size={20}/> 모든 선수가 팀에 배정되었습니다.</div>:null}</div></section>
-    <div className="team-layout">{(['A','B'] as Team[]).map(team=><TeamCard key={team} s={s} team={team} slam={slam?.team===team?slam:null} onDrop={id=>assign(id,team)} onRemove={id=>assign(id,null)} onName={name=>commit(v=>({...v,teams:{...v.teams,[team]:name}}),`${team}팀 이름 변경`)}/>)}</div>
+    <section className={`panel bench-panel team-bench-panel${benchDragOver?' drag-over':''}`} aria-label="미배정 선수 덱" onDragOver={e=>{if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();e.dataTransfer.dropEffect='move';setBenchDragOver(true);}}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setBenchDragOver(false);}} onDrop={e=>{e.preventDefault();setBenchDragOver(false);assign(e.dataTransfer.getData('text/plain'),null);}}><PanelHead eyebrow="AVAILABLE PLAYERS" title="미배정 선수"><span className="count-pill">{unassigned.length}명</span><Button disabled={!s.players.some(p=>p.team)} onClick={()=>commit(v=>withTeamNames({...v,players:v.players.map(p=>({...p,team:null}))},v),'팀 배정 초기화')}><RotateCcw size={14}/> 배정 초기화</Button><Button primary onClick={()=>{try{const players=allocateTeams(s.players,s.teamSize,randomSeed());commit(v=>withTeamNames({...v,players},v),'무작위 팀 편성');notify('두 팀을 무작위로 편성했습니다.');}catch(e){notify((e as Error).message);}}}><Shuffle size={16}/> 무작위 팀 편성</Button></PanelHead><div className="bench-list"><AnimatePresence mode="popLayout" initial={false}>{unassigned.map(p=><motion.div className="bench-slot" key={p.id} layout initial={{scale:.8,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:.6,opacity:0}} transition={{type:'spring',stiffness:520,damping:32}}><div className="bench-player" draggable onDragStart={e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',p.id);}}><Portrait player={p} small/><RaceMark race={p.race}/><strong>{p.name}</strong><div className="bench-assign"><button aria-label={`${p.name} A팀 배정`} onClick={()=>assign(p.id,'A')}>A</button><button aria-label={`${p.name} B팀 배정`} onClick={()=>assign(p.id,'B')}>B</button></div><button className="record-button" data-viewer-ok aria-label={`${p.name} 전적보기`} disabled={eloboardId(p)===null} title={eloboardId(p)===null?NO_RECORD_LINK:`${p.name} 이번 달 프로리그 전적`} onClick={()=>setRecordOf(p)}><ChartColumn size={13}/> 전적보기</button></div></motion.div>)}</AnimatePresence>{!unassigned.length?<div className="empty-state"><Check size={20}/> 모든 선수가 팀에 배정되었습니다.</div>:null}</div></section>
+    <div className="team-layout">{(['A','B'] as Team[]).map(team=><TeamCard key={team} s={s} team={team} slam={slam?.team===team?slam:null} onDrop={id=>assign(id,team)} onRemove={id=>assign(id,null)} onRecord={setRecordOf} onName={name=>commit(v=>({...v,teams:{...v.teams,[team]:name}}),`${team}팀 이름 변경`)}/>)}</div>
+    {recordOf?<PlayerRecordModal key={recordOf.id} player={recordOf} onClose={()=>setRecordOf(null)}/>:null}
     </>;
 }
 function QuantityControl({label,value,min=0,disabled,onChange}:{label:string;value:number;min?:number;disabled:boolean;onChange:(n:number)=>void}) {

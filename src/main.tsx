@@ -22,6 +22,7 @@ import './settlement.css';
 import './motion-effects.css';
 import './mode-toggle.css';
 import './map-draw.css';
+import './player-record.css';
 import './light-mode.css';
 initTheme();
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><MotionConfig reducedMotion="user"><App/></MotionConfig></React.StrictMode>);
