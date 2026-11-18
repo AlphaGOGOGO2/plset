@@ -309,7 +309,7 @@ export default function ScoreboardPage({ s, commit, notify, viewer, mode, scorer
         </div>
         {!viewer ? <div className="sb-actions">
           {sb.onAir !== tab ? <button className="button primary" onClick={() => edit(b => ({ ...b, onAir: tab }), `${SB_SET_NAME[tab]} 송출`)}><Radio size={15}/> {SB_SET_NAME[tab]} 송출</button> : <span className="count-pill sb-onair-pill"><Radio size={13}/> {SB_SET_NAME[tab]} 송출 중</span>}
-          <button className="button" onClick={() => setBulk(bulk ? null : { a: '', map: '', b: '', chat: '' })}><ClipboardPaste size={15}/> 일괄 입력</button>
+          <button className={`button sb-bulk-button${bulk ? ' on' : ''}`} aria-pressed={!!bulk} onClick={() => setBulk(bulk ? null : { a: '', map: '', b: '', chat: '' })}><ClipboardPaste size={15}/> 일괄 입력</button>
           <button className="button" onClick={clearSet}><RotateCcw size={15}/> 비우기</button>
         </div> : sb.onAir === tab ? <span className="count-pill sb-onair-pill"><Radio size={13}/> {SB_SET_NAME[tab]} 송출 중</span> : null}
       </div>

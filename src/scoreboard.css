@@ -304,3 +304,10 @@ html.sb-overlay-page, html.sb-overlay-page body, html.sb-overlay-page #root { ba
 .sb-scorer-form input { width: 150px; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: inherit; font: inherit; }
 .sb-scorer-error { flex-basis: 100%; margin: 0; text-align: right; color: var(--red); font-size: 13px; }
 .sb-field-label small { margin-left: 6px; font-weight: 500; color: var(--muted); }
+
+/* 일괄 입력 is how most entries come in (Battle.net chat paste), so it stands out with a green border; filled while open.
+   Explicit colours: light mode turns --mint near-black, and its own .button rule would win over a plain class. */
+.button.sb-bulk-button { border-color: #6fcf97; color: #a4e5bc; }
+.button.sb-bulk-button:hover, .button.sb-bulk-button.on { background: #6fcf9724; }
+[data-mode=light] .button.sb-bulk-button { border-color: #2f9e62; color: #1f7a4a; }
+[data-mode=light] .button.sb-bulk-button:hover, [data-mode=light] .button.sb-bulk-button.on { background: #2f9e621f; }
