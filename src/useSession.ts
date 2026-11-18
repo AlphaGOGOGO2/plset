@@ -1,12 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createSession, uid, validateSession, type Patron, type Session } from './domain';
-import { connectHost, connectViewer, fetchMe, type HostStatus, type ViewerStatus } from './live';
+import { connectHost, connectViewer, fetchMe, scorerLogin, scorerLogout, type HostStatus, type PrefsMessage, type ViewerStatus } from './live';
+import { applyScoreboardPatch, mergePatches, scoreboardPatch, type ScoreboardPatch } from './scoreboard';
 import type { Mode, Page } from './mode';
 import { patronOnly, rebaseClock, shareStructure } from './share';
 
 const KEY='plset.session.v1';
 const output = new URLSearchParams(location.search).has('output');
-export type LiveInfo={status:HostStatus|ViewerStatus|null;hostPage:Page|null};
+// An OBS page's streamer key (?me=): the room pushes that streamer's overlay settings to it.
+const outputKey = output ? new URLSearchParams(location.search).get('me') : null;
+/** `scorer`: the 방싸개 logged in on this viewer, who may edit the scoreboard (see connectViewer). */
+export type LiveInfo={status:HostStatus|ViewerStatus|null;hostPage:Page|null;scorer:string|null;prefs:unknown};
+// True when an update changed the scoreboard and nothing else (commits spread the previous session, so compare by reference).
+const scoreboardOnly=(prev:Session,next:Session)=>{
+  if(prev.scoreboard===next.scoreboard)return false;
+  const a=prev as unknown as Record<string,unknown>,b=next as unknown as Record<string,unknown>;
+  return [...new Set([...Object.keys(a),...Object.keys(b)])].every(key=>key==='scoreboard'||a[key]===b[key]);
+};
+// A 방싸개's own recent edits are laid over incoming frames for this long, so the echo of an earlier keystroke cannot undo a
+// later one; only the parts it edited, so the host's changes to the rest still show.
+const SCORER_HOLD_MS=1200,SCORER_SEND_MS=150;
 
 // `mode` is fixed for the lifetime of the page; switching modes reloads (see App).
 export function useSession(mode:Mode) {
@@ -16,7 +29,7 @@ export function useSession(mode:Mode) {
   const [canUndo,setCanUndo]=useState(false);
   const [status,setStatus]=useState('불러오는 중');
   const [error,setError]=useState('');
-  const [live,setLive]=useState<LiveInfo>({status:null,hostPage:null});
+  const [live,setLive]=useState<LiveInfo>({status:null,hostPage:null,scorer:null,prefs:null});
   const channel=useRef<BroadcastChannel|null>(null);
   const storageKey=useRef(KEY);
   const host=useRef<ReturnType<typeof connectHost>|null>(null);
@@ -24,6 +37,9 @@ export function useSession(mode:Mode) {
   // Viewer only: what the host sent (already on this PC's clock) and this PC's own patrons.
   const shared=useRef<Session|null>(null),patrons=useRef<Patron[]>([]),patronUndo=useRef<Patron[][]>([]),clockOffset=useRef<number|null>(null);
   const patronKey=mode.kind==='watch'?`plset.watch.${mode.room}.patrons`:'';
+  // Viewer only: the live connection (recreated when a 방싸개 logs in or out) and the 방싸개's latest local edit.
+  const viewerConn=useRef<ReturnType<typeof connectViewer>|null>(null),reconnect=useRef<(scorer:boolean)=>void>(()=>{});
+  const prefsRef=useRef<PrefsMessage|null>(null),scorerRef=useRef<string|null>(null),localPatch=useRef<{patch:ScoreboardPatch;at:number}|null>(null),pendingPatch=useRef<ScoreboardPatch|null>(null),scorerSend=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
   const show=useCallback(()=>{if(!shared.current)return;const next={...shared.current,patrons:patrons.current};current.current=next;setState(next);},[]);
   useEffect(()=>{
     let alive=true;
@@ -31,19 +47,32 @@ export function useSession(mode:Mode) {
     const setStatusOf=(next:HostStatus|ViewerStatus)=>{if(alive)setLive(v=>({...v,status:next}));};
     if(mode.kind==='watch'){
       try{const raw=localStorage.getItem(patronKey);if(raw)patrons.current=validateSession({...createSession(),patrons:JSON.parse(raw)}).patrons;}catch{setError('저장된 귀인 기록을 읽지 못했습니다.');}
-      let stop=()=>{};
-      fetchMe().then(({url})=>{
+      fetchMe().then(({url,scorer})=>{
         if(!alive)return;
-        stop=connectViewer(mode.room,url,({session,page:hostPage,hostNow})=>{
-          if(!alive)return;
-          // One offset per page load: re-estimating on every message would shift a running draw's start time.
-          clockOffset.current??=hostNow-Date.now();
-          shared.current=shareStructure(shared.current,rebaseClock(session,clockOffset.current));
-          setLive(v=>v.hostPage===hostPage?v:{...v,hostPage});
-          show();
-        },setStatusOf);
+        const connect=(asScorer:boolean)=>{
+          viewerConn.current?.stop();
+          viewerConn.current=connectViewer(mode.room,url,({session,page:hostPage,hostNow})=>{
+            if(!alive)return;
+            // One offset per page load: re-estimating on every message would shift a running draw's start time.
+            clockOffset.current??=hostNow-Date.now();
+            const recent=localPatch.current&&Date.now()-localPatch.current.at<SCORER_HOLD_MS?localPatch.current.patch:null;
+            const board=recent?applyScoreboardPatch(session.scoreboard,recent):null;
+            shared.current=shareStructure(shared.current,rebaseClock(board?{...session,scoreboard:board}:session,clockOffset.current));
+            setLive(v=>v.hostPage===hostPage?v:{...v,hostPage});
+            show();
+          },setStatusOf,output,asScorer,{me:outputKey,onPrefs:prefs=>{if(alive)setLive(v=>({...v,prefs}));},
+            onError:code=>{if(!alive||!scorerRef.current)return;setError(code==='no_host'?'진행자가 연결되어 있지 않아 스코어보드 수정을 저장하지 못했습니다. 진행자가 들어온 뒤 다시 입력해 주세요.':code==='no_state'?'진행자가 아직 방송을 시작하지 않아 스코어보드를 저장하지 못했습니다.':'스코어보드 수정을 저장하지 못했습니다.');},
+            onScorerLost:()=>{if(!alive)return;scorerRef.current=null;localPatch.current=null;pendingPatch.current=null;setLive(v=>({...v,scorer:null}));setError('방싸개 로그인이 만료되었습니다. 다시 로그인해 주세요.');}});
+          if(prefsRef.current)viewerConn.current.sendPrefs(prefsRef.current);
+        };
+        reconnect.current=connect;
+        // An OBS output page never edits, so it never connects as the 방싸개 even when the cookie is there.
+        const asScorer=!output&&!!scorer;
+        scorerRef.current=asScorer?scorer!:null;
+        setLive(v=>({...v,scorer:scorerRef.current}));
+        connect(asScorer);
       }).catch(()=>{if(alive)setError('방송 서버에 연결하지 못했습니다. 새로고침해 주세요.');});
-      return ()=>{alive=false;stop();};
+      return ()=>{alive=false;clearTimeout(scorerSend.current);viewerConn.current?.stop();viewerConn.current=null;};
     }
     channel.current=new BroadcastChannel('plset-session');
     channel.current.onmessage=e=>{if(output)receive(e.data);};
@@ -64,8 +93,14 @@ export function useSession(mode:Mode) {
         load(`${KEY}.${account}`,KEY);
         // An ?output window only displays; connecting it would register a second host and replace the real one.
         if(output)return;
-        host.current=connectHost(account,url,setStatusOf);
+        // A 방싸개 edited the scoreboard: take it in, so the next state sent carries it instead of overwriting it.
+        host.current=connectHost(account,url,setStatusOf,patch=>{
+          if(!alive||!current.current)return;
+          const board=applyScoreboardPatch(current.current.scoreboard,patch);
+          if(board)persist({...current.current,scoreboard:board});
+        });
         if(current.current)host.current.send(current.current,page.current);
+        if(prefsRef.current)host.current.sendPrefs(prefsRef.current);
       }).catch(()=>{if(alive)setError('계정을 확인하지 못했습니다. 새로고침해 주세요.');});
     } else load(KEY);
     return ()=>{alive=false;host.current?.stop();host.current=null;channel.current?.close();window.removeEventListener('storage',storage);};
@@ -82,6 +117,22 @@ export function useSession(mode:Mode) {
     if(next===previous)return;
     const privateChange=patronOnly(previous,next);
     if(mode.kind==='watch'){
+      // A 방싸개 may change the scoreboard: shown at once, sent shortly after (one message per burst of typing).
+      if(scorerRef.current&&shared.current&&next.scoreboard&&scoreboardOnly(previous,next)){
+        const patch=scoreboardPatch(previous.scoreboard,next.scoreboard);
+        if(!patch)return;
+        const now=Date.now(),held=localPatch.current&&now-localPatch.current.at<SCORER_HOLD_MS?localPatch.current.patch:null;
+        localPatch.current={patch:held?mergePatches(held,patch):patch,at:now};
+        pendingPatch.current=pendingPatch.current?mergePatches(pendingPatch.current,patch):patch;
+        shared.current={...shared.current,scoreboard:next.scoreboard};
+        show();
+        clearTimeout(scorerSend.current);
+        scorerSend.current=setTimeout(()=>{
+          const send=pendingPatch.current;pendingPatch.current=null;
+          if(send&&!viewerConn.current?.sendScoreboard(send))setError('방송 서버에 연결되지 않아 스코어보드를 보내지 못했습니다.');
+        },SCORER_SEND_MS);
+        return;
+      }
       // A viewer owns nothing but their patron list; every other change belongs to the host.
       if(!privateChange)return;
       if(history){patronUndo.current=[...patronUndo.current.slice(-39),previous.patrons];setCanUndo(true);}
@@ -108,5 +159,20 @@ export function useSession(mode:Mode) {
   },[persist,show]);
   const replace=useCallback((next:Session)=>commit(()=>validateSession(next),'세션 불러오기'),[commit]);
   const publishPage=useCallback((next:Page)=>{page.current=next;if(current.current)host.current?.send(current.current,next);},[]);
-  return {state,commit,undo,canUndo,status,error,setError,replace,live,publishPage};
+  // 방싸개 login / logout: the viewer connection is remade with (or without) the right to edit the scoreboard.
+  const loginScorer=useCallback(async(id:string,password:string)=>{
+    if(!viewerConn.current)return '방송 서버에 연결된 뒤 다시 시도해 주세요.';
+    const failed=await scorerLogin(id,password);
+    if(failed)return failed;
+    scorerRef.current=id;setLive(v=>({...v,scorer:id}));reconnect.current(true);
+    return null;
+  },[]);
+  const logoutScorer=useCallback(async()=>{
+    await scorerLogout();
+    clearTimeout(scorerSend.current);
+    scorerRef.current=null;localPatch.current=null;pendingPatch.current=null;setLive(v=>({...v,scorer:null}));reconnect.current(false);
+  },[]);
+  // This console's own overlay settings, saved in the room so the streamer's OBS page follows them live.
+  const sendPrefs=useCallback((next:PrefsMessage)=>{prefsRef.current=next;viewerConn.current?.sendPrefs(next);host.current?.sendPrefs(next);},[]);
+  return {state,commit,undo,canUndo,status,error,setError,replace,live,publishPage,loginScorer,logoutScorer,sendPrefs};
 }
