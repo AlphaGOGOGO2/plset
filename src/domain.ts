@@ -1,3 +1,4 @@
+import { validScoreboard, type Scoreboard } from './scoreboard';
 export type Race = 'T' | 'P' | 'Z';
 export type Team = 'A' | 'B';
 export type Scene = 'board' | 'teams' | 'draw' | 'timer';
@@ -131,6 +132,8 @@ export interface Session {
   wheelSetup?: WheelSetup;
   // The map draw tab's last run (see mapDrawGames); null or absent until the host draws.
   mapDraw?: MapDraw | null;
+  // The scoreboard tab's entry and scores for the broadcast overlays (see scoreboard.ts); absent until the host edits it.
+  scoreboard?: Scoreboard;
 }
 export interface WheelSetup { labels: string[]; arrangement: 'numbers'|'captains'|null; editing: boolean; edited: boolean }
 export function validWheelSetup(p: unknown): p is WheelSetup {
@@ -231,5 +234,6 @@ export function validateSession(input: unknown): Session {
   if(s.maps===undefined)s.maps=MATCH_MAPS.map(m=>({...m}));
   if(!Array.isArray(s.maps)||s.maps.length>MAX_MAPS||s.maps.some(m=>!m||typeof m.id!=='string'||!m.id||typeof m.label!=='string'||!m.label.trim()||m.label.length>30)||new Set(s.maps.map(m=>m.id)).size!==s.maps.length||new Set(s.maps.map(m=>m.label)).size!==s.maps.length)throw new Error('경기 맵 목록을 확인해주세요.');
   if(s.mapDraw!==undefined&&s.mapDraw!==null&&!validMapDraw(s.mapDraw))throw new Error('맵 추첨 데이터를 확인해주세요.');
+  if(s.scoreboard!==undefined&&!validScoreboard(s.scoreboard))delete s.scoreboard;
   return s;
 }
