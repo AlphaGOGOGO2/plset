@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSession, validateSession, type Session, type Team } from './domain';
-import { chatEntries, isSbStyle, parseBoardSets, scoreboardPatch, mergePatches, applyScoreboardPatch, createScoreboard, currentGame, fillRows, findPlayer, fitStage, mapShort, pasteDown, gameScore, scoreboardView, validScoreboard, type SbRow } from './scoreboard';
+import { chatEntries, isSbStyle, parseBoardSets, scoreboardPatch, mergePatches, applyScoreboardPatch, createScoreboard, currentGame, fillRows, findPlayer, fitStage, mapShort, pasteDown, gameScore, scoreboardView, validScoreboard, clockHour, gameColor, type SbRow } from './scoreboard';
 
 const row = (a: string, map: string, b: string, winner: Team | null = null): SbRow => ({ a, map, b, winner });
 // 이재호 on team A, 김명운 on team B, everyone else unassigned.
@@ -39,7 +39,7 @@ test('without a base player team A stays on the left with the session team names
   const v = scoreboardView(session([row('재호', '녹아', '명운', 'A'), row('병구', '컬러', '지성')]), null);
   assert.deepEqual([v.left.label, v.right.label], ['재호팀', '명운팀']);
   assert.deepEqual([v.left.setScore, v.left.gameScore, v.right.gameScore, v.right.setScore], [1, 1, 0, 0]);
-  assert.deepEqual(v.now, { left: { name: '병구', race: 'P' }, right: { name: '지성', race: 'T' } });
+  assert.deepEqual(v.now, { left: { name: '병구', race: 'P', pos: '', color: '' }, right: { name: '지성', race: 'T', pos: '', color: '' } });
   assert.equal(v.rows[0].winner, 'left');
   assert.equal(v.title, '프로리그 7/4');
   assert.equal(v.setLabel, '1SET');
@@ -49,8 +49,8 @@ test('a base player on team B swaps every side and labels the teams from their v
   const v = scoreboardView(session([row('재호', '녹아', '명운', 'A'), row('병구', '컬러', '지성')]), '김명운');
   assert.deepEqual([v.left.label, v.right.label], ['명운팀', '상대팀']);
   assert.deepEqual([v.left.setScore, v.left.gameScore, v.right.gameScore, v.right.setScore], [0, 0, 1, 1]);
-  assert.deepEqual(v.rows[0], { left: { name: '명운', race: 'Z' }, map: '녹아', right: { name: '재호', race: 'T' }, winner: 'right', current: false });
-  assert.deepEqual(v.now, { left: { name: '지성', race: 'T' }, right: { name: '병구', race: 'P' } });
+  assert.deepEqual(v.rows[0], { left: { name: '명운', race: 'Z', pos: '', color: '' }, map: '녹아', right: { name: '재호', race: 'T', pos: '', color: '' }, winner: 'right', current: false });
+  assert.deepEqual(v.now, { left: { name: '지성', race: 'T', pos: '', color: '' }, right: { name: '병구', race: 'P', pos: '', color: '' } });
 });
 
 test('the base player may be given by full or given name; team A keeps its side but is renamed', () => {
@@ -176,7 +176,7 @@ test('entry boards follow the set on air; SUPER ACE keeps both sets, with the 2S
   const e = v.entries[1];
   assert.deepEqual([e.setLabel, e.title, e.left, e.right], ['2SET', '위너스 9/5', 2, 1]);
   assert.deepEqual(e.rows.map(r => [r.left.name, r.winner, r.current]), [['명운', 'left', false], ['지성', 'right', false], ['지성', 'left', false]]);
-  assert.deepEqual(v.ace, { left: { name: '명운', race: 'Z' }, map: '오디', right: { name: '병구', race: 'P' }, winner: null, current: true });
+  assert.deepEqual(v.ace, { left: { name: '명운', race: 'Z', pos: '', color: '' }, map: '오디', right: { name: '병구', race: 'P', pos: '', color: '' }, winner: null, current: true });
   assert.equal(v.setLabel, 'SUPER ACE');
   // 1SET on air: its board alone. 2SET: the 1SET board stays and 2SET goes beside it. No card either way.
   const one = scoreboardView({ ...s, scoreboard: { ...s.scoreboard!, onAir: '1' } }, null);
@@ -228,4 +228,27 @@ test('a 방싸개 edit travels as a patch of what changed, so the host\'s edits 
   assert.deepEqual(mergePatches({ onAir: '1', sets: { '1': [] } }, { onAir: '2', sets: { '2': [] } }), { onAir: '2', sets: { '1': [], '2': [] } });
   assert.equal(applyScoreboardPatch(board, { onAir: '3' }), null);
   assert.equal(applyScoreboardPatch(board, []), null);
+});
+
+test('start locations are clock hours, follow the side swap, and stay with their player', () => {
+  assert.deepEqual(['11', '1', '13', '0', '7시', '', '123'].map(clockHour), ['11', '1', '3', '', '7', '', '3']);
+  const rows: SbRow[] = [{ ...row('재호', '녹아', '명운'), pa: '11', pb: '5' }];
+  assert.deepEqual([scoreboardView(session(rows), null).now!.left.pos, scoreboardView(session(rows), null).now!.right.pos], ['11', '5']);
+  assert.deepEqual([scoreboardView(session(rows), '김명운').now!.left.pos, scoreboardView(session(rows), '김명운').now!.right.pos], ['5', '11']);
+  assert.equal(scoreboardView(session([row('재호', '', '명운')]), null).now!.left.pos, '');
+  const sb = createScoreboard();
+  assert.ok(validScoreboard({ ...sb, sets: { ...sb.sets, '1': rows } }));
+  assert.equal(validScoreboard({ ...sb, sets: { ...sb.sets, '1': [{ ...rows[0], pa: '13' }] } }), false);
+  // Refilling the entry keeps a location only where the player is the same.
+  assert.deepEqual(fillRows(rows, '재호', '', '지성')[0], { a: '재호', map: '녹아', b: '지성', winner: null, pa: '11' });
+});
+
+test('a player\'s game colour follows the side swap, is "#rrggbb" only, and stays with its player', () => {
+  assert.deepEqual(['#F40404', 'red', '#fff', '#000000;x', 7].map(gameColor), ['#f40404', '', '', '', '']);
+  const rows: SbRow[] = [{ ...row('재호', '녹아', '명운'), ca: '#f40404', cb: '#0c48cc' }];
+  assert.deepEqual([scoreboardView(session(rows), '김명운').now!.left.color, scoreboardView(session(rows), '김명운').now!.right.color], ['#0c48cc', '#f40404']);
+  const sb = createScoreboard();
+  assert.ok(validScoreboard({ ...sb, sets: { ...sb.sets, '1': rows } }));
+  assert.equal(validScoreboard({ ...sb, sets: { ...sb.sets, '1': [{ ...rows[0], ca: 'red' }] } }), false);
+  assert.deepEqual(fillRows(rows, '병구', '', '명운')[0], { a: '병구', map: '녹아', b: '명운', winner: null, cb: '#0c48cc' });
 });

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { ClipboardPaste, Copy, KeyRound, LogOut, Minus, Plus, Radio, RotateCcw, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { givenName, number, sessionMaps, type Race, type Session, type Team } from './domain';
-import { chatEntries, sideOrder, SB_SET_NAME, emptyRow, fillRows, mapShort, pasteDown, fitStage, SB_STYLES, SB_STYLE_LABEL, type SbStyle, SB_MAX_ROWS, SB_SET_LABEL, SB_SETS, scoreboardView, sessionScoreboard, type SbRow, type SbSetId, type Scoreboard, type ScoreboardView, type EntryBoardView, isSbStyle, BOARD_SETS, parseBoardSets, type BoardSet } from './scoreboard';
+import { chatEntries, sideOrder, SB_SET_NAME, emptyRow, fillRows, mapShort, pasteDown, fitStage, SB_STYLES, SB_STYLE_LABEL, type SbStyle, SB_MAX_ROWS, SB_SET_LABEL, SB_SETS, scoreboardView, sessionScoreboard, type SbRow, type SbSetId, type Scoreboard, type ScoreboardView, type EntryBoardView, isSbStyle, BOARD_SETS, parseBoardSets, type BoardSet, clockHour, gameColor, GAME_COLORS } from './scoreboard';
 import { fetchMe, type PrefsMessage } from './live';
 import { ComboCell, Picker, type Option } from './ScoreboardControls';
 import type { Mode } from './mode';
@@ -17,9 +17,9 @@ type Vars = Record<`--sb-${string}`, string>;
 const WHITE_TEXT: Vars = { '--sb-text': '#f3f5fa', '--sb-muted': 'rgba(222, 229, 242, .6)', '--sb-faint': 'rgba(222, 229, 242, .32)' };
 const STYLE_VARS: Record<SbStyle, Vars> = {
   glass: {
-    ...WHITE_TEXT, '--sb-bg': 'linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 46%), rgba(13, 17, 25, .62)',
+    ...WHITE_TEXT, '--sb-bg': 'linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 46%), rgba(13, 17, 25, .8)',
     '--sb-border': '1px solid rgba(255, 255, 255, .13)', '--sb-shadow': '0 10px 28px rgba(0, 0, 0, .36), inset 0 1px 0 rgba(255, 255, 255, .16)',
-    '--sb-blur': 'blur(18px) saturate(160%)', '--sb-deep': 'rgba(8, 11, 17, .8)', '--sb-line': 'rgba(255, 255, 255, .13)',
+    '--sb-blur': 'blur(18px) saturate(160%)', '--sb-deep': 'rgba(8, 11, 17, .9)', '--sb-line': 'rgba(255, 255, 255, .13)',
     '--sb-live': '#9fe3b8', '--sb-ink': '#0b0e14', '--sb-glow': 'rgba(214, 255, 229, .95)', '--sb-T': '#62a6ff', '--sb-P': '#f2c45a', '--sb-Z': '#ff6161',
   },
   doodle: {
@@ -94,7 +94,7 @@ const HUD: { style: CSSProperties; text?: string }[] = [
 /** The scoreboard on the minimap: set and title, sets won · the current game's players · games won, and their races around the game timer. */
 export function ScoreBug({ v }: { v: ScoreboardView }) {
   // Before any entry is typed the name slots stay empty rather than showing team names.
-  const left = v.now?.left ?? { name: '', race: null }, right = v.now?.right ?? { name: '', race: null };
+  const left = v.now?.left ?? { name: '', race: null, pos: '', color: '' }, right = v.now?.right ?? { name: '', race: null, pos: '', color: '' };
   return <div className="sb-bug" data-style={v.style} style={styleVars(v.style)}>
     <div className="sb-glass sb-bar sb-head sb-bug-head"><b>{v.setLabel}</b><span className="sb-bug-title">{v.title}</span><span className="sb-prize">{v.prize > 0 ? `두 ${number(v.prize)}개` : null}</span></div>
     <div className="sb-glass sb-bar sb-bug-main">
@@ -105,9 +105,11 @@ export function ScoreBug({ v }: { v: ScoreboardView }) {
       <span className="sb-set" title="세트 스코어">{v.right.setScore}</span>
     </div>
     <div className="sb-bug-races">
-      <span className="sb-glass sb-race" data-race={left.race ?? undefined} title={left.race ? RACE_WORD[left.race] : undefined}>{left.race ?? ''}</span>
+      {/* The start location sits on the outer side of each race letter ("11 P" on the left, "Z 5" on the right), and both
+          take the player's colour in the game once it is picked. */}
+      <span className="sb-glass sb-race" data-race={left.race ?? undefined} style={left.color ? { color: left.color } : undefined} title={left.race ? RACE_WORD[left.race] : undefined}>{left.pos ? <i className="sb-pos" title="시작 위치">{left.pos}</i> : null}{left.race ?? ''}</span>
       <span aria-hidden="true"/>
-      <span className="sb-glass sb-race" data-race={right.race ?? undefined} title={right.race ? RACE_WORD[right.race] : undefined}>{right.race ?? ''}</span>
+      <span className="sb-glass sb-race" data-race={right.race ?? undefined} style={right.color ? { color: right.color } : undefined} title={right.race ? RACE_WORD[right.race] : undefined}>{right.race ?? ''}{right.pos ? <i className="sb-pos" title="시작 위치">{right.pos}</i> : null}</span>
     </div>
   </div>;
 }
@@ -265,6 +267,8 @@ export default function ScoreboardPage({ s, commit, notify, viewer, mode, scorer
   const edit = (update: (b: Scoreboard) => Scoreboard, label?: string) => commit(v => ({ ...v, scoreboard: update(sessionScoreboard(v)) }), label, !!label);
   const rows = sb.sets[tab], setLabel = SB_SET_LABEL[tab];
   const setRows = (next: SbRow[], label?: string) => edit(b => ({ ...b, sets: { ...b.sets, [tab]: next } }), label);
+  const place = (i: number, team: Team, value: string) => setRows(rows.map((r, j) => j === i ? { ...r, [team === 'A' ? 'pa' : 'pb']: clockHour(value) } : r));
+  const paint = (i: number, team: Team, value: string) => setRows(rows.map((r, j) => j === i ? { ...r, [team === 'A' ? 'ca' : 'cb']: gameColor(value) } : r));
   const cell = (i: number, key: 'a' | 'map' | 'b', value: string) => setRows(rows.map((r, j) => j === i ? { ...r, [key]: key === 'map' ? mapShort(value) : value.slice(0, 20) } : r));
   const pasteMany = (i: number, key: 'a' | 'map' | 'b', values: string[]) => setRows(pasteDown(rows, i, key, values), `${setLabel} ${key === 'map' ? '맵' : '엔트리'} 붙여넣기`);
   // Suggestions for the entry table: each team's players by given name in their race colour, and the maps by two letters.
@@ -286,6 +290,18 @@ export default function ScoreboardPage({ s, commit, notify, viewer, mode, scorer
   const clearSet = () => { if (confirm(`${setLabel} 엔트리와 결과를 모두 비울까요?`)) setRows(rows.map(emptyRow), `${setLabel} 엔트리 비우기`); };
 
   const view = scoreboardView(s, base || null, mine.style, mine.sets), order = sideOrder(s, base || null);
+  // Beside each name: the player's start location (clock hour) and their colour in the game. On the scoreboard the race
+  // letter and the location take that colour while the game is on. The swatches offered are StarCraft's player colours.
+  const posInput = (i: number, team: Team, r: SbRow) => {
+    const who = `${i + 1}경기 ${s.teams[team]}`, picked = (team === 'A' ? r.ca : r.cb) ?? '';
+    return <>
+      <input className="sb-pos-input" aria-label={`${who} 시작 위치 (몇 시)`} title="시작 위치 (몇 시)" placeholder="위치" inputMode="numeric" maxLength={2} autoComplete="off" readOnly={viewer} value={(team === 'A' ? r.pa : r.pb) ?? ''} onChange={e => place(i, team, e.target.value)}/>
+      <label className={`sb-swatch${picked ? ' on' : ''}`} style={picked ? { background: picked } : undefined} title={picked ? '게임 내 색 (우클릭: 지우기)' : '게임 내 색 고르기'}
+        onContextMenu={e => { if (!picked || viewer) return; e.preventDefault(); paint(i, team, ''); }}>
+        <input type="color" list="sb-game-colors" aria-label={`${who} 게임 내 색`} disabled={viewer} value={picked || '#000000'} onChange={e => paint(i, team, e.target.value)}/>
+      </label>
+    </>;
+  };
   const key = (t: Team) => t === 'A' ? 'a' as const : 'b' as const;
   const teamPlayers = (team: Team) => s.players.filter(p => p.active && p.team === team);
   // One link per streamer, carrying their own picks: the overlays they switched on, their design and 기준 선수.
@@ -341,13 +357,14 @@ export default function ScoreboardPage({ s, commit, notify, viewer, mode, scorer
         <div className="sb-bulk-actions"><button className="button" onClick={() => setBulk(null)}>취소</button><button className="button primary" disabled={!bulk.a.trim() && !bulk.map.trim() && !bulk.b.trim()} onClick={applyBulk}>적용</button></div>
       </div> : null}
 
+      <datalist id="sb-game-colors">{GAME_COLORS.map(c => <option key={c} value={c}/>)}</datalist>
       <table className="sb-table">
         <thead><tr><th>#</th><th className={`sb-${order[0]}`}>{s.teams[order[0]]}</th><th>맵</th><th className={`sb-${order[1]}`}>{s.teams[order[1]]}</th><th>승리</th>{!viewer ? <th aria-label="삭제"/> : null}</tr></thead>
         <tbody>{rows.map((r, i) => <tr key={i} data-current={view.rows[i]?.current && sb.onAir === tab || undefined}>
           <td className="sb-no">{rows.length === 1 ? 'A' : i + 1}</td>
-          <td><ComboCell label={`${i + 1}경기 ${s.teams[order[0]]} 선수`} options={playerOptions(order[0])} readOnly={viewer} value={r[key(order[0])]} onChange={v => cell(i, key(order[0]), v)} onPasteMany={vs => pasteMany(i, key(order[0]), vs)}/></td>
+          <td><div className="sb-cell"><ComboCell label={`${i + 1}경기 ${s.teams[order[0]]} 선수`} options={playerOptions(order[0])} readOnly={viewer} value={r[key(order[0])]} onChange={v => cell(i, key(order[0]), v)} onPasteMany={vs => pasteMany(i, key(order[0]), vs)}/>{posInput(i, order[0], r)}</div></td>
           <td><ComboCell label={`${i + 1}경기 맵`} options={mapOptions} readOnly={viewer} maxLength={2} value={r.map} onChange={v => cell(i, 'map', v)} onPasteMany={vs => pasteMany(i, 'map', vs)}/></td>
-          <td><ComboCell label={`${i + 1}경기 ${s.teams[order[1]]} 선수`} options={playerOptions(order[1])} readOnly={viewer} value={r[key(order[1])]} onChange={v => cell(i, key(order[1]), v)} onPasteMany={vs => pasteMany(i, key(order[1]), vs)}/></td>
+          <td><div className="sb-cell"><ComboCell label={`${i + 1}경기 ${s.teams[order[1]]} 선수`} options={playerOptions(order[1])} readOnly={viewer} value={r[key(order[1])]} onChange={v => cell(i, key(order[1]), v)} onPasteMany={vs => pasteMany(i, key(order[1]), vs)}/>{posInput(i, order[1], r)}</div></td>
           <td className="sb-win">{order.map(t => <button key={t} type="button" className={`sb-win-button sb-${t}${r.winner === t ? ' on' : ''}`} aria-pressed={r.winner === t} disabled={viewer || !(r.a.trim() && r.b.trim())} title={`${(t === 'A' ? r.a : r.b) || s.teams[t]} 승리`} onClick={() => win(i, t)}>{(t === 'A' ? r.a : r.b).trim() || t}</button>)}</td>
           {!viewer ? <td><button className="icon-button" aria-label={`${i + 1}경기 줄 삭제`} disabled={rows.length <= 1} onClick={() => setRows(rows.filter((_, j) => j !== i), `${setLabel} ${i + 1}경기 줄 삭제`)}><X size={14}/></button></td> : null}
         </tr>)}</tbody>
