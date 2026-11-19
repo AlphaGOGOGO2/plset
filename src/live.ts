@@ -2,6 +2,7 @@ import { validateSession, type Session } from './domain';
 import type { ScoreboardPatch } from './scoreboard';
 import { PAGES, type Page, type RoomId } from './mode';
 import { toShared } from './share';
+import type { AccountSave } from './accountSync';
 
 export type HostStatus = 'connecting' | 'live' | 'reconnecting' | 'down' | 'replaced' | 'login' | 'closed';
 export type ViewerStatus = 'connecting' | 'live' | 'waiting' | 'reconnecting' | 'closed' | 'stale';
@@ -11,7 +12,7 @@ export type ViewerEvent = ({ t: 'state' } & ViewerState) | { t: 'host'; online: 
 export type PrefsMessage = { key: string; prefs: unknown };
 const prefsFrame = (p: PrefsMessage) => JSON.stringify({ t: 'prefs', key: p.key, prefs: p.prefs });
 
-const CLOSED_RETRY_MS = 10000, SEND_DEBOUNCE = 150, PING_MS = 45000, CODE_REPLACED = 4000, CODE_CLOSED = 4001;
+const CLOSED_RETRY_MS = 10000, SEND_DEBOUNCE = 150, PING_MS = 45000, CODE_REPLACED = 4000, CODE_CLOSED = 4001, SAVE_WAIT_MS = 1500;
 const socketUrl = (url: string) => url.replace(/^http/, 'ws');
 
 export const backoff = (attempt: number, random: () => number = Math.random) => Math.min(30000, 1000 * 2 ** attempt) * (0.5 + random() / 2);
@@ -57,13 +58,23 @@ export function viewerInbox() {
   };
 }
 
-export function connectHost(account: string, url: string, onStatus: (status: HostStatus) => void, onScoreboard: (patch: unknown) => void = () => {}) {
+/**
+ * `onSave`: the account's saved console, sent by the room right after connecting and again whenever another console of
+ * the account saves (see accountSync.ts); `onSaved`: the room's stamp for a save this console sent. `device`: this
+ * browser's id, so its new connection replaces its own old one instead of counting as one more console.
+ */
+export function connectHost(account: string, url: string, onStatus: (status: HostStatus) => void, onScoreboard: (patch: unknown) => void = () => {},
+  { onSave, onSaved, device }: { onSave?: (save: AccountSave) => void; onSaved?: (at: number) => void; device?: string | null } = {}) {
   let ws: WebSocket | null = null, stopped = false, attempt = 0, rev = 0;
   let debounce: ReturnType<typeof setTimeout> | undefined, retry: ReturnType<typeof setTimeout> | undefined, ping: ReturnType<typeof setInterval> | undefined;
   let latest: { session: Session; page: Page } | null = null, prefs: PrefsMessage | null = null;
+  // Nothing is broadcast on a new connection until the room has handed over the account's save (its first frame), so a
+  // console on a new computer shows viewers the account's session, never its own empty one first. A room that sends no
+  // save (an older server) is waited for only SAVE_WAIT_MS.
+  let released = false, release: ReturnType<typeof setTimeout> | undefined;
   const flush = () => {
     debounce = undefined;
-    if (!latest || ws?.readyState !== WebSocket.OPEN) return;
+    if (!latest || !released || ws?.readyState !== WebSocket.OPEN) return;
     // Wall-clock based so revisions keep increasing across reloads; viewers drop anything not newer.
     rev = Math.max(rev + 1, Date.now());
     ws.send(JSON.stringify({ t: 'state', rev, sentAt: Date.now(), page: latest.page, session: toShared(latest.session) }));
@@ -78,12 +89,14 @@ export function connectHost(account: string, url: string, onStatus: (status: Hos
       if (!res.ok) throw new Error('token');
       const { token } = await res.json() as { token: string };
       if (stopped) return;
-      const socket = new WebSocket(`${socketUrl(url)}/rooms/${account}/ws?token=${token}`);
+      const socket = new WebSocket(`${socketUrl(url)}/rooms/${account}/ws?token=${token}${device ? `&dev=${device}` : ''}`);
       ws = socket;
-      socket.onopen = () => { attempt = 0; onStatus('live'); flush(); if (prefs) socket.send(prefsFrame(prefs)); clearInterval(ping); ping = setInterval(() => { if (socket.readyState === WebSocket.OPEN) socket.send('ping'); }, PING_MS); };
+      socket.onopen = () => { attempt = 0; onStatus('live'); released = false; clearTimeout(release); release = setTimeout(() => { released = true; flush(); }, SAVE_WAIT_MS); if (prefs) socket.send(prefsFrame(prefs)); clearInterval(ping); ping = setInterval(() => { if (socket.readyState === WebSocket.OPEN) socket.send('ping'); }, PING_MS); };
       socket.onmessage = event => {
         if (event.data === 'pong') return;
-        try { const m = JSON.parse(event.data); if (m.t === 'replaced') end('replaced'); else if (m.t === 'closed') end('closed'); else if (m.t === 'scoreboard') onScoreboard(m.patch); } catch { /* ignore */ }
+        try { const m = JSON.parse(event.data); if (m.t === 'replaced') end('replaced'); else if (m.t === 'closed') end('closed'); else if (m.t === 'scoreboard') onScoreboard(m.patch);
+          else if (m.t === 'save' && Number.isFinite(m.at)) { onSave?.({ at: m.at, by: typeof m.by === 'string' ? m.by : null, data: m.data && typeof m.data === 'object' ? m.data : null }); if (!released) { clearTimeout(release); released = true; flush(); } }
+          else if (m.t === 'saved' && Number.isFinite(m.at)) onSaved?.(m.at); } catch { /* ignore */ }
       };
       socket.onclose = event => {
         if (ws !== socket) return;
@@ -96,9 +109,17 @@ export function connectHost(account: string, url: string, onStatus: (status: Hos
   void open();
   return {
     send(session: Session, page: Page) { latest = { session, page }; if (debounce === undefined) debounce = setTimeout(flush, SEND_DEBOUNCE); },
+    /** Takes a session another console of the account already broadcast: it becomes what a reconnect would send, but is not sent now. */
+    keep(session: Session) { if (latest) latest = { ...latest, session }; },
     /** Saves this console's overlay settings now, or as soon as the connection opens. */
     sendPrefs(next: PrefsMessage) { prefs = next; if (ws?.readyState === WebSocket.OPEN) ws.send(prefsFrame(next)); },
-    stop() { stopped = true; clearTimeout(debounce); clearTimeout(retry); clearInterval(ping); const socket = ws; ws = null; socket?.close(1000, 'leaving'); },
+    /** Saves the whole console under the account, patrons included: unlike `send`, this copy only ever returns to a host. False when not connected. */
+    sendSave(by: string, session: Session, local: Record<string, string>) {
+      if (ws?.readyState !== WebSocket.OPEN) return false;
+      ws.send(JSON.stringify({ t: 'save', by, data: { session, local } }));
+      return true;
+    },
+    stop() { stopped = true; clearTimeout(debounce); clearTimeout(retry); clearTimeout(release); clearInterval(ping); const socket = ws; ws = null; socket?.close(1000, 'leaving'); },
   };
 }
 
