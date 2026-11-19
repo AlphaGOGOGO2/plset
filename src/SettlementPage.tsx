@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Download, Trophy } from 'lucide-react';
 import { Portrait, TeamCard } from './components';
-import { number, settlement, settlementFileName, settlementText, teamMembers, type Session, type Team } from './domain';
+import { balloonWon, number, settlement, settlementFileName, settlementText, teamMembers, type Session, type Team } from './domain';
 import { saveText } from './saveText';
 
 const signed = (n: number) => `${n > 0 ? '+' : ''}${number(n)}개`;
+// 반띵 is what actually changes hands, so it is shown as money (1개 = 100원): -50개 → -5,000원.
+const signedWon = (balloons: number) => `${balloons > 0 ? '+' : ''}${number(balloonWon(balloons))}원`;
 
 type Commit = (update: (s: Session) => Session, label?: string, history?: boolean) => void;
 export default function SettlementPage({ s, commit, notify, viewer = false }: { s: Session; commit: Commit; notify: (text: string) => void; viewer?: boolean }) {
@@ -52,18 +54,18 @@ export default function SettlementPage({ s, commit, notify, viewer = false }: { 
           <tbody>{(() => {
             // Team totals sit first and stay quiet (grey band, no colour, no sign): context for the rows, not the thing to act on.
             const sum = (pick: (w: typeof result.winners[number]) => number) => result.winners.reduce((total, w) => total + pick(w), 0);
-            return <tr className="sum"><td>{s.teams[winner]} 합계</td><td>두당 {number(sum(w => w.per))}개</td><td>{number(Math.abs(sum(w => w.diff)))}개</td><td className="half">{number(Math.abs(sum(w => w.half)))}개</td></tr>;
+            return <tr className="sum"><td>{s.teams[winner]} 합계</td><td>두당 {number(sum(w => w.per))}개</td><td>{number(Math.abs(sum(w => w.diff)))}개</td><td className="half">{number(balloonWon(Math.abs(sum(w => w.half))))}원</td></tr>;
           })()}{result.winners.map(({ player, per, diff, half }) => {
             const tone = diff > 0 ? 'receive' : diff < 0 ? 'send' : '', isBase = player === result.base;
             return <tr key={player.id} className={isBase ? 'base' : ''}>
               <td><span className="settlement-player"><Portrait player={player} small/>{player.name}</span></td>
               <td>두당 {number(per)}개</td>
               <td className={tone}>{isBase ? <span className="settlement-none">기준</span> : <b>{signed(diff)}</b>}</td>
-              <td className={`half ${tone}`}>{isBase ? <span className="settlement-none">—</span> : <b>{signed(half)}</b>}</td>
+              <td className={`half ${tone}`}>{isBase ? <span className="settlement-none">—</span> : <b>{signedWon(half)}</b>}</td>
             </tr>;
           })}</tbody>
         </table>
-        <p className="settlement-hint">{result.base.name} 기준: <b className="send">빨간 −</b>는 {result.base.name}이(가) 보낼 개수, +는 받을 개수입니다. 반띵은 차액의 절반(홀수면 소수점 버림)입니다.</p>
+        <p className="settlement-hint">{result.base.name} 기준: <b className="send">빨간 −</b>는 {result.base.name}이(가) 보낼 개수, +는 받을 개수입니다. 반띵은 차액의 절반(홀수면 소수점 버림)을 1개 = 100원으로 계산한 금액입니다.</p>
       </> : <p className="settlement-empty">{s.teams[winner]}에 편성된 선수가 없습니다.</p>}
     </section>}
   </section>;
