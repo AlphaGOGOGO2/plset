@@ -105,9 +105,9 @@ export function ScoreBug({ v }: { v: ScoreboardView }) {
       <span className="sb-set" title="세트 스코어">{v.right.setScore}</span>
     </div>
     <div className="sb-bug-races">
-      {/* The start location sits on the outer side of each race letter ("11 P" on the left, "Z 5" on the right), and both
+      {/* The start location follows the race letter on both sides ("P 11", "Z 5"), and both
           take the player's colour in the game once it is picked. */}
-      <span className="sb-glass sb-race" data-race={left.race ?? undefined} style={left.color ? { color: left.color } : undefined} title={left.race ? RACE_WORD[left.race] : undefined}>{left.pos ? <i className="sb-pos" title="시작 위치">{left.pos}</i> : null}{left.race ?? ''}</span>
+      <span className="sb-glass sb-race" data-race={left.race ?? undefined} style={left.color ? { color: left.color } : undefined} title={left.race ? RACE_WORD[left.race] : undefined}>{left.race ?? ''}{left.pos ? <i className="sb-pos" title="시작 위치">{left.pos}</i> : null}</span>
       <span aria-hidden="true"/>
       <span className="sb-glass sb-race" data-race={right.race ?? undefined} style={right.color ? { color: right.color } : undefined} title={right.race ? RACE_WORD[right.race] : undefined}>{right.race ?? ''}{right.pos ? <i className="sb-pos" title="시작 위치">{right.pos}</i> : null}</span>
     </div>

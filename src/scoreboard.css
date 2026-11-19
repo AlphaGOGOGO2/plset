@@ -35,7 +35,7 @@
    and the two hug the tab from both sides. */
 .sb-bug-races { display: grid; grid-template-columns: 92px 1fr 105px; }
 .sb-race { display: flex; align-items: center; justify-content: center; gap: 7px; font-family: 'Manrope Variable', sans-serif; font-size: 22px; font-weight: 800; color: var(--sb-muted); }
-/* Start location (clock hour) on the outer side of the race letter, in the same lettering and colour as the letter:
+/* Start location (clock hour) after the race letter, in the same lettering and colour as the letter:
    the race colour, or the player's colour in the game once it is picked (inline on .sb-race). */
 .sb-pos { font-style: normal; }
 .sb-race:first-child { border-radius: 6px 0 0 6px; padding-right: 22px; clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%); }
