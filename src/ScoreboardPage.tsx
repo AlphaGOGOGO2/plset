@@ -17,9 +17,9 @@ type Vars = Record<`--sb-${string}`, string>;
 const WHITE_TEXT: Vars = { '--sb-text': '#f3f5fa', '--sb-muted': 'rgba(222, 229, 242, .6)', '--sb-faint': 'rgba(222, 229, 242, .32)' };
 const STYLE_VARS: Record<SbStyle, Vars> = {
   glass: {
-    ...WHITE_TEXT, '--sb-bg': 'linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 46%), rgba(13, 17, 25, .62)',
+    ...WHITE_TEXT, '--sb-bg': 'linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 46%), rgba(13, 17, 25, .8)',
     '--sb-border': '1px solid rgba(255, 255, 255, .13)', '--sb-shadow': '0 10px 28px rgba(0, 0, 0, .36), inset 0 1px 0 rgba(255, 255, 255, .16)',
-    '--sb-blur': 'blur(18px) saturate(160%)', '--sb-deep': 'rgba(8, 11, 17, .8)', '--sb-line': 'rgba(255, 255, 255, .13)',
+    '--sb-blur': 'blur(18px) saturate(160%)', '--sb-deep': 'rgba(8, 11, 17, .9)', '--sb-line': 'rgba(255, 255, 255, .13)',
     '--sb-live': '#9fe3b8', '--sb-ink': '#0b0e14', '--sb-glow': 'rgba(214, 255, 229, .95)', '--sb-T': '#62a6ff', '--sb-P': '#f2c45a', '--sb-Z': '#ff6161',
   },
   doodle: {
