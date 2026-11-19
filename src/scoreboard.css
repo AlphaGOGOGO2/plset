@@ -155,7 +155,8 @@
 [data-style=neon] .sb-bar { clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); }
 [data-style=neon] .sb-head { text-transform: uppercase; letter-spacing: .12em; }
 [data-style=neon] .sb-head b, [data-style=neon] .sb-entry-teams strong { text-shadow: 0 0 8px var(--sb-live); color: var(--sb-live); }
-[data-style=neon] .sb-name { text-shadow: 0 0 6px currentColor, 0 0 14px currentColor; }
+/* A faint halo only: a full-strength glow blurs the strokes of Korean names, most of all on the white scoreboard names. */
+[data-style=neon] .sb-name { text-shadow: 0 0 5px color-mix(in srgb, currentColor 40%, transparent); }
 [data-style=neon] .sb-name.lost { text-shadow: none; }
 [data-style=neon] .sb-set, [data-style=neon] .sb-games, [data-style=neon] .sb-entry-teams strong { border-radius: 0; box-shadow: inset 0 0 0 1px var(--sb-line); }
 [data-style=neon] .sb-entry-rows li[data-current] .sb-no { background: var(--sb-live); color: var(--sb-ink); box-shadow: 0 0 10px var(--sb-live); }
