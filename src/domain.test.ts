@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MATCH_MAPS, mapSchedule, allocateTeams, createSession, patronFunding, funding, clockRemaining, shuffle, validateSession, setAmount, setTeam, rankByFunding, teamMembers, givenName, withTeamNames, spectatorText, setNote, sessionReport, reportFileName, addMap, removeMap, sessionMaps, participantGroups, swapTie, settlement, settlementText, settlementFileName } from './domain';
+import { balloonWon, MATCH_MAPS, mapSchedule, allocateTeams, createSession, patronFunding, funding, clockRemaining, shuffle, validateSession, setAmount, setTeam, rankByFunding, teamMembers, givenName, withTeamNames, spectatorText, setNote, sessionReport, reportFileName, addMap, removeMap, sessionMaps, participantGroups, swapTie, settlement, settlementText, settlementFileName } from './domain';
 import { ROSTER, searchRoster } from './roster';
 test('별명·줄인 이름·초성으로 등록 선수를 검색한다',()=>{
   assert.equal(searchRoster('현제')[0].name,'변현제');
@@ -230,6 +230,7 @@ test('정산: 기준 선수의 두당과 팀원 두당의 차액을 보여준다
   assert.deepEqual(r.winners.map(w=>w.diff),[0,-500,-1300,-1500],'기준 선수가 보내는 차액은 음수');
   assert.deepEqual(settlement(players,'A',4,'이현제').winners.map(w=>w.diff),[500,0,-800,-1000],'기준보다 두당이 많은 팀원에게서는 받으므로 양수');
   assert.deepEqual(r.winners.map(w=>w.half),[0,-250,-650,-750],'반띵은 차액의 절반');
+  assert.deepEqual([balloonWon(-50),balloonWon(350),balloonWon(0)],[-5000,35000,0],'반띵 금액은 1개 = 100원');
   assert.deepEqual(settlement([p('가',4,'A',1),p('나',0,'A',2)],'A',4,'가').winners.map(w=>w.half),[0,0],'홀수 차액은 0 쪽으로 버리고 -0을 만들지 않는다');
   assert.equal(settlement(players,'A',4,'임홍규').base?.name,'김택용','이긴 팀이 아닌 선수를 기준으로 고르면 최다 두당으로 돌아간다');
   assert.equal(settlement([],'B',5).base,undefined);

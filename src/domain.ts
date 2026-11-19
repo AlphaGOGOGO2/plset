@@ -149,6 +149,9 @@ export function validPinballSetup(p: unknown): p is PinballSetup {
 }
 export const uid = () => crypto.randomUUID();
 export const number = (n: number) => n.toLocaleString('ko-KR');
+/** One balloon (개) is settled as 100 won: 350개 → 35,000원. */
+export const WON_PER_BALLOON = 100;
+export const balloonWon = (balloons: number) => balloons * WON_PER_BALLOON;
 export const safeAmount = (value: number) => Math.max(0, Math.min(100_000_000, Math.round(Number.isFinite(value) ? value : 0)));
 export function funding(players: Player[], size: number) {
   const total = players.filter(p => p.active).reduce((sum,p) => sum + p.amount, 0);
