@@ -108,7 +108,8 @@
 .sb-win-mark { position: absolute; left: 100%; top: 50%; display: grid; place-items: center; width: 15px; height: 15px; margin: -8px 0 0 4px; border: 1.5px solid currentColor; border-radius: 50%; box-sizing: border-box; font: normal 800 9px/1 'Manrope Variable', sans-serif; letter-spacing: 0; }
 [data-style=doodle] .sb-win-mark { width: 19px; height: 19px; margin: -10px 0 0 5px; font-family: 'Gaegu', sans-serif; font-size: 15px; border-width: 2px; border-radius: 48% 55% 46% 58%; transform: rotate(-8deg); }
 [data-style=pixel] .sb-win-mark { border-radius: 0; }
-.sb-map { text-align: center; font-size: 13px; color: var(--sb-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* The map between the two names is in the design's text colour (white on the dark designs), like a name without a race. */
+.sb-map { text-align: center; font-size: 13px; color: var(--sb-text); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 /* ---------- Designs: shapes and fonts (colors are inline, see STYLE_VARS) ---------- */
 /* 낙서: marker outlines on ruled paper, hand lettering, a highlighter on the current game, every bar a little crooked. */
@@ -140,7 +141,7 @@
 @keyframes sb-highlight { 0% { --sb-mark: 0%; } 9% { --sb-mark: 100%; } 100% { --sb-mark: 100%; } }
 @media (prefers-reduced-motion: reduce) { [data-style=doodle] .sb-entry-rows li[data-current] .sb-entry-line { animation: none; } }
 [data-style=doodle] .sb-entry-line .sb-name.lost { text-decoration: line-through 2px; text-decoration-color: var(--sb-faint); }
-[data-style=doodle] .sb-map { color: var(--sb-muted); font-size: 18px; }
+[data-style=doodle] .sb-map { font-size: 18px; }
 /* Hand lettering runs wide: on the narrow entry board the names, the map and the W mark step down a size so a
    three-letter name with its mark still fits. */
 [data-style=doodle] .sb-entry-line .sb-name, [data-style=doodle].sb-entry .sb-entry-teams { font-size: 20px; }
