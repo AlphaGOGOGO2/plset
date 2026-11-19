@@ -4,6 +4,13 @@ import { connectHost, connectViewer, fetchMe, scorerLogin, scorerLogout, type Ho
 import { applyScoreboardPatch, mergePatches, scoreboardPatch, type ScoreboardPatch } from './scoreboard';
 import type { Mode, Page } from './mode';
 import { patronOnly, rebaseClock, shareStructure } from './share';
+import { deviceId, readLocal, shouldAdopt, writeLocal } from './accountSync';
+import { setMode, subscribeMode, type Mode as ColorMode } from './theme';
+
+// The account save is sent this long after the last change: short, because the account's other consoles (a second
+// computer) mirror this one through it. The room spaces out its own storage writes.
+const ACCOUNT_SAVE_MS=400;
+const getStoredMode=():ColorMode=>{try{return localStorage.getItem('plset.mode')==='light'?'light':'dark';}catch{return 'dark';}};
 
 const KEY='plset.session.v1';
 const output = new URLSearchParams(location.search).has('output');
@@ -40,6 +47,10 @@ export function useSession(mode:Mode) {
   // Viewer only: the live connection (recreated when a 방싸개 logs in or out) and the 방싸개's latest local edit.
   const viewerConn=useRef<ReturnType<typeof connectViewer>|null>(null),reconnect=useRef<(scorer:boolean)=>void>(()=>{});
   const prefsRef=useRef<PrefsMessage|null>(null),scorerRef=useRef<string|null>(null),localPatch=useRef<{patch:ScoreboardPatch;at:number}|null>(null),pendingPatch=useRef<ScoreboardPatch|null>(null),scorerSend=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
+  // Host only: the account save (see the host branch below). `notice` is a one-off message for the user; `syncEpoch`
+  // counts the times this browser's settings were replaced by the account's, so pages that read them at mount can remount.
+  const saveSoon=useRef<()=>void>(()=>{}),flushSave=useRef<()=>void>(()=>{});
+  const [notice,setNotice]=useState(''),[syncEpoch,setSyncEpoch]=useState(0);
   const show=useCallback(()=>{if(!shared.current)return;const next={...shared.current,patrons:patrons.current};current.current=next;setState(next);},[]);
   useEffect(()=>{
     let alive=true;
@@ -94,21 +105,66 @@ export function useSession(mode:Mode) {
         // An ?output window only displays; connecting it would register a second host and replace the real one.
         if(output)return;
         // A 방싸개 edited the scoreboard: take it in, so the next state sent carries it instead of overwriting it.
+        // The console follows the account (accountSync.ts): the room hands over its save first, and this browser either
+        // takes it (another computer saved last) or keeps its own and sends that. Nothing is sent before that answer, so
+        // a new computer's empty session can never overwrite the account's.
+        const device=deviceId(),seenKey=`plset.sync.${account}`;
+        let ready=false,saveTimer:ReturnType<typeof setTimeout>|undefined;
+        const pushSave=()=>{clearTimeout(saveTimer);saveTimer=undefined;if(ready&&device&&current.current)host.current?.sendSave(device,current.current,readLocal());};
+        saveSoon.current=()=>{if(!ready)return;clearTimeout(saveTimer);saveTimer=setTimeout(pushSave,ACCOUNT_SAVE_MS);};
+        flushSave.current=()=>{if(saveTimer!==undefined)pushSave();};
+        const seen=()=>{try{return Number(localStorage.getItem(seenKey))||0;}catch{return 0;}};
+        const markSeen=(at:number)=>{try{localStorage.setItem(seenKey,String(at));}catch{/* The save is then taken again next time, which is harmless. */}};
         host.current=connectHost(account,url,setStatusOf,patch=>{
           if(!alive||!current.current)return;
           const board=applyScoreboardPatch(current.current.scoreboard,patch);
           if(board)persist({...current.current,scoreboard:board});
-        });
+        },{device,onSaved:markSeen,onSave:save=>{
+          if(!alive)return;
+          // The first save on a page load is the takeover decision above; every later one is another console of the
+          // account (this host's second computer) saving a change, which this one simply mirrors.
+          const mirror=ready;
+          if(!shouldAdopt(save,device,seen())){if(!mirror){ready=true;pushSave();}return;}
+          let next:Session;
+          // A save this console cannot read is left alone for now (it is only replaced by this computer's next change), and said.
+          try{next=validateSession(save.data!.session as Session);}catch{if(!mirror){ready=true;setError('계정에 저장된 내용을 읽지 못해 이 컴퓨터의 내용으로 이어갑니다.');}return;}
+          if(mirror){
+            // Mirrored as is: the other console already broadcast it, so it is neither sent on nor saved back.
+            clearTimeout(saveTimer);saveTimer=undefined;
+            markSeen(save.at);
+            if(writeLocal(save.data!.local)){setMode(getStoredMode());setSyncEpoch(n=>n+1);}
+            current.current=next;setState(next);host.current?.keep(next);
+            try{localStorage.setItem(storageKey.current,JSON.stringify(next));}catch{/* shown, and saved again with the next change */}
+            return;
+          }
+          // What this computer held goes on the undo stack (and into a backup key), so taking the account's copy can be undone.
+          const previous=current.current;
+          if(previous){
+            try{localStorage.setItem(`${storageKey.current}.backup`,JSON.stringify(previous));}catch{/* undo still holds it */}
+            undoStack.current=[...undoStack.current.slice(-39),previous];setCanUndo(true);
+          }
+          markSeen(save.at);
+          if(writeLocal(save.data!.local)){setMode(getStoredMode());setSyncEpoch(n=>n+1);}
+          ready=true;
+          persist(next,false);
+          setNotice('다른 컴퓨터에서 저장한 내용을 불러왔습니다. 되돌리기를 누르면 이 컴퓨터의 이전 내용으로 돌아갑니다.');
+        }});
         if(current.current)host.current.send(current.current,page.current);
         if(prefsRef.current)host.current.sendPrefs(prefsRef.current);
       }).catch(()=>{if(alive)setError('계정을 확인하지 못했습니다. 새로고침해 주세요.');});
     } else load(KEY);
-    return ()=>{alive=false;host.current?.stop();host.current=null;channel.current?.close();window.removeEventListener('storage',storage);};
+    // Closing the tab right after an edit: send the pending account save now rather than lose it to the debounce.
+    const leaving=()=>flushSave.current();
+    window.addEventListener('pagehide',leaving);
+    const stopMode=subscribeMode(()=>saveSoon.current());
+    return ()=>{alive=false;flushSave.current();saveSoon.current=()=>{};flushSave.current=()=>{};stopMode();window.removeEventListener('pagehide',leaving);host.current?.stop();host.current=null;channel.current?.close();window.removeEventListener('storage',storage);};
   },[]);
-  const persist=useCallback((next:Session)=>{
+  // `account`: false for a session just taken from the account's save, which must not be sent straight back as a new one.
+  const persist=useCallback((next:Session,account=true)=>{
     current.current=next;setState(next);setStatus('저장 중');
     try{localStorage.setItem(storageKey.current,JSON.stringify(next));channel.current?.postMessage(next);setStatus('자동 저장됨');}catch{setStatus('저장 실패');setError('저장 공간이 부족합니다. 세션을 내보내 주세요.');}
     host.current?.send(next,page.current);
+    if(account)saveSoon.current();
   },[]);
   const commit=useCallback((update:(s:Session)=>Session,label?:string,history=true)=>{
     if(output||!current.current)return;
@@ -173,6 +229,7 @@ export function useSession(mode:Mode) {
     scorerRef.current=null;localPatch.current=null;pendingPatch.current=null;setLive(v=>({...v,scorer:null}));reconnect.current(false);
   },[]);
   // This console's own overlay settings, saved in the room so the streamer's OBS page follows them live.
-  const sendPrefs=useCallback((next:PrefsMessage)=>{prefsRef.current=next;viewerConn.current?.sendPrefs(next);host.current?.sendPrefs(next);},[]);
-  return {state,commit,undo,canUndo,status,error,setError,replace,live,publishPage,loginScorer,logoutScorer,sendPrefs};
+  // A host's settings are also part of the account save, so they are the same on the host's next computer.
+  const sendPrefs=useCallback((next:PrefsMessage)=>{prefsRef.current=next;viewerConn.current?.sendPrefs(next);host.current?.sendPrefs(next);saveSoon.current();},[]);
+  return {state,commit,undo,canUndo,status,error,setError,replace,live,publishPage,loginScorer,logoutScorer,sendPrefs,notice,syncEpoch};
 }
