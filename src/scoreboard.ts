@@ -19,8 +19,23 @@ const DEFAULT_ROWS: Record<SbSetId, number> = { '1': 7, '2': 9, ace: 1 };
 const DEFAULT_TITLES: Record<SbSetId, string> = { '1': '프로리그 7/4', '2': '위너스 9/5', ace: '에이스결정전' };
 const MAX_TEXT = 20;
 
-/** One game of a set. `a` plays for team A, `b` for team B. Empty strings are allowed: the map is often decided after the entry. */
-export interface SbRow { a: string; map: string; b: string; winner: Team | null }
+/**
+ * One game of a set. `a` plays for team A, `b` for team B. Empty strings are allowed: the map is often decided after the entry.
+ * `pa` / `pb` are their start locations as clock hours ("11"), typed once the game has started; absent or empty when unknown.
+ * `ca` / `cb` are their colours in that game ("#rrggbb"), which the scoreboard uses for the race letter and the location.
+ */
+export interface SbRow { a: string; map: string; b: string; winner: Team | null; pa?: string; pb?: string; ca?: string; cb?: string }
+/** StarCraft's player colours, offered as the swatches of the colour picker beside a start location. */
+export const GAME_COLORS = ['#f40404', '#0c48cc', '#2cb494', '#88409c', '#f88c14', '#703014', '#cce0d0', '#fcfc38', '#088008', '#fcfc7c', '#ecc4b0', '#4068d4'];
+/** "#rrggbb" only, so a colour from the room or storage cannot carry anything else into a style. */
+export const gameColor = (v: unknown): string => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : '';
+const color = (v: unknown) => v === undefined || v === '' || (typeof v === 'string' && gameColor(v) === v);
+/** A start location as typed: digits only, a clock hour from 1 to 12 ("" when it is not one). */
+export function clockHour(v: string): string {
+  const d = v.replace(/\D/g, '').slice(-2), n = Number(d);
+  return !d ? '' : n >= 1 && n <= 12 ? String(n) : clockHour(d.slice(1));
+}
+const hour = (v: unknown) => v === undefined || (typeof v === 'string' && clockHour(v) === v);
 export interface Scoreboard {
   /** Each set's title ("프로리그 7/4"), shown on both overlays while that set is on air. */
   titles: Record<SbSetId, string>;
@@ -46,7 +61,7 @@ export function validScoreboard(x: unknown): x is Scoreboard {
   const b = x as Scoreboard;
   return !!b && typeof b === 'object' && !!b.titles && SB_SETS.every(id => typeof b.titles[id] === 'string' && b.titles[id].length <= 40) && SB_SETS.includes(b.onAir)
     && !!b.sets && SB_SETS.every(id => Array.isArray(b.sets[id]) && b.sets[id].length >= 1 && b.sets[id].length <= SB_MAX_ROWS
-      && b.sets[id].every(r => !!r && text(r.a) && text(r.map) && text(r.b) && [null, 'A', 'B'].includes(r.winner)))
+      && b.sets[id].every(r => !!r && text(r.a) && text(r.map) && text(r.b) && [null, 'A', 'B'].includes(r.winner) && hour(r.pa) && hour(r.pb) && color(r.ca) && color(r.cb)))
     && !!b.setScore && score(b.setScore.A) && score(b.setScore.B);
 }
 
@@ -72,7 +87,8 @@ export function findPlayer(players: Player[], name: string): Player | null {
 }
 
 type Side = { label: string; setScore: number; gameScore: number };
-type Seat = { name: string; race: Race | null };
+/** `pos`: the start location as a clock hour; `color`: the player's colour in the game. Both "" when not entered. */
+type Seat = { name: string; race: Race | null; pos: string; color: string };
 /** `rows` are the games that have an entry, each with its game number `no` (see scoreboardView). */
 export type EntryBoardView = { set: SbSetId; setLabel: string; title: string; left: number; right: number; rows: (Line & { no: number })[] };
 type Line = { left: Seat; map: string; right: Seat; winner: 'left' | 'right' | null; current: boolean };
@@ -113,8 +129,8 @@ export function scoreboardView(s: Session, base: string | null, style: SbStyle =
   const [L, R] = sideOrder(s, base);
   const label = (t: Team) => baseTeam ? (t === baseTeam ? `${givenName(basePlayer!.name)}팀` : '상대팀') : s.teams[t];
   const games = gameScore(rows), now = currentGame(rows);
-  const seat = (name: string): Seat => ({ name: name.trim(), race: findPlayer(s.players, name)?.race ?? null });
-  const pick = (r: SbRow, t: Team) => seat(t === 'A' ? r.a : r.b);
+  const seat = (name: string, pos = '', color = ''): Seat => ({ name: name.trim(), race: findPlayer(s.players, name)?.race ?? null, pos, color });
+  const pick = (r: SbRow, t: Team) => t === 'A' ? seat(r.a, r.pa, r.ca) : seat(r.b, r.pb, r.cb);
   const side = (t: Team): Side => ({ label: label(t), setScore: sb.setScore[t], gameScore: games[t] });
   const line = (r: SbRow, current: boolean): Line => ({ left: pick(r, L), map: mapShort(r.map), right: pick(r, R), winner: r.winner === null ? null : r.winner === L ? 'left' : 'right', current });
   const lines = rows.map((r, i) => line(r, i === now));
@@ -178,7 +194,9 @@ export function fillRows(rows: SbRow[], a: string, map: string, b: string): SbRo
   return Array.from({ length: n }, (_, i) => {
     const old = rows[i] ?? emptyRow();
     const next = { a: ca.length ? ca[i] ?? '' : old.a, map: cm.length ? cm[i] ?? '' : old.map, b: cb.length ? cb[i] ?? '' : old.b };
-    return { ...next, winner: next.a === old.a && next.b === old.b ? old.winner : null };
+    // A start location and game colour belong to the player they were entered for: they go when that player changes.
+    const keepA = next.a === old.a, keepB = next.b === old.b;
+    return { ...next, winner: keepA && keepB ? old.winner : null, ...(keepA && old.pa ? { pa: old.pa } : {}), ...(keepB && old.pb ? { pb: old.pb } : {}), ...(keepA && old.ca ? { ca: old.ca } : {}), ...(keepB && old.cb ? { cb: old.cb } : {}) };
   });
 }
 

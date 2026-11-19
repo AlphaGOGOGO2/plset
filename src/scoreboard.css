@@ -25,7 +25,8 @@
 /* Scoreboard: 328×92 of separate bars with 3px see-through gaps; the bottom 36px row lines up with the game's timer tab. */
 .sb-bug { display: grid; grid-template-rows: 20px 30px 36px; gap: 3px; width: 328px; height: 92px; }
 .sb-bug-main { display: grid; grid-template-columns: 28px 1fr auto 1fr 28px; align-items: center; gap: 6px; padding: 0 4px; }
-.sb-bug-main .sb-name { font-size: 18px; text-align: center; }
+/* On the scoreboard the names are plain text colour; the race is told by the boxes below (the entry board keeps race colours). */
+.sb-bug-main .sb-name, .sb-bug-main .sb-name[data-race] { font-size: 18px; text-align: center; color: var(--sb-text); }
 .sb-set { display: grid; place-items: center; height: 22px; border-radius: 4px; font-family: 'Manrope Variable', sans-serif; font-weight: 800; font-size: 14px; color: var(--sb-muted); background: var(--sb-deep); }
 .sb-games { display: inline-flex; align-items: center; gap: 2px; padding: 0 2px; border-radius: 4px; background: var(--sb-deep); }
 .sb-games b { min-width: 22px; text-align: center; font-family: 'Manrope Variable', sans-serif; font-weight: 800; font-size: 18px; line-height: 22px; }
@@ -33,7 +34,10 @@
 /* The game's timer tab is a trapezoid (x 92–225 at the top, 70–245 at the bottom), so each race box is cut along its slope
    and the two hug the tab from both sides. */
 .sb-bug-races { display: grid; grid-template-columns: 92px 1fr 105px; }
-.sb-race { display: grid; place-items: center; font-family: 'Manrope Variable', sans-serif; font-size: 22px; font-weight: 800; color: var(--sb-muted); }
+.sb-race { display: flex; align-items: center; justify-content: center; gap: 7px; font-family: 'Manrope Variable', sans-serif; font-size: 22px; font-weight: 800; color: var(--sb-muted); }
+/* Start location (clock hour) on the outer side of the race letter, in the same lettering and colour as the letter:
+   the race colour, or the player's colour in the game once it is picked (inline on .sb-race). */
+.sb-pos { font-style: normal; }
 .sb-race:first-child { border-radius: 6px 0 0 6px; padding-right: 22px; clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%); }
 .sb-race:last-child { background: var(--sb-bg-end, var(--sb-bg)); border-radius: 0 6px 6px 0; padding-left: 22px; clip-path: polygon(0 0, 100% 0, 100% 100%, 22px 100%); }
 
@@ -256,6 +260,17 @@ html.sb-overlay-page, html.sb-overlay-page body, html.sb-overlay-page #root { ba
 .sb-win-button.sb-A.on { color: #101514; background: var(--gold); border-color: var(--gold); }
 .sb-win-button.sb-B.on { color: #101514; background: var(--blue); border-color: var(--blue); }
 .sb-add-row { margin: 10px 14px 14px; }
+/* A name with its start-location field (clock hour) beside it. */
+.sb-cell { display: flex; align-items: center; gap: 4px; }
+.sb-cell .sb-combo { flex: 1; min-width: 0; }
+.sb-table input.sb-pos-input { flex: none; width: 38px; padding: 0; border-color: var(--line); font-family: 'Manrope Variable', sans-serif; font-variant-numeric: tabular-nums; }
+.sb-table input.sb-pos-input::placeholder { color: var(--muted); opacity: .55; font-weight: 500; }
+/* The player's colour in the game: a swatch that opens the colour picker; dashed and empty until one is picked. */
+.sb-swatch { position: relative; flex: none; width: 22px; height: 22px; border: 1px dashed var(--muted); border-radius: 50%; cursor: pointer; overflow: hidden; }
+.sb-swatch.on { border: 1px solid #ffffff59; }
+.sb-swatch:focus-within { outline: 2px solid var(--mint); outline-offset: 1px; }
+.sb-table .sb-swatch input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+.sb-table .sb-swatch input:disabled { cursor: default; }
 
 .sb-side { display: grid; gap: 12px; padding-bottom: 14px; }
 .sb-side > * { margin: 0 14px; }
