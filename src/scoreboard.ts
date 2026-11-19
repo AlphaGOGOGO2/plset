@@ -120,11 +120,11 @@ export function scoreboardView(s: Session, base: string | null, style: SbStyle =
   const lines = rows.map((r, i) => line(r, i === now));
   const board = (id: SbSetId): EntryBoardView => {
     const r = sb.sets[id], g = gameScore(r);
-    // Every game with a player typed in is shown, the ones still to play included. A row without players is left out,
-    // even when its map is already drawn.
+    // Every game with anything typed in is shown, the ones still to play included: a row with only its map drawn shows
+    // the map between two blank names. Only fully empty rows are left out.
     const playing = id === sb.onAir;
     const shown = r.map((x, i) => ({ ...(playing ? lines[i] : line(x, false)), no: i + 1 }))
-      .filter((x, i) => r[i].a.trim() || r[i].b.trim());
+      .filter((x, i) => r[i].a.trim() || r[i].b.trim() || r[i].map.trim());
     return { set: id, setLabel: SB_SET_LABEL[id], title: sb.titles[id], left: g[L], right: g[R], rows: shown };
   };
   // Following the match (1SET alone, then 1SET and 2SET side by side), minus any set this streamer switched off.

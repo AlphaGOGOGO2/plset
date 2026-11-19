@@ -188,14 +188,15 @@ test('entry boards follow the set on air; SUPER ACE keeps both sets, with the 2S
   assert.deepEqual(two.entries[1].rows.map(r => r.current), [false, false, true]);
 });
 
-test('the board shows every game with a player, the ones still to play included, never rows without players, and keeps game numbers', () => {
+test('the board shows every entered game, map-only rows and games still to play included, never empty rows, and keeps game numbers', () => {
   const base = session([]), sb = base.scoreboard!;
   const two = [row('재호', '녹아', '명운', 'A'), row('병구', '컬러', '지성', 'B'), row('재호', '오디', '지성'), row('병구', '옥타', '명운'), row('', '투혼', ''), row('', '', '')];
   const v = scoreboardView({ ...base, scoreboard: { ...sb, onAir: '2', sets: { ...sb.sets, '1': [row('재호', '녹아', '명운', 'A'), row('', '', ''), row('병구', '', '지성', 'B')], '2': two } } }, null);
   // 1SET is over: its filled rows, numbered as entered (the empty game 2 is skipped).
   assert.deepEqual(v.entries[0].rows.map(r => r.no), [1, 3]);
-  // 2SET is on: all four entered games (3 is being played, 4 is still to come); the map-only row and the empty row are left out.
-  assert.deepEqual(v.entries[1].rows.map(r => [r.no, r.current]), [[1, false], [2, false], [3, true], [4, false]]);
+  // 2SET is on: all four entered games (3 is being played, 4 is still to come); game 5 has only its map; the empty row is left out.
+  assert.deepEqual(v.entries[1].rows.map(r => [r.no, r.current]), [[1, false], [2, false], [3, true], [4, false], [5, false]]);
+  assert.deepEqual([v.entries[1].rows[4].left.name, v.entries[1].rows[4].map, v.entries[1].rows[4].right.name], ['', '투혼', '']);
   // Before any entry the board has no rows at all.
   assert.deepEqual(scoreboardView({ ...base, scoreboard: { ...sb, onAir: '1' } }, null).entries[0].rows, []);
 });
