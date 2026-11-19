@@ -73,7 +73,7 @@ export function findPlayer(players: Player[], name: string): Player | null {
 
 type Side = { label: string; setScore: number; gameScore: number };
 type Seat = { name: string; race: Race | null };
-/** `rows` are only the games to show, each with its game number `no` (see scoreboardView). */
+/** `rows` are the games that have an entry, each with its game number `no` (see scoreboardView). */
 export type EntryBoardView = { set: SbSetId; setLabel: string; title: string; left: number; right: number; rows: (Line & { no: number })[] };
 type Line = { left: Seat; map: string; right: Seat; winner: 'left' | 'right' | null; current: boolean };
 export interface ScoreboardView {
@@ -120,11 +120,11 @@ export function scoreboardView(s: Session, base: string | null, style: SbStyle =
   const lines = rows.map((r, i) => line(r, i === now));
   const board = (id: SbSetId): EntryBoardView => {
     const r = sb.sets[id], g = gameScore(r);
-    // Empty rows are left out, and the set being played shows its games only up to the current one: the rest of the entry
-    // is revealed game by game, as on the broadcast. A finished set shows all its games.
-    const playing = id === sb.onAir, upTo = playing ? now ?? -1 : Infinity;
+    // Every game with a player typed in is shown, the ones still to play included. A row without players is left out,
+    // even when its map is already drawn.
+    const playing = id === sb.onAir;
     const shown = r.map((x, i) => ({ ...(playing ? lines[i] : line(x, false)), no: i + 1 }))
-      .filter((x, i) => i <= upTo && (r[i].a.trim() || r[i].b.trim() || r[i].map.trim()));
+      .filter((x, i) => r[i].a.trim() || r[i].b.trim());
     return { set: id, setLabel: SB_SET_LABEL[id], title: sb.titles[id], left: g[L], right: g[R], rows: shown };
   };
   // Following the match (1SET alone, then 1SET and 2SET side by side), minus any set this streamer switched off.
