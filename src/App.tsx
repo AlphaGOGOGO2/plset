@@ -87,7 +87,7 @@ function useMonthRecords(idsKey:string,month:string) {
     for(const id of idsKey.split(',').map(Number))loadRecord(id,month,{urgent:false}).then(record=>{if(alive)setSlots(v=>v[id]===record?v:{...v,[id]:record});},()=>{if(alive)setSlots(v=>v[id]==='error'?v:{...v,[id]:'error'});});
     return ()=>{alive=false;};
   },[idsKey,month,attempt]);
-  // Records are kept for 15 minutes; ask again after that so games played during the broadcast show up.
+  // Records are kept for 12 hours (about one league a day); ask again after that if the console is still open.
   useEffect(()=>{const id=setInterval(()=>setAttempt(n=>n+1),RECORD_TTL_MS+1000);return ()=>clearInterval(id);},[]);
   const failed=idsKey?idsKey.split(',').filter(id=>slots[Number(id)]==='error').length:0;
   useEffect(()=>{if(!failed||autoRetries.current>=3)return;const id=setTimeout(()=>{autoRetries.current++;setAttempt(n=>n+1);},20000);return ()=>clearTimeout(id);},[failed,attempt]);
