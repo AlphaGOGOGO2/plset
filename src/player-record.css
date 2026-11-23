@@ -46,29 +46,39 @@
 .record-source a.record-detail:hover { border-color: var(--mint); color: var(--mint); }
 .record-source a.record-detail:focus-visible { outline: 2px solid #d4c59f; outline-offset: 2px; }
 
-/* 승률보드: sits above the unassigned players. Ranks 1-5 fill the left column and 6-10 the right. */
+/* 승률보드: sits above the unassigned players. Ranks 1-5 fill the left column and 6-10 the right. Kept compact so the
+   team cards below stay on screen. */
 .winrate-panel { margin-bottom: 12px; }
+.team-layout { margin-bottom: 12px; }
+/* On a 1080p screen the browser leaves about 890px: trim the two photo rows so the board, the bench and both teams fit without scrolling. */
+@media (max-height: 960px) {
+  .team-bench-panel .bench-player .portrait-small { height: 76px; }
+  .team-card .team-slot { min-height: 198px; }
+  .team-card .team-slot .portrait-small { max-height: 126px; }
+}
+.winrate-source { font-size: 12px; color: var(--muted); text-decoration: none; white-space: nowrap; }
+a.winrate-source:hover { color: var(--mint); text-decoration: underline; text-underline-offset: 3px; }
 .winrate-loading { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); white-space: nowrap; }
 .winrate-loading .record-spinner { width: 14px; height: 14px; }
-.winrate-list { list-style: none; margin: 0; padding: 10px 14px 14px; display: grid; grid-template-rows: repeat(5, auto); grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px 26px; }
-.winrate-list li { display: grid; grid-template-columns: 26px 34px 20px minmax(0, 7.5em) auto minmax(60px, 1fr) 66px; align-items: center; gap: 9px; min-height: 44px; padding: 4px 10px 4px 6px; border: 1px solid transparent; border-radius: 6px; font-size: 16px; }
+.winrate-list { list-style: none; margin: 0; padding: 2px 14px 8px; display: grid; grid-template-rows: repeat(5, auto); grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 1px 26px; }
+.winrate-list li { display: grid; grid-template-columns: 22px 22px 18px minmax(0, 7.5em) auto minmax(60px, 1fr) 60px; align-items: center; gap: 8px; min-height: 27px; padding: 0 8px 0 4px; border: 1px solid transparent; border-radius: 5px; font-size: 14px; }
 .winrate-list li:hover { background: #ffffff0a; }
-.winrate-rank { text-align: center; font-family: 'Manrope Variable', sans-serif; font-size: 16px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.winrate-rank { text-align: center; font-family: 'Manrope Variable', sans-serif; font-size: 14px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
 .winrate-top .winrate-rank { color: var(--gold); }
 .winrate-top-1 { border-color: #d6bb8655; background: #d6bb8612; }
-.winrate-list .portrait-small { width: 34px; height: 40px; border-radius: 4px; }
-.winrate-list .race { width: 20px; height: 22px; font-size: 11px; }
+.winrate-list .portrait-small { width: 22px; height: 23px; border-radius: 3px; }
+.winrate-list .race { width: 18px; height: 19px; font-size: 10px; }
 .winrate-list strong { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.winrate-record { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: inherit; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; }
+.winrate-record { display: inline-flex; align-items: center; gap: 4px; height: 21px; padding: 0 7px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: inherit; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; }
 .winrate-record:hover { border-color: var(--mint); color: var(--mint); }
 .winrate-record:focus-visible { outline: 2px solid #d4c59f; outline-offset: 2px; }
-.winrate-bar { display: block; height: 10px; border-radius: 5px; overflow: hidden; background: #df969255; }
+.winrate-bar { display: block; height: 8px; border-radius: 4px; overflow: hidden; background: #df969255; }
 .winrate-bar span { display: block; height: 100%; background: var(--mint); }
-.winrate-rate { text-align: right; font-family: 'Manrope Variable', sans-serif; font-size: 17px; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.winrate-none .winrate-rate { font-family: inherit; font-size: 14px; font-weight: 500; color: var(--muted); }
+.winrate-rate { text-align: right; font-family: 'Manrope Variable', sans-serif; font-size: 15px; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.winrate-none .winrate-rate { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--muted); }
 .winrate-bar.winrate-bar-empty { background: #8390862e; }
 .winrate-record:disabled { opacity: .4; cursor: not-allowed; }
-.empty-state.winrate-empty { flex-direction: row; padding: 18px 14px; font-size: 14px; line-height: 1.5; }
+.empty-state.winrate-empty { flex-direction: row; padding: 10px 14px 14px; font-size: 14px; line-height: 1.5; }
 @media (max-width: 1100px) { .winrate-list { grid-template-rows: none; grid-auto-flow: row; } }
 
 /* 팀장: the first player placed on a team. The slot gets a glowing gold edge, on the console and on the broadcast output. */
