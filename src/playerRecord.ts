@@ -10,8 +10,8 @@ export interface RaceRecord extends WinLoss { complete: boolean }
 export interface PlayerRecord { playerId: number; month: string; total: WinLoss; vs: Record<Race, RaceRecord>; complete: boolean; url: string; fetchedAt: number }
 
 export const RECORD_ENDPOINT = '/api/proleague/record';
-// Hidden for now: while false, no button is shown and no record is requested.
-export const RECORD_ENABLED: boolean = false;
+// While true, 전적보기 opens the in-app record dialog; while false it opens the player's EloBoard page and no record is requested.
+export const RECORD_ENABLED: boolean = true;
 /** Display order of the opponent races. */
 export const VS_RACES: { race: Race; label: string }[] = [{ race: 'T', label: '대 테란' }, { race: 'Z', label: '대 저그' }, { race: 'P', label: '대 토스' }];
 const IDS = data.ids as Record<string, number>;
@@ -64,6 +64,19 @@ export async function fetchRecord(playerId: number, month: string, signal?: Abor
   return record;
 }
 
+export interface RankedRecord<P> { player: P; record: PlayerRecord; games: number; rate: number }
+/**
+ * Win-rate board order: highest total win rate first; a tie goes to the player with more games, then to the name.
+ * A player with no game this month has no win rate and is left out.
+ */
+export function rankByWinRate<P extends { name: string }>(rows: { player: P; record: PlayerRecord }[], limit = 10): RankedRecord<P>[] {
+  return rows
+    .map(({ player, record }) => { const games = record.total.wins + record.total.losses; return { player, record, games, rate: games > 0 ? record.total.wins / games : 0 }; })
+    .filter(row => row.games > 0)
+    .sort((a, b) => b.rate - a.rate || b.games - a.games || a.player.name.localeCompare(b.player.name, 'ko'))
+    .slice(0, Math.max(0, limit));
+}
+
 // Records are loaded ahead of time when a player joins the session, so the modal usually opens with the numbers ready.
 // One request at a time: the server reads the source with a pause between pages and only works on two records at once.
 export const RECORD_TTL_MS = 15 * 60 * 1000;
@@ -99,3 +112,4 @@ export function preloadRecords(playerIds: number[], month: string, now = Date.no
 }
 /** Forgets a player's record so the next load fetches it again (the modal's retry button). */
 export function forgetRecord(playerId: number, month: string): void { const key = keyOf(playerId, month), hit = entries.get(key); if (hit) hit.dropped = true; entries.delete(key); }
+
