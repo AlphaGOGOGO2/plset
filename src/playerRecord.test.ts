@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER } from './roster';
 import ids from './eloboard-ids.json';
-import { currentMonth, eloboardId, eloboardUrl, fetchRecord, monthLabel, parseRecord, winRate, RECORD_TTL_MS, forgetRecord, loadRecord, preloadRecords } from './playerRecord';
+import { currentMonth, eloboardId, eloboardUrl, fetchRecord, monthLabel, parseRecord, winRate, RECORD_TTL_MS, forgetRecord, loadRecord, preloadRecords, rankByWinRate } from './playerRecord';
 
 const sample = () => ({ playerId: 12, month: '2026-11', total: { wins: 20, losses: 14 }, vs: { T: { wins: 5, losses: 6, complete: true }, Z: { wins: 8, losses: 5, complete: true }, P: { wins: 7, losses: 3, complete: false } }, complete: false, url: 'https://eloboard.com/players/12?tab=matches&category=pro_league&month=2026-11&by=month', fetchedAt: 1794900000000 });
 const at = (iso: string) => Date.parse(iso);
@@ -169,4 +169,18 @@ test('a failed load is not remembered, and a record older than 15 minutes is fet
     await server.tick(); await server.release(9302); await again;
     assert.equal(server.calls.filter(id => id === 9302).length, 3);
   } finally { server.restore(); }
+});
+
+test('the win-rate board ranks by total win rate, then games, then name, and skips players without a game', () => {
+  const row = (name: string, wins: number, losses: number) => ({ player: { name }, record: { ...sample(), total: { wins, losses } } });
+  const ranked = rankByWinRate([row('다', 5, 5), row('가', 3, 1), row('나', 6, 2), row('라', 0, 0), row('마', 1, 1), row('바', 0, 4)]);
+  assert.deepEqual(ranked.map(r => r.player.name), ['나', '가', '다', '마', '바']);
+  assert.deepEqual(ranked.map(r => r.games), [8, 4, 10, 2, 4]);
+  assert.equal(ranked[0].rate, 0.75);
+  assert.equal(ranked[4].rate, 0);
+  const many = Array.from({ length: 14 }, (_, i) => row(`선수${String(i).padStart(2, '0')}`, i + 1, 14 - i));
+  assert.equal(rankByWinRate(many).length, 10);
+  assert.equal(rankByWinRate(many)[0].player.name, '선수13');
+  assert.equal(rankByWinRate(many, 3).length, 3);
+  assert.deepEqual(rankByWinRate([]), []);
 });

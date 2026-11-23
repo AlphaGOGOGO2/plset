@@ -25,7 +25,7 @@ import ParticipantRoster from './ParticipantRoster';
 import ModeToggle from './ModeToggle';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Slam } from './components';
-import { currentMonth, eloboardId, eloboardUrl, forgetRecord, loadRecord, monthLabel, preloadRecords, RECORD_ENABLED, VS_RACES, winRate, type PlayerRecord } from './playerRecord';
+import { currentMonth, eloboardId, eloboardUrl, forgetRecord, loadRecord, monthLabel, preloadRecords, rankByWinRate, RECORD_ENABLED, RECORD_TTL_MS, VS_RACES, winRate, type PlayerRecord } from './playerRecord';
 
 type Commit = (update:(s:Session)=>Session,label?:string,history?:boolean)=>void;
 // The open tab lives in the URL hash so the browser's back/forward buttons move between tabs.
@@ -68,11 +68,56 @@ function PlayerRecordModal({player,onClose}:{player:Pick<Player,'name'|'race'|'r
       {record?<>
         <div className="record-total"><span className="record-total-label">이번 달 전적</span><strong>{record.total.wins}승 {record.total.losses}패</strong><span className="record-total-rate">승률 <b>{winRate(record.total.wins,record.total.losses)}</b></span></div>
         <ul className="record-vs">{VS_RACES.map(({race,label})=>{const r=record.vs[race],games=r.wins+r.losses;return <li key={race}><span className="record-vs-label"><RaceMark race={race}/>{label}{r.complete?null:<span className="record-partial">일부 누락</span>}</span>{games?<><span className="record-vs-score">{r.wins}승 {r.losses}패</span><span className="record-vs-rate">{winRate(r.wins,r.losses)}</span><span className="record-bar" aria-hidden="true"><span style={{width:`${r.wins/games*100}%`}}/></span></>:<span className="record-none">경기 없음</span>}</li>;})}</ul>
-        {partial.length?<p className="record-note">{partial.map(v=>v.label).join(', ')} 전적은 경기 수가 많아 일부가 빠졌을 수 있습니다. 정확한 기록은 아래 EloBoard 링크에서 확인하세요.</p>:null}
+        {partial.length?<p className="record-note">{partial.map(v=>v.label).join(', ')} 전적은 경기 수가 많아 일부가 빠졌을 수 있습니다. 정확한 기록은 아래 상세보기에서 확인하세요.</p>:null}
       </>:null}
     </div>
-    <p className="record-source">{url?<a href={url} target="_blank" rel="noopener">출처: EloBoard <ArrowUpRight size={13}/></a>:<span>출처: EloBoard</span>}<span className="record-source-note">해당 기능은 삭제될 수 있습니다.</span></p>
+    <p className="record-source"><span>출처: EloBoard</span>{url?<a className="record-detail" href={url} target="_blank" rel="noopener">상세보기 <ArrowUpRight size={14}/></a>:null}</p>
   </Modal>;
+}
+// Each listed player's record for the month, loaded one after another in the background (usually already in memory from the
+// preload). A failed load is retried a few times on its own: a viewer can arrive before the server has the record ready.
+type RecordSlot=PlayerRecord|'error';
+function useMonthRecords(idsKey:string,month:string) {
+  const [slots,setSlots]=useState<Record<number,RecordSlot>>({});
+  const [attempt,setAttempt]=useState(0);
+  const autoRetries=useRef(0);
+  useEffect(()=>{
+    if(!idsKey)return;
+    let alive=true;
+    for(const id of idsKey.split(',').map(Number))loadRecord(id,month,{urgent:false}).then(record=>{if(alive)setSlots(v=>v[id]===record?v:{...v,[id]:record});},()=>{if(alive)setSlots(v=>v[id]==='error'?v:{...v,[id]:'error'});});
+    return ()=>{alive=false;};
+  },[idsKey,month,attempt]);
+  // Records are kept for 15 minutes; ask again after that so games played during the broadcast show up.
+  useEffect(()=>{const id=setInterval(()=>setAttempt(n=>n+1),RECORD_TTL_MS+1000);return ()=>clearInterval(id);},[]);
+  const failed=idsKey?idsKey.split(',').filter(id=>slots[Number(id)]==='error').length:0;
+  useEffect(()=>{if(!failed||autoRetries.current>=3)return;const id=setTimeout(()=>{autoRetries.current++;setAttempt(n=>n+1);},20000);return ()=>clearTimeout(id);},[failed,attempt]);
+  return {slots,retry:()=>{autoRetries.current=0;setAttempt(n=>n+1);}};
+}
+// 승률보드: today's participants ranked by this month's total pro league win rate, top ten. Viewers see it too.
+// A participant with no game this month (or no EloBoard link) has no win rate: listed after the ranked ones as 전적없음.
+function WinRateBoard({s,onRecord}:{s:Session;onRecord:(p:Player)=>void}) {
+  const [month]=useState(()=>currentMonth(Date.now()));
+  const active=s.players.filter(p=>p.active);
+  const linked=active.flatMap(player=>{const id=eloboardId(player);return id===null?[]:[{player,id}];});
+  const idsKey=[...new Set(linked.map(x=>x.id))].sort((a,b)=>a-b).join(',');
+  const {slots,retry}=useMonthRecords(idsKey,month);
+  const ranked=rankByWinRate(linked.flatMap(({player,id})=>{const record=slots[id];return record&&record!=='error'?[{player,record}]:[];}));
+  const pending=linked.filter(x=>slots[x.id]===undefined).length,failed=linked.filter(x=>slots[x.id]==='error').length;
+  const noRecord=active.filter(p=>{const id=eloboardId(p);if(id===null)return true;const record=slots[id];return !!record&&record!=='error'&&record.total.wins+record.total.losses===0;}).slice(0,Math.max(0,10-ranked.length));
+  return <section className="panel winrate-panel" aria-label="승률보드">
+    <PanelHead eyebrow="WIN RATE BOARD" title="승률보드"><a className="winrate-source" data-viewer-ok href="https://eloboard.com" target="_blank" rel="noopener">출처: EloBoard</a><span className="count-pill">{monthLabel(month)} 프로리그</span>{pending?<span className="winrate-loading" role="status"><span className="record-spinner" aria-hidden="true"/>{pending}명 불러오는 중</span>:null}{failed&&!pending?<Button viewerOk onClick={retry}><RotateCcw size={14}/> {failed}명 다시 불러오기</Button>:null}</PanelHead>
+    {ranked.length||noRecord.length?<ol className="winrate-list">{ranked.map(({player:p,record},i)=><li key={p.id} className={i<3?`winrate-top winrate-top-${i+1}`:undefined}>
+      <span className="winrate-rank">{i+1}</span><Portrait player={p} small/><RaceMark race={p.race}/><strong title={p.name}>{p.name}</strong>
+      <button className="winrate-record" data-viewer-ok aria-label={`${p.name} 전적보기`} onClick={()=>onRecord(p)}><ChartColumn size={13}/> 전적보기</button>
+      <span className="winrate-bar" aria-hidden="true"><span style={{width:`${record.total.wins/(record.total.wins+record.total.losses)*100}%`}}/></span>
+      <b className="winrate-rate">{winRate(record.total.wins,record.total.losses)}</b>
+    </li>)}{noRecord.map(p=><li key={p.id} className="winrate-none">
+      <span className="winrate-rank" aria-hidden="true">–</span><Portrait player={p} small/><RaceMark race={p.race}/><strong title={p.name}>{p.name}</strong>
+      <button className="winrate-record" data-viewer-ok aria-label={`${p.name} 전적보기`} disabled={eloboardId(p)===null} title={eloboardId(p)===null?NO_RECORD_LINK:undefined} onClick={()=>onRecord(p)}><ChartColumn size={13}/> 전적보기</button>
+      <span className="winrate-bar winrate-bar-empty" aria-hidden="true"/>
+      <b className="winrate-rate">전적없음</b>
+    </li>)}</ol>:<div className="empty-state winrate-empty">{!active.length?'참가자를 등록하면 이번 달 프로리그 승률 순위가 표시됩니다.':pending?'승률을 불러오는 중입니다.':'승률을 불러오지 못했습니다.'}</div>}
+  </section>;
 }
 function AmountInput({amount,divisor,label,onChange,onNavigate}:{amount:number;divisor:number;label:string;onChange:(n:number)=>void;onNavigate?:(direction:-1|0|1,input:HTMLInputElement)=>void}) {
   const [value,setValue]=useState(String(Math.floor(amount/divisor)));
@@ -118,7 +163,7 @@ function TeamsPage({s,commit,notify}:{s:Session;commit:Commit;notify:(t:string)=
   const [benchDragOver,setBenchDragOver]=useState(false);
   const [slam,setSlam]=useState<Slam|null>(null);
   const [recordOf,setRecordOf]=useState<Player|null>(null);
-  // While the in-app record is switched off, 전적보기 opens the player's EloBoard page instead.
+  // 전적보기 opens the in-app record dialog (its 상세보기 goes on to EloBoard); with the switch off it opens EloBoard directly.
   const openRecord=(p:Player)=>{if(RECORD_ENABLED){setRecordOf(p);return;}const id=eloboardId(p);if(id!==null)window.open(eloboardUrl(id,currentMonth(Date.now())),'_blank','noopener');};
   const unassigned=s.players.filter(p=>p.active&&!p.team);
   const assign=(id:string,team:Team|null)=>{
@@ -129,7 +174,8 @@ function TeamsPage({s,commit,notify}:{s:Session;commit:Commit;notify:(t:string)=
     setSlam(team?{id,team,n:Date.now()}:null);
   };
   return <>
-    <section className={`panel bench-panel team-bench-panel${benchDragOver?' drag-over':''}`} aria-label="미배정 선수 덱" onDragOver={e=>{if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();e.dataTransfer.dropEffect='move';setBenchDragOver(true);}}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setBenchDragOver(false);}} onDrop={e=>{e.preventDefault();setBenchDragOver(false);assign(e.dataTransfer.getData('text/plain'),null);}}><PanelHead eyebrow="AVAILABLE PLAYERS" title="미배정 선수"><span className="count-pill">{unassigned.length}명</span><Button disabled={!s.players.some(p=>p.team)} onClick={()=>commit(v=>withTeamNames({...v,players:v.players.map(p=>({...p,team:null}))},v),'팀 배정 초기화')}><RotateCcw size={14}/> 배정 초기화</Button><Button primary onClick={()=>{try{const players=allocateTeams(s.players,s.teamSize,randomSeed());commit(v=>withTeamNames({...v,players},v),'무작위 팀 편성');notify('두 팀을 무작위로 편성했습니다.');}catch(e){notify((e as Error).message);}}}><Shuffle size={16}/> 무작위 팀 편성</Button></PanelHead><div className="bench-list"><AnimatePresence mode="popLayout" initial={false}>{unassigned.map(p=><motion.div className="bench-slot" key={p.id} layout initial={{scale:.8,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:.6,opacity:0}} transition={{type:'spring',stiffness:520,damping:32}}><div className="bench-player" draggable onDragStart={e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',p.id);}}><Portrait player={p} small/><RaceMark race={p.race}/><strong>{p.name}</strong><div className="bench-assign"><button aria-label={`${p.name} A팀 배정`} onClick={()=>assign(p.id,'A')}>A</button><button aria-label={`${p.name} B팀 배정`} onClick={()=>assign(p.id,'B')}>B</button></div><button className="record-button" data-viewer-ok aria-label={`${p.name} 전적보기`} disabled={eloboardId(p)===null} title={eloboardId(p)===null?NO_RECORD_LINK:`${p.name} 이번 달 프로리그 전적 (EloBoard에서 보기)`} onClick={()=>openRecord(p)}><ChartColumn size={13}/> 전적보기</button></div></motion.div>)}</AnimatePresence>{!unassigned.length?<div className="empty-state"><Check size={20}/> 모든 선수가 팀에 배정되었습니다.</div>:null}</div></section>
+    {RECORD_ENABLED?<WinRateBoard s={s} onRecord={openRecord}/>:null}
+    <section className={`panel bench-panel team-bench-panel${benchDragOver?' drag-over':''}`} aria-label="미배정 선수 덱" onDragOver={e=>{if(e.dataTransfer.types.includes('text/plain')){e.preventDefault();e.dataTransfer.dropEffect='move';setBenchDragOver(true);}}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setBenchDragOver(false);}} onDrop={e=>{e.preventDefault();setBenchDragOver(false);assign(e.dataTransfer.getData('text/plain'),null);}}><PanelHead eyebrow="AVAILABLE PLAYERS" title="미배정 선수"><span className="count-pill">{unassigned.length}명</span><Button disabled={!s.players.some(p=>p.team)} onClick={()=>commit(v=>withTeamNames({...v,players:v.players.map(p=>({...p,team:null}))},v),'팀 배정 초기화')}><RotateCcw size={14}/> 배정 초기화</Button><Button primary onClick={()=>{try{const players=allocateTeams(s.players,s.teamSize,randomSeed());commit(v=>withTeamNames({...v,players},v),'무작위 팀 편성');notify('두 팀을 무작위로 편성했습니다.');}catch(e){notify((e as Error).message);}}}><Shuffle size={16}/> 무작위 팀 편성</Button></PanelHead><div className="bench-list"><AnimatePresence mode="popLayout" initial={false}>{unassigned.map(p=><motion.div className="bench-slot" key={p.id} layout initial={{scale:.8,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:.6,opacity:0}} transition={{type:'spring',stiffness:520,damping:32}}><div className="bench-player" draggable onDragStart={e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',p.id);}}><Portrait player={p} small/><RaceMark race={p.race}/><strong>{p.name}</strong><div className="bench-assign"><button aria-label={`${p.name} A팀 배정`} onClick={()=>assign(p.id,'A')}>A</button><button aria-label={`${p.name} B팀 배정`} onClick={()=>assign(p.id,'B')}>B</button></div></div></motion.div>)}</AnimatePresence>{!unassigned.length?<div className="empty-state"><Check size={20}/> 모든 선수가 팀에 배정되었습니다.</div>:null}</div></section>
     <div className="team-layout">{(['A','B'] as Team[]).map(team=><TeamCard key={team} s={s} team={team} slam={slam?.team===team?slam:null} onDrop={id=>assign(id,team)} onRemove={id=>assign(id,null)} onRecord={openRecord} onName={name=>commit(v=>({...v,teams:{...v.teams,[team]:name}}),`${team}팀 이름 변경`)}/>)}</div>
     {recordOf?<PlayerRecordModal key={recordOf.id} player={recordOf} onClose={()=>setRecordOf(null)}/>:null}
     </>;

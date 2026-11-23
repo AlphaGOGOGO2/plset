@@ -1,10 +1,6 @@
-/* 전적보기: the button on each player card and the monthly pro league record dialog it opens. */
-.bench-player button.record-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 28px; font-size: 13px; font-weight: 500; background: #171d1a; border: 1px solid var(--line); border-radius: 3px; color: #d8dfd6; cursor: pointer; white-space: nowrap; }
-.bench-player button.record-button:hover:not(:disabled) { border-color: var(--mint); color: var(--mint); }
-.bench-player button.record-button:disabled, .team-slot .record-player:disabled { opacity: .4; cursor: not-allowed; }
-.bench-player button.record-button:focus-visible, .team-slot .record-player:focus-visible { outline: 2px solid #d4c59f; outline-offset: 2px; }
-/* The generic light rule for the last button in a card is the gold B-team style; keep this one neutral. */
-[data-mode=light] .bench-player button.record-button { background: #f1eee8; border-color: #cfc9bb; color: #242527; }
+/* 전적보기: the button on a team slot and on the win-rate board, and the monthly pro league record dialog it opens. */
+.team-slot .record-player:disabled { opacity: .4; cursor: not-allowed; }
+.team-slot .record-player:focus-visible { outline: 2px solid #d4c59f; outline-offset: 2px; }
 /* Mirrors the remove button in the opposite corner of a filled team slot. */
 .team-slot .record-player { position: absolute; top: 5px; left: 5px; z-index: 3; width: 38px; height: 38px; display: grid; place-items: center; margin: 0; padding: 0; border: 1px solid #e1e6dc38; border-radius: 7px; background: #121916ed; color: #d8dfd6; cursor: pointer; }
 .team-slot .record-player:hover:not(:disabled) { background: #24382b; border-color: #a4e5bc88; color: #fff; }
@@ -43,10 +39,51 @@
 .record-bar { grid-column: 1 / -1; display: block; height: 8px; border-radius: 4px; overflow: hidden; background: #df969255; }
 .record-bar span { display: block; height: 100%; background: var(--mint); }
 .record-note { margin: 0; font-size: 13px; line-height: 1.55; color: var(--gold); }
-.record-source { margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; align-items: center; justify-content: space-between; gap: 6px 14px; flex-wrap: wrap; }
-.record-source-note { font-size: 12px; }
-.record-source a { display: inline-flex; align-items: center; gap: 4px; color: inherit; text-decoration: underline; text-underline-offset: 3px; }
-.record-source a:hover { color: var(--mint); }
+.record-source { margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 6px 14px; flex-wrap: wrap; }
+.record-source > span { color: var(--muted); }
+/* 상세보기: opens the player's EloBoard page for the same month in a new tab. */
+.record-source a.record-detail { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: inherit; font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.record-source a.record-detail:hover { border-color: var(--mint); color: var(--mint); }
+.record-source a.record-detail:focus-visible { outline: 2px solid #d4c59f; outline-offset: 2px; }
+
+/* 승률보드: sits above the unassigned players. Ranks 1-5 fill the left column and 6-10 the right. Kept compact so the
+   team cards below stay on screen. */
+.winrate-panel { margin-bottom: 12px; }
+.team-layout { margin-bottom: 12px; }
+/* On a 1080p screen the browser leaves about 890px: trim the two photo rows so the board, the bench and both teams fit without scrolling. */
+@media (max-height: 960px) {
+  .team-bench-panel .bench-player .portrait-small { height: 76px; }
+  .team-card .team-slot { min-height: 198px; }
+  .team-card .team-slot .portrait-small { max-height: 126px; }
+}
+.winrate-source { font-size: 12px; color: var(--muted); text-decoration: none; white-space: nowrap; }
+a.winrate-source:hover { color: var(--mint); text-decoration: underline; text-underline-offset: 3px; }
+.winrate-loading { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.winrate-loading .record-spinner { width: 14px; height: 14px; }
+.winrate-list { list-style: none; margin: 0; padding: 2px 14px 8px; display: grid; grid-template-rows: repeat(5, auto); grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 1px 26px; }
+.winrate-list li { display: grid; grid-template-columns: 22px 22px 18px minmax(0, 7.5em) auto minmax(60px, 1fr) 60px; align-items: center; gap: 8px; min-height: 27px; padding: 0 8px 0 4px; border: 1px solid transparent; border-radius: 5px; font-size: 14px; }
+.winrate-list li:hover { background: #ffffff0a; }
+.winrate-rank { text-align: center; font-family: 'Manrope Variable', sans-serif; font-size: 14px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.winrate-top .winrate-rank { color: var(--gold); }
+.winrate-top-1 { border-color: #d6bb8655; background: #d6bb8612; }
+.winrate-list .portrait-small { width: 22px; height: 23px; border-radius: 3px; }
+.winrate-list .race { width: 18px; height: 19px; font-size: 10px; }
+.winrate-list strong { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.winrate-record { display: inline-flex; align-items: center; gap: 4px; height: 21px; padding: 0 7px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: inherit; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; }
+.winrate-record:hover { border-color: var(--mint); color: var(--mint); }
+.winrate-record:focus-visible { outline: 2px solid #d4c59f; outline-offset: 2px; }
+.winrate-bar { display: block; height: 8px; border-radius: 4px; overflow: hidden; background: #df969255; }
+.winrate-bar span { display: block; height: 100%; background: var(--mint); }
+.winrate-rate { text-align: right; font-family: 'Manrope Variable', sans-serif; font-size: 15px; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.winrate-none .winrate-rate { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--muted); }
+.winrate-bar.winrate-bar-empty { background: #8390862e; }
+.winrate-record:disabled { opacity: .4; cursor: not-allowed; }
+.empty-state.winrate-empty { flex-direction: row; padding: 10px 14px 14px; font-size: 14px; line-height: 1.5; }
+@media (max-width: 1100px) { .winrate-list { grid-template-rows: none; grid-auto-flow: row; } }
+
+/* 팀장: the first player placed on a team. The slot gets a glowing gold edge, on the console and on the broadcast output. */
+.team-card .team-slot.filled.captain { border-color: #f0cf7a; box-shadow: 0 0 0 2px #f0cf7a, 0 0 22px #f0c860b3, inset 0 0 18px #f0c86033; animation: captain-glow 2.4s ease-in-out infinite; }
+@keyframes captain-glow { 50% { box-shadow: 0 0 0 2px #f0cf7a, 0 0 38px #f0c860e6, inset 0 0 26px #f0c8604d; } }
 
 @keyframes record-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .record-spinner { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .record-spinner, .team-card .team-slot.filled.captain { animation: none; } }
