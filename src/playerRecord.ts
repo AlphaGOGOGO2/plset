@@ -79,14 +79,14 @@ export function rankByWinRate<P extends { name: string }>(rows: { player: P; rec
 
 // Records are loaded ahead of time when a player joins the session, so the modal usually opens with the numbers ready.
 // One request at a time: the server reads the source with a pause between pages and only works on two records at once.
-export const RECORD_TTL_MS = 15 * 60 * 1000;
+export const RECORD_TTL_MS = 12 * 60 * 60 * 1000;
 type Entry = { promise: Promise<PlayerRecord>; at: number; started: boolean; dropped: boolean };
 const entries = new Map<string, Entry>();
 let queue: Promise<unknown> = Promise.resolve();
 const keyOf = (playerId: number, month: string) => `${playerId}:${month}`;
 
 /**
- * The player's record, from memory when it was loaded in the last 15 minutes. A background load (`urgent: false`) waits its
+ * The player's record, from memory when it was loaded in the last 12 hours. A background load (`urgent: false`) waits its
  * turn behind earlier ones; an urgent load (someone opened the modal) starts at once, even if the same player is still waiting in line.
  */
 export function loadRecord(playerId: number, month: string, { urgent = true, now = Date.now() }: { urgent?: boolean; now?: number } = {}): Promise<PlayerRecord> {

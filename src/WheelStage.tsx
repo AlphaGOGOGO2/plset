@@ -4,7 +4,7 @@ import { Maximize2, Minimize2, Play, RotateCcw } from 'lucide-react';
 import { seeded, shuffle, type DrawItem, type DrawRun } from './domain';
 import { playSfx, startLoop } from './sfx';
 
-const W=1000,H=640,CX=500,CY=370,R=232,TAU=Math.PI*2,DURATION=7600,REVEAL=650,FLASH=600,TILT=.38;
+const W=1000,H=640,CX=500,CY=370,R=232,TAU=Math.PI*2,DURATION=9000,TURNS=11,REVEAL=650,FLASH=600,TILT=.38;
 // The stage is painted on the canvas, so it follows the console's dark/light mode here rather than via CSS.
 const STAGE={dark:{bg:'#141b18',glowIn:'#35433438',glowOut:'#141b1800',status:'#8c9b90',win:'#d8c598',label:'#e0e5dc',winLabel:'#f0e7d0'},light:{bg:'#f3f0e9',glowIn:'#d9cfb655',glowOut:'#f3f0e900',status:'#6e6b64',win:'#8a6d2a',label:'#242527',winLabel:'#5a4a23'}};
 const COLORS=['#f7b84e','#54c59c','#63b6ed','#ee85a7','#af90ed','#b5d66a','#48c9c4','#efa16b','#8faee5','#ebce58'];
@@ -37,9 +37,10 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
   // Seeded so every window agrees: a third of spins stop within 8% of a border (pointer resting on a peg), the rest anywhere inside 6%..94%.
   const dice=seeded((run?.seed??0)+1),edge=dice()<1/3,side=dice()<.5,roll=dice();
   const landing=run?edge?(side?.04+.08*roll:.96-.08*roll):.06+.88*roll:.5;
-  const duration=DURATION+(run?.seed??0)%1800;
-  const initialAngle=-Math.PI/2-sector/2,finalAngle=TAU*(8+(run?.seed??0)%3)-Math.PI/2-(selected+landing)*sector;
-  let raf=0,disposed=false,sent=false,offset=0,angle=initialAngle,progress=0,lastIndex=-1,releasedAt=0;
+  // How hard the wheel is thrown is drawn per spin too: 11 to 20 full turns, and a harder throw also runs longer.
+  const turns=TURNS+Math.floor(dice()*10),duration=Math.round(DURATION+(turns-TURNS)*150+dice()*1500);
+  const initialAngle=-Math.PI/2-sector/2,finalAngle=TAU*turns-Math.PI/2-(selected+landing)*sector;
+  let raf=0,disposed=false,sent=false,offset=0,angle=initialAngle,progress=0,pace=1,lastIndex=-1,releasedAt=0;
   const start=run?.startedAt??Date.now(),host=window as GameWindow;
   const measure=()=>{const stage=stageRef.current,layer=layerRef.current;if(!stage||!layer)return;const scale=Math.min(stage.clientWidth/W,stage.clientHeight/H);layer.style.width=`${W*scale}px`;layer.style.height=`${H*scale}px`;layer.style.left=`${(stage.clientWidth-W*scale)/2}px`;layer.style.top=`${(stage.clientHeight-H*scale)/2}px`;};
   const observer=new ResizeObserver(measure);if(stageRef.current)observer.observe(stageRef.current);measure();
@@ -49,22 +50,22 @@ export default function WheelStage({run,items,onFinish,onStart,disabled=false,ed
    ctx!.fillStyle=color;ctx!.textAlign='center';ctx!.textBaseline='middle';ctx!.fillText(value,x,y);ctx!.textBaseline='alphabetic';
   }
   // Sound: the crank plays in the short wait before the spin (so reopening the tab mid-spin never replays it), a whirring loop
-  // follows the wheel's speed (it falls linearly, so 1-progress is the speed), and every peg the pointer passes ticks.
+  // follows the wheel's speed, and every peg the pointer passes ticks.
   let spin:ReturnType<typeof startLoop>|null=null,startCued=false;
   function cueSounds(now:number,stopped:boolean,crossed:boolean){
    const audible=!stageRef.current?.closest('[hidden]'),spinning=!!run&&!stopped&&now>=start&&audible;
    if(run&&!stopped&&now<start&&!startCued&&audible){startCued=true;playSfx('wheelStart');}
    if(!spinning){spin?.stop();spin=null;return;}
    spin??=startLoop('wheelSpin');
-   const speed=1-progress;spin.set(.25+.75*speed,.6+.6*speed);
+   spin.set(.25+.75*pace,.6+.6*pace);
    if(crossed)playSfx('wheelTick');
   }
   function draw(){
    if(!ctx||disposed)return;
    const stopped=complete(),now=Date.now()+offset;
    progress=run?(stopped?1:Math.max(0,Math.min(1,(now-start)/duration))):0;
-   // Constant friction: speed falls linearly, so the wheel still visibly moves right up to the stop instead of fading out early.
-   const eased=1-(1-progress)*(1-progress);
+   // A hard launch: the wheel starts at three times its average speed and the speed falls off as (1-t)^2, leaving a long slow run-in to the stop.
+   const rest=1-progress,eased=1-rest*rest*rest;pace=rest*rest;
    angle=run?initialAngle+(finalAngle-initialAngle)*eased:initialAngle;
    const position=wrap(-Math.PI/2-angle)/sector,pointerIndex=Math.min(n-1,Math.floor(position)),peg=position-pointerIndex;
    // Pointer flick: a peg bends the tip as it approaches (peg→0), then the tip springs back once the peg has passed.
