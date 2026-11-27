@@ -28,7 +28,9 @@ export default function MapDrawPage({ s, commit, notify, visible, viewer = false
   const [format, setFormat] = useState<MapDrawFormat>(run?.format ?? 'plus');
   // The picker follows whatever draw is on screen, so "다시 추첨" repeats the same format unless it is changed.
   useEffect(() => { if (run) setFormat(run.format); }, [run]);
-  const pool = sessionMaps(s);
+  // A viewer may also pick a season for their own draws. It stays in this window; without one they use the host's maps.
+  const [ownSeason, setOwnSeason] = useState<string | null>(null);
+  const pool = (viewer ? MAP_SEASONS.find(v => v.id === ownSeason)?.maps : null) ?? sessionMaps(s);
   const plan = useMemo(() => run ? mapDrawPlan(run) : null, [run]);
   const frameAt = (now: number): MapDrawFrame | null => plan && run ? mapDrawFrame(plan, run === skipped ? plan.total : now - run.startedAt) : null;
   const [frame, setFrame] = useState<MapDrawFrame | null>(() => frameAt(Date.now()));
@@ -132,7 +134,8 @@ export default function MapDrawPage({ s, commit, notify, visible, viewer = false
       <div className="mapdraw-head"><div><h2>등록된 맵</h2><span className="count-pill">{pool.length}개</span></div>
         {!viewer ? <form className="mapdraw-add" onSubmit={e => { e.preventDefault(); add(); }}>
           <select aria-label="맵 시즌" value={season ?? ''} disabled={running} onChange={e => pickSeason(e.target.value)}>{season ? null : <option value="" disabled>직접 구성</option>}{MAP_SEASONS.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}</select>
-          <input aria-label="추가할 맵 이름" placeholder="맵 이름" maxLength={30} value={mapName} disabled={running} onChange={e => setMapName(e.target.value)}/><button className="button" type="submit" disabled={running || !mapName.trim()}><Plus size={15}/> 맵 추가</button></form> : null}
+          <input aria-label="추가할 맵 이름" placeholder="맵 이름" maxLength={30} value={mapName} disabled={running} onChange={e => setMapName(e.target.value)}/><button className="button" type="submit" disabled={running || !mapName.trim()}><Plus size={15}/> 맵 추가</button></form>
+          : <div className="mapdraw-add" data-viewer-ok><select aria-label="내 추첨에 쓸 맵" value={ownSeason ?? ''} disabled={running} onChange={e => setOwnSeason(e.target.value || null)}><option value="">진행자 맵</option>{MAP_SEASONS.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}</select></div>}
       </div>
       <ul className="mapdraw-pool-list">
         {pool.map(map => <li key={map.id}><MapCard label={map.label}/>{!viewer ? <button className="icon-button mapdraw-remove" aria-label={`${map.label} 삭제`} disabled={running} onClick={() => commit(v => removeMap(v, map.id), `맵 삭제 · ${map.label}`)}><X size={14}/></button> : null}</li>)}
