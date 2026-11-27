@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, FastForward, Play, Plus, RotateCcw, X } from 'lucide-react';
 import { LayoutGroup, motion } from 'motion/react';
-import { MAP_DRAW_EXTRA, MAP_DRAW_FORMATS, addMap, mapDrawBase, randomSeed, removeMap, sessionMaps, validMapDraw, type MapDraw, type MapDrawFormat, type Session } from './domain';
+import { MAP_DRAW_EXTRA, MAP_DRAW_FORMATS, MAP_SEASONS, addMap, mapDrawBase, mapSeasonOf, randomSeed, removeMap, sessionMaps, setMapSeason, validMapDraw, type MapDraw, type MapDrawFormat, type Session } from './domain';
 import { mapDrawFrame, mapDrawPlan, mapOrderText, type MapDrawFrame } from './mapDraw';
 import { mapImage } from './mapImages';
 import { playSfx } from './sfx';
@@ -75,6 +75,8 @@ export default function MapDrawPage({ s, commit, notify, visible, viewer = false
     try { await navigator.clipboard.writeText(mapOrderText(shownPlan.games.map(labelOf))); notify('맵 순서를 복사했습니다.'); } catch { notify('복사하지 못했습니다. 다시 시도해주세요.'); }
   };
   const add = () => { try { commit(v => addMap(v, mapName), `맵 추가 · ${mapName.trim()}`); setMapName(''); } catch (e) { notify((e as Error).message); } };
+  const season = mapSeasonOf(pool);
+  const pickSeason = (id: string) => { try { commit(v => setMapSeason(v, id), `맵 시즌 · ${MAP_SEASONS.find(v => v.id === id)?.label ?? id}`); } catch (e) { notify((e as Error).message); } };
 
   const maps = shown ? shown.items.length : pool.length, ace = format === 'ace';
   const slots = shownPlan ? shownPlan.games.length : gameCount(format, maps), base = shown ? mapDrawBase(shown) : ace ? 0 : maps;
@@ -128,7 +130,9 @@ export default function MapDrawPage({ s, commit, notify, visible, viewer = false
     </LayoutGroup>
     <section className="panel mapdraw-pool">
       <div className="mapdraw-head"><div><h2>등록된 맵</h2><span className="count-pill">{pool.length}개</span></div>
-        {!viewer ? <form className="mapdraw-add" onSubmit={e => { e.preventDefault(); add(); }}><input aria-label="추가할 맵 이름" placeholder="맵 이름" maxLength={30} value={mapName} disabled={running} onChange={e => setMapName(e.target.value)}/><button className="button" type="submit" disabled={running || !mapName.trim()}><Plus size={15}/> 맵 추가</button></form> : null}
+        {!viewer ? <form className="mapdraw-add" onSubmit={e => { e.preventDefault(); add(); }}>
+          <select aria-label="맵 시즌" value={season ?? ''} disabled={running} onChange={e => pickSeason(e.target.value)}>{season ? null : <option value="" disabled>직접 구성</option>}{MAP_SEASONS.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}</select>
+          <input aria-label="추가할 맵 이름" placeholder="맵 이름" maxLength={30} value={mapName} disabled={running} onChange={e => setMapName(e.target.value)}/><button className="button" type="submit" disabled={running || !mapName.trim()}><Plus size={15}/> 맵 추가</button></form> : null}
       </div>
       <ul className="mapdraw-pool-list">
         {pool.map(map => <li key={map.id}><MapCard label={map.label}/>{!viewer ? <button className="icon-button mapdraw-remove" aria-label={`${map.label} 삭제`} disabled={running} onClick={() => commit(v => removeMap(v, map.id), `맵 삭제 · ${map.label}`)}><X size={14}/></button> : null}</li>)}

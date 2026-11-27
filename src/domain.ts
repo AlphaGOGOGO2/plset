@@ -44,7 +44,7 @@ export function sessionReport(s: Session, now = new Date()): string {
     lines.push(`${pad2(i + 1)}. ${p.name} (${p.race}) · 두당 ${number(Math.floor(p.amount / s.teamSize))}개 · 토탈 ${number(p.amount)}개${tags.length ? ` · ${tags.join(' · ')}` : ''}`);
   });
   if (!ranked.length) lines.push('-');
-  else lines.push(spectatorText(active));
+  else lines.push(`관전 : ${spectatorText(active)}`);
   lines.push('', `[팀 편성] ${s.teams.A} vs ${s.teams.B}`);
   for (const team of ['A', 'B'] as Team[]) { const members = teamMembers(s.players, team); lines.push(`${team} ${s.teams[team]} ${members.length}/${s.teamSize}: ${members.map(p => p.name).join(', ') || '-'}`); }
   const unassigned = active.filter(p => !p.team); if (unassigned.length) lines.push(`미배정: ${unassigned.map(p => p.name).join(', ')}`);
@@ -55,7 +55,7 @@ export function sessionReport(s: Session, now = new Date()): string {
   return lines.join('\r\n') + '\r\n';
 }
 // Spectator slots go to the top funders; the host pastes this line into chat.
-export function spectatorText(players: Player[], count = 6) { return `관전 : ${rankByFunding(players.filter(p=>p.active)).slice(0,count).map(p=>givenName(p.name)).join('-')}`; }
+export function spectatorText(players: Player[], count = 6) { return rankByFunding(players.filter(p=>p.active)).slice(0,count).map(p=>givenName(p.name)).join(' '); }
 // Team names follow the first assigned player. A name the host typed stays only while that first player stays:
 // when `prev` shows the team had a different first player (or none), the name goes back to following.
 export function withTeamNames(s: Session, prev?: Session): Session {
@@ -103,6 +103,18 @@ export function addMap(s: Session, name: string): Session {
   if (maps.length >= MAX_MAPS) throw new Error(`맵은 최대 ${MAX_MAPS}개까지 등록할 수 있습니다.`);
   if (maps.some(m => m.label === label)) throw new Error('이미 등록된 맵입니다.');
   return { ...s, maps: [...maps, { id: `map-${uid()}`, label }] };
+}
+// Stock pools by season. Picking one replaces the session's pool; maps can still be added or removed afterwards.
+// The season is not stored: it is whichever stock pool the session's maps currently match, by name.
+export const MAP_SEASONS: { id: string; label: string; maps: DrawItem[] }[] = [
+  { id: 'asl22', label: 'ASL 22', maps: MATCH_MAPS },
+  { id: 'asl23', label: 'ASL 23', maps: ['머즐플래시','뉴노멀','마리골드','녹아웃','어센션','마스커레이드','버터'].map((label,i)=>({id:`asl23-map-${i+1}`,label})) },
+];
+export const mapSeasonOf = (maps: DrawItem[]): string | null => MAP_SEASONS.find(season => season.maps.length === maps.length && season.maps.every(m => maps.some(x => x.label === m.label)))?.id ?? null;
+export function setMapSeason(s: Session, id: string): Session {
+  const season = MAP_SEASONS.find(v => v.id === id);
+  if (!season) throw new Error('시즌을 확인해주세요.');
+  return { ...s, maps: season.maps.map(m => ({ ...m })) };
 }
 export function removeMap(s: Session, id: string): Session {
   const maps = sessionMaps(s);
