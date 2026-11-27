@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MATCH_MAPS, mapDrawGames, validMapDraw, validateSession, createSession } from './domain';
+import { MAP_SEASONS, MATCH_MAPS, addMap, mapDrawGames, mapSeasonOf, removeMap, sessionMaps, setMapSeason, validMapDraw, validateSession, createSession } from './domain';
 import { rebaseClock } from './share';
 import { INTRO_MS, mapDrawFrame, mapDrawPlan, mapOrderText } from './mapDraw';
 
@@ -111,4 +111,16 @@ test('the flicker is a random walk, not a repeating lap', () => {
   assert.ok(faces.length >= 20 && !lap);
   assert.ok(new Set(plan.intro).size >= 6);
   assert.notDeepEqual(mapDrawPlan({ format: 'plus', seed: 22, items }).steps[7].faces, faces);
+});
+
+test('a season replaces the pool with its seven maps, and the pool names the season until it is edited', () => {
+  const s = createSession();
+  assert.equal(mapSeasonOf(sessionMaps(s)), 'asl22');
+  const next = setMapSeason(s, 'asl23');
+  assert.equal(mapSeasonOf(sessionMaps(next)), 'asl23');
+  assert.equal(sessionMaps(next).length, 7);
+  assert.doesNotThrow(() => validateSession(JSON.parse(JSON.stringify(next))));
+  assert.equal(mapSeasonOf(sessionMaps(addMap(next, '투혼'))), null);
+  assert.equal(mapSeasonOf(sessionMaps(removeMap(next, 'asl23-map-1'))), null);
+  assert.throws(() => setMapSeason(s, 'asl99'));
 });

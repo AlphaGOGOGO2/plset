@@ -134,8 +134,8 @@ test('관전 복사는 펀딩 상위 6명의 성을 뺀 이름을 순위대로 �
   const s=createSession();let players=s.players;
   const amounts=[['임홍규',500],['김정우',400],['조일장',300],['김명운',300],['이재호',200],['유영진',100],['김지성',50]] as const;
   amounts.forEach(([name,amount],i)=>{players=setAmount(players,players.find(p=>p.name===name)!.id,amount,1000+i);});
-  assert.equal(spectatorText(players),'관전 : 홍규-정우-일장-명운-재호-영진');
-  assert.equal(spectatorText(players.map(p=>p.name==='임홍규'?{...p,active:false}:p)),'관전 : 정우-일장-명운-재호-영진-지성');
+  assert.equal(spectatorText(players),'홍규 정우 일장 명운 재호 영진');
+  assert.equal(spectatorText(players.map(p=>p.name==='임홍규'?{...p,active:false}:p)),'정우 일장 명운 재호 영진 지성');
 });
 test('참가자 비고는 빈 문자열이면 지워지고 200자를 넘으면 거부한다',()=>{
   const s=createSession();const id=s.players[0].id;
@@ -156,7 +156,7 @@ test('텍스트 보고서는 참가자·펀딩·팀·귀인·메모를 담고 �
   assert.ok(lines.some(l=>l.startsWith('Z 저그 4명: 임홍규')));
   assert.ok(lines.includes('[펀딩 현황] 두당 3,000개 · 토탈 15,000개'));
   assert.ok(lines.includes('01. 임홍규 (Z) · 두당 2,000개 · 토탈 10,000개 · 1위'));
-  assert.ok(lines.some(l=>l.startsWith('관전 : 홍규-영진-')));
+  assert.ok(lines.some(l=>l.startsWith('관전 : 홍규 영진 ')));
   assert.ok(lines.includes('[팀 편성] 홍규팀 vs 영진팀'));
   assert.ok(lines.includes('A 홍규팀 1/5: 임홍규'));
   assert.ok(lines.includes('[귀인 펀딩] 2건 · 토탈 4,000개 · 두당 800개'));
